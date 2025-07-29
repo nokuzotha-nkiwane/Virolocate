@@ -10,5 +10,5 @@ threads=$((`/bin/nproc` -2))
 #loop over each .m8 files in output and get matches with e-value < 1e-10
 for file in ${output}/*.matches.m8; do 
     file_name=$(basename ${file} .matches.m8)
-    awk '$11 <= 1e-10' "${file}" > "${output}/${file_name}.filtered.m8"
+    awk '$11 <= 1e-5' "${file}" > "${output}/${file_name}.filtered.m8"
 done
