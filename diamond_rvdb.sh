@@ -30,7 +30,7 @@ for folder in ${input_reads_dir}/*; do
 
     #alignment using blastx
     if [[ -f ${contigs} ]]; then
-    sample_out=${output}/${sample}_rvdv.matches.m8
+    sample_out=${output}/${sample}_rvdb.matches.m8
     diamond blastx -d ${output}/nr.dmnd -q ${contigs} -o ${sample_out} --threads ${threads} -f 6
 
     else 
