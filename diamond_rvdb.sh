@@ -7,7 +7,7 @@ module diamond
 wdir="/analyses/users/nokuzothan/disc_pipe/init_tools"
 current_dir="${wdir}/diamond"
 input_reads_dir="${wdir}/megahit/output/default"
-input_proteins="${current_dir}/input/protein_sequences_rvdb.fasta"
+zipped_proteins="${current_dir}/input/U-RVDBv30.0-prot.fasta.xz"
 output="${current_dir}/output"
 threads=$((`/bin/nproc` -2))
 
@@ -18,9 +18,11 @@ fi
 mkdir -p -m a=rwx ${output}
 
 #make diamond protein database
+unxz -k ${zipped_proteins}
+input_proteins=${zipped_proteins%.xz}
 diamond makedb --in ${input_proteins} -d ${output}/nr
 
-#loop through each of the files created in megahit output directory to find final.congtigs.fa files and run diamond
+#loop through each of the files created in megahit output directory to find final.contigs.fa files and run diamond
 for folder in ${input_reads_dir}/*; do
 
   if [[ -d ${folder} ]]; then
