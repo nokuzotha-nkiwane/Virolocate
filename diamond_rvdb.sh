@@ -8,14 +8,14 @@ wdir="/analyses/users/nokuzothan/disc_pipe/init_tools"
 current_dir="${wdir}/diamond"
 input_reads_dir="${wdir}/megahit/output/default"
 zipped_proteins="${current_dir}/input/U-RVDBv30.0-prot.fasta.xz"
-output="${current_dir}/output"
+output="${current_dir}/output/RVDB"
 threads=$((`/bin/nproc` -2))
 
 #clear existing output directory if any, make new output directory 
-if [[ -e $output ]]; then
-  rm -rf ${output} 
-fi
-mkdir -p -m a=rwx ${output}
+# if [[ -e $output ]]; then
+#   rm -rf ${output} 
+# fi
+#mkdir -p -m a=rwx ${output}
 
 #make diamond protein database
 unxz -k ${zipped_proteins}

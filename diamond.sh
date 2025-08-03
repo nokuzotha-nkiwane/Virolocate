@@ -8,7 +8,7 @@ wdir="/analyses/users/nokuzothan/disc_pipe/init_tools"
 current_dir="${wdir}/diamond"
 input_reads_dir="${wdir}/megahit/output/default"
 input_proteins="${current_dir}/input/protein_sequences.fasta"
-output="${current_dir}/output"
+output="${current_dir}/output/NCBI"
 threads=$((`/bin/nproc` -2))
 
 #clear existing output directory if any, make new output directory 
