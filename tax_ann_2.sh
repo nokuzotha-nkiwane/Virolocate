@@ -32,3 +32,10 @@ for folder in $(ls ${wdir}/*); do
         sort -u "${ann_dir}/acc_id_list.txt" -o "${ann_dir}/unique_acc_id.txt"
     done
 done
+
+
+#  cat $file | awk '{print $2}' | cut -d '|' -f5  >>${ann_dir}/acc_id_list.txt
+
+#   cat $file | cut -d ',' -f2 | awk '{print $2}' >>${ann_dir}/acc_id_list.txt
+
+# cat K058681_S32_rvdb.matches.m8 | awk '{print $2}' | cut -d '|' -f5  >> acc_id_list.txt
