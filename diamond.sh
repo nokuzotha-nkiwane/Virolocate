@@ -18,7 +18,7 @@ fi
 mkdir -p -m a=rwx ${output}
 
 #make diamond protein database
-diamond makedb --in ${input_proteins} -d ${output}/nr
+#diamond makedb --in ${input_proteins} -d ${output}/nr
 
 #loop through each of the files created in megahit output directory to find final.congtigs.fa files and run diamond
 for folder in ${input_reads_dir}/*; do
