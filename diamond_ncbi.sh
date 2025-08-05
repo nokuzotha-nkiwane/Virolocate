@@ -1,5 +1,8 @@
 #!/bin/env bash
 
+#load modules
+module diamond
+
 #directories
 wdir="/analyses/users/nokuzothan/disc_pipe"
 cdir="${wdir}/init_tools/diamond/output"
