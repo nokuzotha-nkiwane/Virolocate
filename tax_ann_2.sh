@@ -16,22 +16,24 @@ for folder in $(ls ${wdir}/*); do
 
     ann_dir="${folder}/annotated"
     mkdir -p "${ann_dir}"
-
+done
 
     #get nucleotide accession number for RVDB samples
-    for file in $(ls ${rv_dir}/*.m8); do
-        cat $file | awk '{print $2}' | cut -d '|' -f5  >> "${rv_dir}/${ann_dir}/acc_id_list.txt"
-    done
-
-    #get nucleotide accession number for NCBI samples
-    for file in $(ls ${nc_dir}/*.m8); do
-        awk '{print $2}' ${file} >> ${nc_dir}/${ann_dir}/acc_id_list.txt
-    done
-
-    for folder in $(ls ${wdir}/*); do
-        sort -u "${ann_dir}/acc_id_list.txt" -o "${ann_dir}/unique_acc_id.txt"
-    done
+for file in $(ls ${rv_dir}/*.m8); do
+    awk '{print $2}' ${file} | cut -d '|' -f5  >> "${rv_ann}/acc_id_list.txt"
 done
+
+#get nucleotide accession number for NCBI samples
+for file in $(ls ${nc_dir}/*.m8); do
+    awk '{print $2}' ${file} >> ${nc_ann}/acc_id_list.txt
+done
+
+for ann_dir in $(ls ${wdir}/*/annotated); do
+    if [[ -f ${ann_dir}/acc_id_list.txt ]]; then
+        sort -u "${ann_dir}/acc_id_list.txt" -o "${ann_dir}/unique_acc_id.txt"
+    fi
+done
+
 
 
 #  cat $file | awk '{print $2}' | cut -d '|' -f5  >>${ann_dir}/acc_id_list.txt
