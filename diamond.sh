@@ -4,11 +4,11 @@
 module diamond
 
 # variables and directories
-wdir="/analyses/users/nokuzothan/disc_pipe/init_tools"
-current_dir="${wdir}/diamond"
-input_reads_dir="${wdir}/megahit/output/default"
-db="${wdir}/../ncbidb/nr"
-output="${current_dir}/output/NCBI"
+wdir="/analyses/users/nokuzothan/disc_pipe"
+cdir="${wdir}/init_tools/diamond"
+input_reads_dir="${wdir}/init_tools/megahit/output/default"
+db="${wdir}/ncbidb/fasta/nr.gz"
+output="${cdir}/output/NCBI"
 threads=$((`/bin/nproc` -2))
 
 #clear existing output directory if any, make new output directory 
@@ -18,10 +18,10 @@ fi
 mkdir -p -m a=rwx ${output}
 
 #make diamond protein database
-#diamond makedb --in ${db} -d ${output}/nr
+gunzip -c ${db} | diamond makedb --in - -d ${cdir}/nr
 
 #loop through each of the files created in megahit output directory to find final.congtigs.fa files and run diamond
-for folder in ${input_reads_dir}/*; do
+for folder in (ls ${input_reads_dir}/*); do
 
   if [[ -d ${folder} ]]; then
     sample=$(basename ${folder})
@@ -31,7 +31,7 @@ for folder in ${input_reads_dir}/*; do
     #alignment using blastx
     if [[ -f ${contigs} ]]; then
     sample_out=${output}/${sample}.matches.m8
-    diamond blastx -d ${db}/nr.dmnd -q ${contigs} -o ${sample_out} --threads ${threads} -f 6
+    diamond blastx -d ${cdir}/nr.dmnd -q ${contigs} -o ${sample_out} --threads ${threads} -f 6
 
     else 
       echo "Contigs file for ${sample} not found."
