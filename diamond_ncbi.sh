@@ -20,7 +20,7 @@ function dbx() {
 
 
 
-ls ${db_fasta}/nr.*.tar.gz | cut -d '.' f1,2 | parallel -j 10 -n1 -I% "DBX % ${fasta} ${output}" "
+ls ${db_fasta}/nr.*.tar.gz | cut -d '.' f1,2 | parallel -j 10 -n1 -I% "DBX % ${output}"
 
 
 
