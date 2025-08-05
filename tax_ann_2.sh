@@ -15,7 +15,7 @@ for folder in $(ls ${wdir}/*); do
     fi
 
     ann_dir="${folder}/annotated"
-    mkdir -p "${ann_dir}"
+    mkdir -p -m a=rwx "${ann_dir}"
 done
 
     #get nucleotide accession number for RVDB samples
