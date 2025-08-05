@@ -7,7 +7,7 @@ module diamond
 wdir="/analyses/users/nokuzothan/disc_pipe/init_tools"
 current_dir="${wdir}/diamond"
 input_reads_dir="${wdir}/megahit/output/default"
-db="/database/ncbi/blast/db_v5/nr"
+db="${wdir}/../ncbidb/nr"
 output="${current_dir}/output/NCBI"
 threads=$((`/bin/nproc` -2))
 
