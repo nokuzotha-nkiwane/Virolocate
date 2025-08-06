@@ -1,32 +1,6 @@
 #!/bin/env bash
 
 ON="module miniconda && conda activate megahit"
-eval ${ON}
-
-input="/analyses/users/nokuzothan/disc_pipe/init_tools/fastp_test/output"
-output="/analyses/users/nokuzothan/disc_pipe/init_tools/megahit/output"
-
-for file in ${input}/*_out.fastq;
-
-file_name=$(basename "$file")
-id=${file_name%%_1_out.fastq}
-
-R1=${id}_1_out.fastq
-R2=${id}_2_out.fastq
-
-do 
-megahit --verbose -t 8 -1 ${R1} -2 ${R2} -o ${output}
-done
-
-echo "Megahit assembly completed successfully :-)"
-
-
-
-##corrected script
-
-#!/bin/env bash
-
-ON="module miniconda && conda activate megahit"
 eval $ON
 
 input="/analyses/users/nokuzothan/disc_pipe/init_tools/fastp_test/output"
