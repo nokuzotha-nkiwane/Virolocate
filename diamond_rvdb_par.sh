@@ -12,10 +12,10 @@ output="${cdir}/output/RVDB"
 threads=$((`/bin/nproc` -2))
 
 #clear existing output directory if any, make new output directory 
-if [[ -e $output ]]; then
+if [[ -e ${output} ]]; then
   rm -rf ${output} 
 fi
-mkdir -p -m a=rwx ${output}
+mkdir -p ${output}
 
 #make diamond protein database
 diamond makedb --in ${db} -d ${output}/nr
@@ -24,6 +24,7 @@ diamond makedb --in ${db} -d ${output}/nr
 
 function blasting() {
   contigs=$1
+  output=$2
  
   #extract sample name
   name=`basename $(dirname ${contigs})`
@@ -31,7 +32,18 @@ function blasting() {
 
   #blastx alignment
   if [[ -f ${contigs} ]]; then
-  diamond blastx -d ${output}/nr.dmnd -q ${contigs} -o ${sample_out} --threads ${threads} -e 1E-5 -f 6 qseqid qlen sseqid stitle pident length evalue 
+  diamond blastx -d ${output}/nr.dmnd \
+    -q ${contigs} \
+    -o ${sample_out} \
+    --threads ${threads} \
+    -e 1E-5 \
+    -f 6 qseqid qlen sseqid stitle pident length evalue bitscore \
+    -id 50 \
+    -min-score 50 \
+    --outfmt 50 \
+    --strand both \
+    --unal 0 \
+    -mp-init
 
   else 
     echo "Contigs file for ${name} not found."
@@ -40,4 +52,4 @@ function blasting() {
 export -f blasting
 
 #function call for alignment
-ls ${input_reads_dir}/*/*.fasta | parallel -j 10 -n1 -I% "blasting %"
+ls ${input_reads_dir}/*/*.fa | parallel -j 10 -n1 -I% "blasting % ${output}"
