@@ -15,26 +15,38 @@ threads=$((`/bin/nproc` -2))
 if [[ -e $output ]]; then
   rm -rf ${output} 
 fi
-mkdir -p -m a=rwx ${output}
+mkdir -p ${output}
 
 #make diamond protein database
 diamond makedb --in ${db} -d ${output}/nr
 
 #loop through each of the files created in megahit output directory to find final.contigs.fa files and run diamond
-for folder in (ls ${input_reads_dir}/*); do
+for folder in ${input_reads_dir}/*; do
 
   if [[ -d ${folder} ]]; then
     sample=$(basename ${folder})
     contigs=${folder}/final.contigs.fa
 
 
-    #alignment using blastx
+    #alignment using blastx (exclude --min-score because it overrides the evalue (acc. to manual))
     if [[ -f ${contigs} ]]; then
     sample_out=${output}/${sample}_rvdb.matches.m8
-    diamond blastx -d ${output}/nr.dmnd -q ${contigs} -o ${sample_out} --threads ${threads} -e 1E-5 -f 6 qseqid qlen sseqid stitle pident length evalue 
+    diamond blastx -d ${output}/nr.dmnd \
+    -q ${contigs} \
+    --out ${sample_out} \
+    --threads ${threads} \
+    --evalue 1E-5 \
+    --outfmt 6 qseqid qlen sseqid stitle pident length evalue bitscore \
+    --id 80 \
+    --strand both \
+    --unal 0 \
+    --mp-init 
 
     else 
       echo "Contigs file for ${sample} not found."
     fi
   fi
 done
+
+
+its been a while where have you been?
