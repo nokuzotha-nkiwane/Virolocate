@@ -32,18 +32,16 @@ function blasting() {
 
   #blastx alignment
   if [[ -f ${contigs} ]]; then
-  diamond blastx -d ${output}/nr.dmnd \
+    diamond blastx -d ${output}/nr.dmnd \
     -q ${contigs} \
-    -o ${sample_out} \
+    --out ${sample_out} \
     --threads ${threads} \
-    -e 1E-5 \
-    -f 6 qseqid qlen sseqid stitle pident length evalue bitscore \
-    -id 50 \
-    -min-score 50 \
-    --outfmt 50 \
+    --evalue 1E-5 \
+    --outfmt 6 qseqid qlen sseqid stitle pident length evalue bitscore \
+    --id 80 \
     --strand both \
     --unal 0 \
-    -mp-init
+    --mp-init 
 
   else 
     echo "Contigs file for ${name} not found."
