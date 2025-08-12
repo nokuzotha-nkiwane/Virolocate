@@ -41,6 +41,7 @@ function blasting() {
     --id 80 \
     --strand both \
     --unal 0 \
+    --query-gencode 11 \
     --mp-init 
 
   else 
