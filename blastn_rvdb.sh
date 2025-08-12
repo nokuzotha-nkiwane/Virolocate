@@ -12,22 +12,22 @@ blast_contigs="${blastn_out}/blast_fastas"
 final_out="${blastn_out}/blastn_results"
 threads=$((`/bin/nproc` -2))
 
-#create output for blastn
-if [[ -e ${blastn_out} ]]; then
-    rm -rf ${blastn_out}
-fi
-mkdir -p ${blastn_out}
-
 #make blast_fastas subdirectory in blastn output folder
+if [[ -e ${blast_contigs} ]]; then
+    rm -rf ${blast_contigs}
+fi
 mkdir -p ${blast_contigs}
 
 #make blastn_results subdirectory in blastn output folder
+if [[ -e ${final_out} ]]; then
+    rm -rf ${final_out}
+fi
 mkdir -p ${final_out}
 
 
 #if working with RVDB, check if RVDB folder exists so if it doesnt only run ncbi part
 if [[ ! -e ${rv_dir} ]]; then 
-    echo "No RVDB folder exists. Searching for NCBI folder..."
+    echo "No RVDB folder exists"
 else 
     echo "Using RVDB folder for blastn file preparation"
 
