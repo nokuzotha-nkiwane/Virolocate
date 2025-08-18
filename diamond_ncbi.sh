@@ -31,7 +31,16 @@ for folder in ls ${input_reads_dir}/*; do
     #alignment using blastx
     if [[ -f ${contigs} ]]; then
     sample_out=${output}/${sample}.matches.m8
-    diamond blastx -d ${output}/nr.dmnd -q ${contigs} -o ${sample_out} --threads ${threads} -e 1E-5 -f 6 qseqid qlen sseqid stitle pident length evalue 
+    diamond blastx -d ${output}/nr.dmnd \
+    -q ${contigs} \
+    --out ${sample_out} \
+    --threads ${threads} \
+    --evalue 1E-5 \
+    --outfmt 6 qseqid qlen sseqid stitle pident length evalue bitscore \
+    --id 80 \
+    --strand both \
+    --unal 0 \
+    --mp-init 
 
     else 
       echo "Contigs file for ${sample} not found."
