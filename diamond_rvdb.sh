@@ -48,5 +48,4 @@ for folder in ${input_reads_dir}/*; do
   fi
 done
 
-
-its been a while where have you been?
+exit 0
