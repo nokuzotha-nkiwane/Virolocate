@@ -43,12 +43,14 @@ else
     done
 
     #convert the protein accesions to nucleotide ones, make acc_ids.txt output file with contig ids and nucleotide accessions only
+    
 
 fi
 
 #if both folders don't exist script should not be executed
 if [[ ! -d ${rv_dir} && ! -d ${nc_dir} ]]; then 
     exit 1
+fi
 
 #merge the ncbi and rvdb acc_ids files (if both present) and write out to diamond output directory
 #if only the ncbi file exists and has a non-empty acc-ids.txt file
@@ -95,7 +97,7 @@ function get_tax_id {
         echo -e "${contig}\t${acc_id}\tNOT_FOUND" >> ${output}
     fi
 
-} export -f get_tax_id
+}
 
 #clear output file before each run
 output_tsv="${out}/acc_tax_id.tsv"
