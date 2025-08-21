@@ -25,7 +25,7 @@ for folder in ls ${input_reads_dir}/*; do
 
   if [[ -d ${folder} ]]; then
     sample=$(basename ${folder})
-    contigs=${folder}/final.contigs.fa
+    contigs=${folder}/sample.contigs.fa
 
 
     #alignment using blastx
