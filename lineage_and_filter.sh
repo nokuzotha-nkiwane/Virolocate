@@ -1,5 +1,9 @@
 #!/bin/env bash
 
+#load modules
+ON="module miniconda && conda activate viral_pipeline"
+eval ${ON}
+
 #directories used
 wdir="/analyses/users/nokuzothan/disc_pipe/init_tools"
 out="${wdir}/diamond/output"
@@ -9,10 +13,10 @@ mega_conts="${wdir}/megahit/output/default"
 
 
 #clear lineage output files
-# > ${lineage_out}
+> ${lineage_out}
 
-# #get raw lineage information
-# taxonkit lineage -d $'\t' -i 3 ${acc_tax_id} > ${lineage_out}
+#get raw lineage information
+taxonkit lineage -d $'\t' -i 3 ${acc_tax_id} > ${lineage_out}
 
 #contig filtering according to kingdom viruses
 #empty files before extraction
@@ -21,7 +25,7 @@ mega_conts="${wdir}/megahit/output/default"
 u_match_out="${out}/unique_contig_ids.txt"
 > ${u_match_out}
 
-output_fa="${out}/blast_fasta"
+output_fa="${out}/blast_fasta.fa"
 > ${output_fa}
 
 #extract contig matches that are part of viruses
@@ -36,7 +40,7 @@ cat ${out}/contig_matches.tsv | awk '{print $1}' > ${u_match_out}
 sort -u ${u_match_out} -o ${u_match_out}
 
 #find the contig matches in the final.contigs.fa file
-fin_fasta=${mega_conts}/*/final.contigs.fa
+fin_fasta=${mega_conts}/*/sample.contigs.fa
 
 while read -r hit; do
     awk -v contig=">${hit} " '
