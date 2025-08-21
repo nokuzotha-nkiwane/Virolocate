@@ -78,12 +78,11 @@ echo "Clearing previous run's files"
 > ${blastn_tax}
 
 #make file of sample ids and accession ids from blastn output
+
+#progress check
+echo "Making contig_acc.txt file"
+
 while IFS=$'\t' read -r col1 col2 col3 rest; do
-
-    #progress check
-    echo "Making contig_acc.txt file"
-
-    #actual run
     acc=$(echo -e ${col3} | cut -d "|" -f4)
     echo -e "${col1}\t${acc}" >> ${blastn_tax_tmp_1}
 done < ${output}
@@ -95,10 +94,10 @@ sort -u ${blastn_tax_tmp_1} -o ${blastn_tax_tmp_1}
 echo " Unique contig_acc_tax.txt file made"
 
 #function call to write out taxon ids to output file
-while IFS=$'\t' read -r col1 col2; do
-    #progress check
-    echo "Acquiring taxonomic ids"
 
+#progress check
+echo "Acquiring taxonomic ids"
+while IFS=$'\t' read -r col1 col2; do
     get_tax_id ${col1} ${col2} ${blastn_tax_tmp_2}
 done < ${blastn_tax_tmp_1}
 
