@@ -73,12 +73,10 @@ function get_tax_id {
     acc_id=$2
     output=$3
 
-    #remove extra line characters before putting into url
-    acc_id=$(echo ${acc_id} | tr -d '\r\n')
 
     #get uid first which links the accesion id to the taxonid (filter the json output using jq to get uid)
-    url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=\"${acc_id}\"&retmode=json"
-    uid=$(curl "${url1}" | tr -d '\r\n' | jq -r '.esearchresult.idlist[0]')
+    url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=${acc_id}&retmode=json"
+    uid=$(curl -N -# "${url1}" | tr -d '\r\n' | jq -r '.esearchresult.idlist[0]')
 
 
     #get taxon id using uid
@@ -86,7 +84,7 @@ function get_tax_id {
 
         #link to get taxon id using uid
         url2="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=nuccore&id=${uid}&retmode=json" 
-        tax_id=$(curl "${url2}" | tr -d '\r\n' | jq -r ".result[\"${uid}\"].taxid")
+        tax_id=$(curl -N -# "${url2}" | tr -d '\r\n' | jq -r ".result[\"${uid}\"].taxid")
 
 
         #print output
