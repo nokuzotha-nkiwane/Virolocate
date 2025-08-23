@@ -29,7 +29,7 @@ for folder in ${input_reads_dir}/*; do
 
 
     #alignment using blastx (exclude --min-score because it overrides the evalue (acc. to manual))
-    if [[ -f ${contigs} ]]; then
+    if [[ -s ${contigs} ]]; then
     sample_out=${output}/${sample}_rvdb.matches.m8
     diamond blastx -d ${output}/nr.dmnd \
     -q ${contigs} \

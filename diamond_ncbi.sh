@@ -7,7 +7,7 @@ module diamond
 wdir="/analyses/users/nokuzothan/disc_pipe"
 cdir="${wdir}/init_tools/diamond"
 input_reads_dir="${wdir}/init_tools/megahit/output/default"
-db="${wdir}/ncbidb/viral/refseq/viral.1.protein.faa"
+db="${wdir}/ncbidb/fasta/nr.faa"
 output="${cdir}/output/NCBI"
 threads=$((`/bin/nproc` -2))
 
@@ -29,7 +29,7 @@ for folder in ls ${input_reads_dir}/*; do
 
 
     #alignment using blastx
-    if [[ -f ${contigs} ]]; then
+    if [[ -s ${contigs} ]]; then
     sample_out=${output}/${sample}.matches.m8
     diamond blastx -d ${output}/nr.dmnd \
     -q ${contigs} \
