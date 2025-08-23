@@ -8,7 +8,7 @@ ON="module miniconda && conda activate viral_pipeline"
 wdir="/analyses/users/nokuzothan/disc_pipe"
 db_fa="${wdir}/ncbidb/nt/nt"
 diamond_out="${wdir}/init_tools/diamond/output"
-input_fa="${diamond_out}/blast_fasta.fa"
+input_fa="${diamond_out}/blastn.fasta"
 blastn_out="${wdir}/init_tools/blastn/output"
 output="${blastn_out}/blastn_output_3.tsv"
 blastn_tax_tmp_1="${blastn_out}/contig_acc.txt"
@@ -33,7 +33,7 @@ if [[ -s ${input_fa} ]]; then
         -evalue 1E-5 \
         -outfmt "6 qseqid qlen sseqid stitle pident length qstart qend evalue bitscore" \
         -perc_identity 80 \
-        -max_target_seqs 5
+        -max_target_seqs 20
 
 else
     echo "Query fasta file of samples does not exist or is empty, skipping blastn."
@@ -73,8 +73,6 @@ function get_tax_id {
 
 #clear files
 echo "Clearing previous run's files"
-> ${blastn_tax_tmp_1}
-> ${blastn_tax_tmp_2}
 > ${blastn_tax}
 
 #make file of sample ids and accession ids from blastn output
@@ -84,7 +82,7 @@ echo "Making contig_acc.txt file"
 
 while IFS=$'\t' read -r col1 col2 col3 rest; do
     acc=$(echo -e ${col3} | cut -d "|" -f4)
-    echo -e "${col1}\t${acc}" >> ${blastn_tax_tmp_1}
+    echo -e "${col1}\t${col2}\t${acc}" >> ${blastn_tax_tmp_1}
 done < ${output}
 
 #deduplicate above file so no unneccary taxonomy id calls are made
