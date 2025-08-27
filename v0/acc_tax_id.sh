@@ -2,7 +2,8 @@
 
 #directories
 wdir="/analyses/users/nokuzothan/disc_pipe/init_tools"
-out="${wdir}/diamond/output"
+in="${wdir}/diamond/output"
+out="${wdir}/blastn"
 rv_dir="${out}/RVDB"
 nc_dir="${out}/NCBI"
 output_tsv="${out}/acc_tax_id.tsv"
@@ -50,7 +51,7 @@ fi
 
 #if both folders don't exist script should not be executed
 if [[ ! -d ${rv_dir} && ! -d ${nc_dir} ]]; then 
-    echo "No RVDB or NCBI folder with Diamond Blastx output exist. Exiting process."
+    echo "Exiting process."
     exit 1
 fi
 

@@ -9,6 +9,7 @@ cdir="${wdir}/init_tools/diamond"
 input_reads_dir="${wdir}/init_tools/megahit/output/default"
 db="${wdir}/ncbidb/fasta/nr.faa"
 output="${cdir}/output/NCBI"
+tmp_db="${output}/nt.tmp"
 threads=$((`/bin/nproc` -2))
 
 #clear existing output directory if any, make new output directory 
@@ -16,6 +17,16 @@ if [[ -e $output ]]; then
   rm -rf ${output} 
 fi
 mkdir -p -m a=rwx ${output}
+
+# #filter full nr database for viral sequences
+# > ${tmp_db}
+# while read -r LN;do
+#   if [[ ${LN} == ">" ]]; then
+#     echo "" >> ${tmp_db}
+#   fi
+  
+#   echo -e -n "${LN}\t" >> ${tmp_db}
+# done < ${db}
 
 #make diamond protein database
 diamond makedb --in ${db} -d ${output}/nr
