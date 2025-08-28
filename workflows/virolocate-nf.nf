@@ -3,12 +3,21 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+
+//import modules
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_virolocate-nf_pipeline'
+include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
+include { MEGAHIT } from '../modules/nf-core/megahit/main.nf'
+include { DIAMOND_BLASTX } from '../modules/nf-core/diamond/blastx/main.nf'
+include { MULTIQC } from '../modules/nf-core/multiqc/main.nf'
+include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
+include { BLAST_BLASTN } from '../modules/nf-core/blast/blastn/main.nf'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -33,6 +42,13 @@ workflow VIROLOCATE-NF {
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
+    //---------------------------------------
+
+
+
+
+
+    //---------------------------------------
     //
     // Collate and save software versions
     //
@@ -74,7 +90,8 @@ workflow VIROLOCATE-NF {
         []
     )
 
-    emit:multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
+    emit:
+    multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
 }
