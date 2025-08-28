@@ -43,7 +43,7 @@ workflow VIROLOCATE-NF {
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
     //---------------------------------------
-
+    //this is a test comment
 
 
 
