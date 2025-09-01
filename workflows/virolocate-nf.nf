@@ -48,21 +48,27 @@ workflow VIROLOCATE-NF {
         //FastQC run to check quality of raw pretrimmed reads
         FASTQC()
         //Trimmomatic run to trim reads
-        TRIMMOMATIC(channel)
+        input_reads_ch=channel.fromFilePairs()
+        TRIMMOMATIC(input_reads_ch)
         //FastQC to check quality of trimmed reads
-        FASTQC()
+        FASTQC(TRIMMOMATIC.out.trimmed_reads)
         //MultiQC to combine FastQC outputs (raw pretrimmed reads and trimmed reads)
-        MULTIQC()
+        MULTIQC(FASTQC.out.html)
         //Megahit to assemble reads into contigs
-        MEGAHIT()
+        MEGAHIT(TRIMMOMATIC.out.trimmed_reads)
         //Diamond to compare read proteins against known protiens in databases
-        DIAMOND_BLASTX()
+        DIAMOND_BLASTX(MEGAHIT.out.kfinal_contigs)
+
+        //get accession ids and taxonomy ids for taxonkit to use
+        (DIAMOND_BLASTX.out.tsv)
+
+
         //Taxonkit for lineage filtering and getting taxonomy ids
-        TAXONKIT_LINEAGE()
+        TAXONKIT_LINEAGE(ACC_IDS.out.tsv)
         //Blastn for comparing contig sequences to knwon nucleotide sequences
-        BLAST_BLASTN()
+        BLAST_BLASTN(TAXONKIT_LINEAGE.out.tsv)
         //Blastx to compare proteins to check for distant orthologs
-        DIAMOND_BLASTX()
+        DIAMOND_BLASTX(BLAST_BLASTN.out.txt)
     }
 
     //---------------------------------------
