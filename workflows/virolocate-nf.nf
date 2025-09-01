@@ -64,7 +64,7 @@ workflow VIROLOCATE-NF {
 
 
         //Taxonkit for lineage filtering and getting taxonomy ids
-        TAXONKIT_LINEAGE(ACC_IDS.out.tsv)
+        TAXONKIT_LINEAGE(TAX_IDS.out.tsv)
         //Blastn for comparing contig sequences to knwon nucleotide sequences
         BLAST_BLASTN(TAXONKIT_LINEAGE.out.tsv)
         //Blastx to compare proteins to check for distant orthologs
