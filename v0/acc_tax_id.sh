@@ -94,9 +94,4 @@ while read -r col1 col2;do
     get_tax_id ${col1} ${col2} ${output_tsv}
 done < ${out}/acc_ids.txt
 
-
-#a check through file for taxonomic ids that not have been found
-# echo "If number below is not 0, please check file for possible values where the taxonomy id was not found"
-# grep "NOT_FOUND" ${output_tsv} | wc -l
-
 exit 0
