@@ -7,7 +7,7 @@ module diamond
 wdir="/analyses/users/nokuzothan/disc_pipe"
 cdir="${wdir}/init_tools/diamond"
 input_reads_dir="${wdir}/init_tools/megahit/output/default"
-db="${wdir}/ncbidb/fasta/nr.faa"
+db="${wdir}/init_tools/ncbi_fasta.faa"
 output="${cdir}/output/NCBI"
 tmp_db="${output}/nt.tmp"
 threads=$((`/bin/nproc` -2))
@@ -27,6 +27,62 @@ mkdir -p -m a=rwx ${output}
   
 #   echo -e -n "${LN}\t" >> ${tmp_db}
 # done < ${db}
+
+
+
+#matching viral names from nt database using csv
+wdir="/analyses/users/nokuzothan/disc_pipe"
+db="${wdir}/ncbidb/fasta/nr.faa"
+while read -r name;do
+    awk  -v virus="${name}" '
+        $0 ~ virus {print; ON=1; next}
+        ON && /^>/ {ON=0}
+        ON {print}
+    ' ${db} >> ncbi_fasta
+done < virus.txt
+
+wdir="/analyses/users/nokuzothan/disc_pipe"
+db="${wdir}/ncbidb/fasta/nr.faa"
+
+while read -r name;do
+    awk  -v virus="${name}" '
+        /^>/ && index($0, virus) > 0 {title=$0; ON=1; next}
+        /^>/ {ON=0}
+        ON {print title "\n" $0}
+    ' ${db} >> ncbi_fasta
+done < virus.txt
+
+
+wdir="/analyses/users/nokuzothan/disc_pipe"
+db="${wdir}/ncbidb/fasta/nr.faa"
+
+while read -r virus; do
+    grep -i -A 1000 "^>.*${virus}" ${db} | \
+    awk '
+        /^>/ {title=$0; next}
+        {print title "\n" $0}
+    ' >> ncbi_fasta
+done < virus.txt
+
+#downloading protein fasta sequences from genbank and making them one file 
+
+wdir="/analyses/users/nokuzothan/disc_pipe"
+db="${wdir}/init_tools/ncbi_fasta.faa"
+# Number of sequences per batch
+batch=50000
+
+# Step 1: Get total number of viral protein sequences
+total=$(curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=protein&term=txid10239[Organism]&rettype=count&retmode=text")
+echo "Total viral protein sequences: $total"
+
+# Step 2: Fetch in batches
+for start in $(seq 0 $batch $total); do
+    echo "Fetching sequences $start to $((start+batch-1))..."
+    curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&term=txid10239[Organism]&retstart=${start}&retmax=${batch}&rettype=fasta&retmode=text" >> ${db}
+done
+
+echo "Download complete. Sequences saved in ${db}"
+
 
 #make diamond protein database
 diamond makedb --in ${db} -d ${output}/nr
