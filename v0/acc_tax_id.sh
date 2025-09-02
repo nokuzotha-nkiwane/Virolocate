@@ -23,7 +23,7 @@ if [[ -d ${rv_dir} ]]; then
             name=$(echo ${col4} | cut -d "|" -f6)
             echo -e "${col1}\t${col2}\t${acc_id}\t${name}\t${rest}"
         done < ${matches} 
-    done >> ${rv_dir}/acc_ids.txt
+    done >> ${rv_dir}/acc_ids.tsv
 
 else
     echo "No RVDB folder exists. Searching for NCBI folder"
@@ -39,19 +39,19 @@ fi
 #merge the ncbi and rvdb acc_ids files and write out to diamond output directory
 #if the rvdb file exists and has a non-empty acc-ids.txt file
 if [[ -s ${rv_dir}/acc_ids.txt ]]; then
-    cat ${rv_dir}/acc_ids.txt >> ${out}/acc_ids.txt
+    cat ${rv_dir}/acc_ids.tsv >> ${out}/acc_ids.tsv
 fi
 
 #if the ncbi file exists and has a non-empty acc-ids.txt file
 if [[ -d ${nc_dir} ]]; then 
     echo "Using NCBI folder for metadata file preparation"
     for matches in ${nc_dir}/*.m8; do
-        cat ${matches} >> ${out}/acc_ids.txt
+        cat ${matches} >> ${out}/acc_ids.tsv
     done
 fi
 
 #sort and deduplicate acc_ids.txt
-sort -u ${out}/acc_ids.txt -o ${out}/acc_ids.txt
+sort -u ${out}/acc_ids.tsv -o ${out}/acc_ids.tsv
 
 #function to get metadata from eutils
 function get_meta {
@@ -89,5 +89,5 @@ function get_meta {
 while IFS=$'\t' read -r col1 col2 col3 rest;do
     echo "[${col3}]"
     get_meta ${col1} ${col2} ${col3} ${rest} ${output_tsv}
-done < ${out}/acc_ids.txt
+done < ${out}/acc_ids.tsv
 
