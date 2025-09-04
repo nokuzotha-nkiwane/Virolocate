@@ -30,38 +30,24 @@ mkdir -p -m a=rwx ${output}
 
 
 
-#matching viral names from nt database using csv
-wdir="/analyses/users/nokuzothan/disc_pipe"
-db="${wdir}/ncbidb/fasta/nr.faa"
-while read -r name;do
-    awk  -v virus="${name}" '
-        $0 ~ virus {print; ON=1; next}
-        ON && /^>/ {ON=0}
-        ON {print}
-    ' ${db} >> ncbi_fasta
+
+while read -r virus; do
+    grep -i "^>.*${virus}" ${db} | \
+    awk '
+        /^>/ {title=$0; next}
+        {print title "\n" $0}
+    ' >> ncbi_fasta
 done < virus.txt
-
-wdir="/analyses/users/nokuzothan/disc_pipe"
-db="${wdir}/ncbidb/fasta/nr.faa"
-
-while read -r name;do
-    awk  -v virus="${name}" '
-        /^>/ && index($0, virus) > 0 {title=$0; ON=1; next}
-        /^>/ {ON=0}
-        ON {print title "\n" $0}
-    ' ${db} >> ncbi_fasta
-done < virus.txt
-
 
 wdir="/analyses/users/nokuzothan/disc_pipe"
 db="${wdir}/ncbidb/fasta/nr.faa"
 
 while read -r virus; do
-    grep -i -A 1000 "^>.*${virus}" ${db} | \
-    awk '
-        /^>/ {title=$0; next}
-        {print title "\n" $0}
-    ' >> ncbi_fasta
+    awk -v name="${virus}" '
+        BEGIN {IGNORECASE=1}
+        /^>/ {ON = index($0, name) > 0}
+        ON {print}
+    ' ${db} >> ncbi_fasta
 done < virus.txt
 
 #downloading protein fasta sequences from genbank and making them one file 
