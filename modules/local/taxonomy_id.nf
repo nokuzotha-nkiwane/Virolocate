@@ -47,7 +47,7 @@ process TAX_IDS{
     fi
 
     #if both folders don't exist script should not be executed
-    if [[ ! -d ${rvdb_dir} && ! -d ${ncbi_dir} ]]; then 
+    if [[ ! -d "${rvdb_dir}" && ! -d "${ncbi_dir}" ]]; then 
         echo "No NCBI folder exists. Exiting process."
         exit 1
     fi
@@ -59,15 +59,19 @@ process TAX_IDS{
     fi
 
     #if the ncbi file exists and has a non-empty acc-ids.txt file
-    if [[ -d "${nc_acc} ]]; then 
+    if [[ -d "${ncbi_dir}" ]] && [[ \$(find "${ncbi_dir}" -name "*.m8" | wc -l) -gt 0 ]]; then 
         echo "Using NCBI folder for metadata file preparation"
-        for matches in ${ncbi_dir}/*.m8; do
-            cat ${matches} >> ${fin_acc}
+        for matches in "${ncbi_dir}"/*.m8; do
+            if [[ -s "\${matches}" ]];then
+                cat "\${matches}" >> "\${fin_acc}"
+            fi
         done
     fi
 
     #sort and deduplicate acc_ids.txt
-    sort -u ${fin_acc} -o ${fin_acc}
+    sort -u "\${fin_acc}" -o "\${fin_acc}"
+
+
 
     #function to get metadata from eutils
     function get_meta {
@@ -100,12 +104,12 @@ process TAX_IDS{
     } 
 
     #clear output file before each run
-    > ${output_tsv}
+    > "${output_tsv}"
 
     while IFS=$'\t' read -r col1 col2 col3 rest;do
         echo "[${col3}]"
         get_meta ${col1} ${col2} ${col3} ${rest} ${output_tsv}
-    done < ${fin_acc}
+    done < "${fin_acc}"
 
     """
 }
