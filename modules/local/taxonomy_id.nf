@@ -1,10 +1,14 @@
 process TAX_IDS{
+
+    conda 'bioconda::curl'
+
     input:
     path rvdb_dir 
     path ncbi_dir
 
     output:
-    path "acc_tax_id.tsv", emit: tsv
+    path "../output", emit: out_dir
+    path "\${out_dir}/acc_tax_id.tsv", emit: tsv
 
 
     script:
@@ -13,50 +17,51 @@ process TAX_IDS{
     #!/bin/env bash
     set -uex
 
-    rv_acc=${rvdb_dir}/rvdb_acc_ids.tsv
-    nc_acc=${ncbi_dir}/ncbi_acc_ids.tsv
-    fin_acc=accessions.tsv
+    #set file variables
+    rv_acc=\${rvdb_dir}/rvdb_acc_ids.tsv
+    nc_acc=\${ncbi_dir}/ncbi_acc_ids.tsv
+    fin_acc=\${out_dir}/accessions.tsv
+    output_tsv=\${out_dir}/acc_tax_id.tsv
 
-
+    #clear existing files
+    > \${rv_acc}
+    > \${nc_acc}
+    > \${fin_acc}
+    > \${output_tsv}
 
     #if working with RVDB, check if RVDB folder exists so if it doesnt only run ncbi part
-    if [[ -d ${rvdb_dir} ]]; then 
+    if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.m8" | wc -l) -gt 0 ]]; then 
 
-    echo "Using RVDB folder for metadata file preparation"
-
-    #clear accession id list if existing
-    > ${rv_acc}
-
-    #take nucleotide acc_id from diamond output file 
-    for matches in ${rvdb_dir}/*.m8;do
-        while read -r col1 col2 col3 col4 rest; do
-            acc_id=$(echo ${col3} | cut -d "|" -f3)
-            name=$(echo ${col4} | cut -d "|" -f6)
-            echo -e "${col1}\t${col2}\t${acc_id}\t${name}\t${rest}"
-        done < ${matches} 
-    done >> ${rv_acc}
-
-    else
-        echo "No RVDB folder exists. Searching for NCBI folder"
+        #check for empty files and skip them
+        for matches in "${rvdb_dir}"/*.m8;do
+            if [[ -f "\${matches}" ]]; then
+                
+                #take nucleotide acc_id from diamond output file 
+                while read -r col1 col2 col3 col4 rest; do
+                    acc_id=\$(echo "\${col3}" | cut -d "|" -f3)
+                    name=\$(echo "\${col4}" | cut -d "|" -f6)
+                    echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}"
+                done < "\${matches}" 
+            fi
+        done >> "\${rv_acc}"
     fi
 
-
     #if both folders don't exist script should not be executed
-    if [[ ! -d ${rvdb_dir} && ! -d ${nc_dir} ]]; then 
+    if [[ ! -d ${rvdb_dir} && ! -d ${ncbi_dir} ]]; then 
         echo "No NCBI folder exists. Exiting process."
         exit 1
     fi
 
     #merge the ncbi and rvdb acc_ids files and write out to diamond output directory
     #if the rvdb file exists and has a non-empty acc-ids.txt file
-    if [[ -s ${rv_acc} ]]; then
-        cat ${rv_acc} >> ${fin_acc}
+    if [[ -s "\${rv_acc}" ]]; then
+        cat "\${rv_acc}" >> "\${fin_acc}"
     fi
 
     #if the ncbi file exists and has a non-empty acc-ids.txt file
-    if [[ -s ${nc_acc} ]]; then 
+    if [[ -d "${nc_acc} ]]; then 
         echo "Using NCBI folder for metadata file preparation"
-        for matches in ${nc_dir}/*.m8; do
+        for matches in ${ncbi_dir}/*.m8; do
             cat ${matches} >> ${fin_acc}
         done
     fi
