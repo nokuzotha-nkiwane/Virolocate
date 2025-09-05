@@ -7,7 +7,7 @@ module diamond
 wdir="/analyses/users/nokuzothan/disc_pipe"
 cdir="${wdir}/init_tools/diamond"
 input_reads_dir="${wdir}/init_tools/megahit/output/default"
-db="${wdir}/ncbidb/fasta/nr.faa"
+db="${wdir}/init_tools/ncbi_fasta.faa"
 output="${cdir}/output/NCBI"
 tmp_db="${output}/nt.tmp"
 threads=$((`/bin/nproc` -2))
@@ -18,6 +18,28 @@ if [[ -e $output ]]; then
 fi
 mkdir -p -m a=rwx ${output}
 
+# #filter full nr database for viral sequences
+# > ${tmp_db}
+# while read -r LN;do
+#   if [[ ${LN} == ">" ]]; then
+#     echo "" >> ${tmp_db}
+#   fi
+  
+#   echo -e -n "${LN}\t" >> ${tmp_db}
+# done < ${db}
+
+
+
+
+while read -r virus; do
+    grep -i "^>.*${virus}" ${db} | \
+    awk '
+        /^>/ {title=$0; next}
+        {print title "\n" $0}
+    ' >> ncbi_fasta
+done < virus.txt
+
+
 while read -r virus; do
     awk -v name="${virus}" '
         BEGIN {IGNORECASE=1}
@@ -26,7 +48,7 @@ while read -r virus; do
     ' ${db} >> ncbi_fasta
 done < virus.txt
 
-# #downloading protein fasta sequences from genbank and making them one file 
+#downloading protein fasta sequences from genbank and making them one file 
 # # Number of sequences per batch
 # batch=50000
 
