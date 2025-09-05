@@ -5,12 +5,10 @@ process RVDB_PROCESSING{
     
 
     output:
-    tuple val(meta) , path(rvdb_dir), emit: output_dir
     tuple val(meta) , path(final_accessions), emit: fin_acc
     
 
     script:
-    //to change into nextflow logic
     """
     #if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
     if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.tsv" | wc -l) -gt 0 ]]; then
