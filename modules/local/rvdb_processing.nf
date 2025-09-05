@@ -1,23 +1,17 @@
 process RVDB_PROCESSING{
     
     input:
-    path rvdb_dir
+    tuple val(meta) , path(rvdb_dir), emit: rvdb_dir
+    
 
     output:
-    path "../output", emit: out_dir
+    tuple val(meta) , path(rvdb_dir), emit: output_dir
+    tuple val(meta) , path(final_accessions), emit: fin_acc
     
 
     script:
     //to change into nextflow logic
     """
-    #set file variables
-    rv_acc=\${rvdb_dir}/rvdb_acc_ids.tsv
-    fin_acc=\${out_dir}/accessions.tsv
-
-    #clear existing files
-    > \${rv_acc}
-    > \${fin_acc}
-
     #if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
     if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.tsv" | wc -l) -gt 0 ]]; then
 
@@ -32,16 +26,11 @@ process RVDB_PROCESSING{
                     echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}"
                 done < "\${matches}"
             fi
-        done >> "\${rv_acc}"
+        done >> "${fin_acc}"
 
     #if directory or files empty
     else
         echo "RVDB directory does not exist. Searching for NCBI directory."
-    fi
-
-    #if the rvdb file exists and has a non-empty acc-ids.txt file
-    if [[ -s "\${rv_acc}" ]]; then
-        cat "\${rv_acc}" >> "\${fin_acc}"
     fi
     
     """
