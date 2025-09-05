@@ -29,7 +29,7 @@ process TAX_IDS{
     > \${fin_acc}
     > \${output_tsv}
 
-    #if working with RVDB, check if RVDB folder exists so if it doesnt only run ncbi part
+    #if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
     if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.m8" | wc -l) -gt 0 ]]; then 
 
         #check for empty files and skip them
@@ -44,10 +44,15 @@ process TAX_IDS{
                 done < "\${matches}" 
             fi
         done >> "\${rv_acc}"
+
+    #if directory or files empty
+    else
+        echo "RVDB directory does not exist. Searching for NCBI directory."
     fi
 
+
     #if both folders don't exist script should not be executed
-    if [[ ! -d "${rvdb_dir}" && ! -d "${ncbi_dir}" ]]; then 
+    if [[ ! -d "${rvdb_dir}" && ! -d "${ncbi_dir}" ]] | [[ \$(find "${rvdb_dir}" -name "*.m8" | wc -l) -eq 0 && \$(find "${ncbi_dir}" -name "*.m8" | wc -l) -eq 0 ]]; then 
         echo "No NCBI folder exists. Exiting process."
         exit 1
     fi
@@ -62,54 +67,67 @@ process TAX_IDS{
     if [[ -d "${ncbi_dir}" ]] && [[ \$(find "${ncbi_dir}" -name "*.m8" | wc -l) -gt 0 ]]; then 
         echo "Using NCBI folder for metadata file preparation"
         for matches in "${ncbi_dir}"/*.m8; do
-            if [[ -s "\${matches}" ]];then
+                #if [[ -s "\${matches}" ]];then
                 cat "\${matches}" >> "\${fin_acc}"
+
+            else
+                echo "Files in NCBI directory empty or do not exist."
             fi
         done
+
+    else 
+        echo "NCBI directory does not exist or is empty"
+
     fi
 
     #sort and deduplicate acc_ids.txt
-    sort -u "\${fin_acc}" -o "\${fin_acc}"
+    if [[ -s "\${fin_acc}" ]];then
+        sort -u "\${fin_acc}" -o "\${fin_acc}"
+
+    else
+        echo -e "Accessions file "\${fin_acc}" not found.)"
+        exit 1
+    fi
 
 
 
     #function to get metadata from eutils
-    function get_meta {
-        contig=$1
-        length=$2
-        acc_id=$3
-        columns=$4
-        output=$5
+    get_meta() {
+    
+    local contig=\$1
+    local length=\$2
+    local acc_id=\$3
+    local columns=\$4
+    local output=\$5
+    
+    #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
+    local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=${acc_id}&rettype=gb&retmode=text"
+    local info=\$(curl -N -# \${url1})
 
+    #host source, gographical location name, collection date, gene, product, taxonomic number
+    local host=\$(echo "\${info}" | awk -F'"' '/\/host/ {print \$2}')
+    local geo_loc_name=\$(echo "\${info}" | awk -F'"' '/\/geo_loc_name/ {print \$2}')
+    local date=\$(echo "\${info}" | awk -F'"' '/\/collection_date/ {print \$2}')
+    local gene=\$(echo "\${info}" | awk -F'"' '/\/coded_by/ {print \$2}')
+    local product=\$(echo "\${info}" | awk -F'"' '/\/product/ {print \$2}')
+    local tax=$(echo "\${info}" | awk '/\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
 
-        #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
-        url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=${acc_id}&rettype=gb&retmode=text"
-        info=$(curl -N -# ${url1})
-        #host source, gographical location name, collection date, gene, product, taxonomic number
-        host=$(echo "${info}" | awk -F'"' '/\/host/ {print $2}')
-        geo_loc_name=$(echo "${info}" | awk -F'"' '/\/geo_loc_name/ {print $2}')
-        date=$(echo "${info}" | awk -F'"' '/\/collection_date/ {print $2}')
-        gene=$(echo "${info}" | awk -F'"' '/\/coded_by/ {print $2}')
-        product=$(echo "${info}" | awk -F'"' '/\/product/ {print $2}')
-        tax=$(echo "${info}" | awk '/\/db_xref/ { match($0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
+    #split the other columns after the third one
+    IFS=$'\t' read -r -a rest_array <<< ${columns}
+    rest=$(printf "%s\t" "\${rest_array[@]}" )
 
-        #split the other columns after the third one
-        IFS=$'\t' read -r -a rest_array <<< ${columns}
-        rest=$(printf "%s\t" "${rest_array[@]}" )
-
-        #print output
-        echo -e "${contig}\t${length}\t${acc_id}\t${rest}\t${host}\t${gene}\t${product}\t${geo_loc_name}\t${date}\t${tax}" >>${output}
-
+    #print output
+    echo -e "\${contig}\\t\${length}\\t\${acc_id}\\t\${rest}\\t\${host}\\t\${gene}\\t\${product}\\t\${geo_loc_name}\\t\${date}\\t\${tax}" >>\${output}
 
     } 
 
     #clear output file before each run
-    > "${output_tsv}"
+    > "\${output_tsv}"
 
     while IFS=$'\t' read -r col1 col2 col3 rest;do
-        echo "[${col3}]"
-        get_meta ${col1} ${col2} ${col3} ${rest} ${output_tsv}
-    done < "${fin_acc}"
+        echo "[\${col3}]"
+        get_meta \${col1} \${col2} \${col3} \${rest} \${output_tsv}
+    done < "\${fin_acc}"
 
     """
 }
