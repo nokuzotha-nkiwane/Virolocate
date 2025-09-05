@@ -4,20 +4,23 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-//import modules
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
+// import nf-core modules
+include { BLAST_BLASTN } from '../modules/nf-core/blast/blastn/main.nf'
+include { DIAMOND_BLASTX } from '../modules/nf-core/diamond/blastx/main.nf'
+include { FASTQC as FASTQC_POST  } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_PRE   } from '../modules/nf-core/fastqc/main'
+include { MEGAHIT } from '../modules/nf-core/megahit/main.nf'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
+include { MULTIQC } from '../modules/nf-core/multiqc/main.nf'
+include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
+include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
+include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_virolocate-nf_pipeline'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
-include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_virolocate-nf_pipeline'
-include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
-include { MEGAHIT } from '../modules/nf-core/megahit/main.nf'
-include { DIAMOND_BLASTX } from '../modules/nf-core/diamond/blastx/main.nf'
-include { MULTIQC } from '../modules/nf-core/multiqc/main.nf'
-include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
-include { BLAST_BLASTN } from '../modules/nf-core/blast/blastn/main.nf'
 
+// import local modules
+include { TAXONOMY_ID } from '../modules/local/taxonomy_id.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -25,7 +28,7 @@ include { BLAST_BLASTN } from '../modules/nf-core/blast/blastn/main.nf'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow VIROLOCATE-NF {
+workflow VIROLOCATE_NF {
 
     take:
     ch_samplesheet // channel: samplesheet read in from --input
@@ -36,40 +39,44 @@ workflow VIROLOCATE-NF {
     //
     // MODULE: Run FastQC
     //
-    FASTQC (
+    FASTQC_PRE (
         ch_samplesheet
     )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PRE.out.zip.collect{it[1]})
+    ch_versions = ch_versions.mix(FASTQC_PRE.out.versions.first())
 
     //---------------------------------------
-    
-    workflow {
-        //FastQC run to check quality of raw pretrimmed reads
-        FASTQC()
-        //Trimmomatic run to trim reads
-        input_reads_ch=channel.fromFilePairs()
-        TRIMMOMATIC(input_reads_ch)
-        //FastQC to check quality of trimmed reads
-        FASTQC(TRIMMOMATIC.out.trimmed_reads)
-        //MultiQC to combine FastQC outputs (raw pretrimmed reads and trimmed reads)
-        MULTIQC(FASTQC.out.html)
-        //Megahit to assemble reads into contigs
-        MEGAHIT(TRIMMOMATIC.out.trimmed_reads)
-        //Diamond to compare read proteins against known protiens in databases
-        DIAMOND_BLASTX(MEGAHIT.out.kfinal_contigs)
 
-        //get accession ids and taxonomy ids for taxonkit to use
-        (DIAMOND_BLASTX.out.tsv)
+    //Trimmomatic run to trim reads
+    //TODO: @nox Add a parameter to allow users to pass the folder location
+    input_reads_ch=channel.fromFilePairs()
+    TRIMMOMATIC(input_reads_ch)
+
+    //FastQC to check quality of trimmed reads
+    FASTQC_POST(TRIMMOMATIC.out.trimmed_reads)
+
+    //Megahit to assemble reads into contigs
+    //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
+    //such that it aligns with the expectation of MEGAHIT
+    MEGAHIT()
+
+    //Diamond to compare read proteins against known protiens in databases
+    // NOTE: In the bash script, we have the output extension as `m8` which is
+    // just a TSV, therefore we shall use TSV directly to call the nf-core module.
+    //TODO: @nox we need to add more parameters to this process-call
+    DIAMOND_BLASTX(MEGAHIT.out.kfinal_contigs, params.diamond_db)
+
+    //get accession ids and taxonomy ids for taxonkit to use
+    TAX_IDS(DIAMOND_BLASTX.out.tsv)
 
 
-        //Taxonkit for lineage filtering and getting taxonomy ids
-        TAXONKIT_LINEAGE(TAX_IDS.out.tsv)
-        //Blastn for comparing contig sequences to knwon nucleotide sequences
-        BLAST_BLASTN(TAXONKIT_LINEAGE.out.tsv)
-        //Blastx to compare proteins to check for distant orthologs
-        DIAMOND_BLASTX(BLAST_BLASTN.out.txt)
-    }
+    //Taxonkit for lineage filtering and getting taxonomy ids
+    TAXONKIT_LINEAGE(TAX_IDS.out.tsv)
+    //Blastn for comparing contig sequences to knwon nucleotide sequences
+    BLAST_BLASTN(TAXONKIT_LINEAGE.out.tsv)
+    //Blastx to compare proteins to check for distant orthologs
+    DIAMOND_BLASTX(BLAST_BLASTN.out.txt)
+
 
     //---------------------------------------
     //
