@@ -39,8 +39,6 @@ while read -r virus; do
     ' >> ncbi_fasta
 done < virus.txt
 
-wdir="/analyses/users/nokuzothan/disc_pipe"
-db="${wdir}/ncbidb/fasta/nr.faa"
 
 while read -r virus; do
     awk -v name="${virus}" '
@@ -51,23 +49,20 @@ while read -r virus; do
 done < virus.txt
 
 #downloading protein fasta sequences from genbank and making them one file 
+# # Number of sequences per batch
+# batch=50000
 
-wdir="/analyses/users/nokuzothan/disc_pipe"
-db="${wdir}/init_tools/ncbi_fasta.faa"
-# Number of sequences per batch
-batch=50000
+# # Step 1: Get total number of viral protein sequences
+# total=$(curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=protein&term=txid10239[Organism]&rettype=count&retmode=text")
+# echo "Total viral protein sequences: $total"
 
-# Step 1: Get total number of viral protein sequences
-total=$(curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=protein&term=txid10239[Organism]&rettype=count&retmode=text")
-echo "Total viral protein sequences: $total"
+# # Step 2: Fetch in batches
+# for start in $(seq 0 $batch $total); do
+#     echo "Fetching sequences $start to $((start+batch-1))..."
+#     curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&term=txid10239[Organism]&retstart=${start}&retmax=${batch}&rettype=fasta&retmode=text" >> ${db}
+# done
 
-# Step 2: Fetch in batches
-for start in $(seq 0 $batch $total); do
-    echo "Fetching sequences $start to $((start+batch-1))..."
-    curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&term=txid10239[Organism]&retstart=${start}&retmax=${batch}&rettype=fasta&retmode=text" >> ${db}
-done
-
-echo "Download complete. Sequences saved in ${db}"
+# echo "Download complete. Sequences saved in ${db}"
 
 
 #make diamond protein database
