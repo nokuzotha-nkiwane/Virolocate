@@ -48,22 +48,6 @@ while read -r virus; do
     ' ${db} >> ncbi_fasta
 done < virus.txt
 
-#downloading protein fasta sequences from genbank and making them one file 
-# # Number of sequences per batch
-# batch=50000
-
-# # Step 1: Get total number of viral protein sequences
-# total=$(curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=protein&term=txid10239[Organism]&rettype=count&retmode=text")
-# echo "Total viral protein sequences: $total"
-
-# # Step 2: Fetch in batches
-# for start in $(seq 0 $batch $total); do
-#     echo "Fetching sequences $start to $((start+batch-1))..."
-#     curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&term=txid10239[Organism]&retstart=${start}&retmax=${batch}&rettype=fasta&retmode=text" >> ${db}
-# done
-
-# echo "Download complete. Sequences saved in ${db}"
-
 
 #make diamond protein database
 diamond makedb --in ${db} -d ${output}/nr
