@@ -7,9 +7,8 @@ module diamond
 wdir="/analyses/users/nokuzothan/disc_pipe"
 cdir="${wdir}/init_tools/diamond"
 input_reads_dir="${wdir}/init_tools/megahit/output/default"
-db="${wdir}/init_tools/ncbi_fasta.faa"
 output="${cdir}/output/NCBI"
-tmp_db="${output}/nt.tmp"
+db_fasta="${cdir}/input/ncbi_fasta.faa"
 threads=$((`/bin/nproc` -2))
 
 #clear existing output directory if any, make new output directory 
@@ -18,18 +17,9 @@ if [[ -e $output ]]; then
 fi
 mkdir -p -m a=rwx ${output}
 
-#filter nr database for viral sequences 
-while read -r virus; do
-    awk -v name="${virus}" '
-        BEGIN {IGNORECASE=1}
-        /^>/ {ON = index($0, name) > 0}
-        ON {print}
-    ' ${db} >> ncbi_fasta
-done < virus.txt
-
 
 #make diamond protein database
-diamond makedb --in ${db} -d ${output}/nr
+diamond makedb --in ${db_fasta} -d ${output}/nr
 
 #loop through each of the files created in megahit output directory to find final.congtigs.fa files and run diamond
 for folder in ls ${input_reads_dir}/*; do
