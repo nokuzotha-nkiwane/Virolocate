@@ -7,7 +7,7 @@ module diamond
 wdir="/analyses/users/nokuzothan/disc_pipe"
 cdir="${wdir}/init_tools/diamond"
 input_reads_dir="${wdir}/init_tools/megahit/output/default"
-db="${wdir}/init_tools/ncbi_fasta.faa"
+db="${wdir}/ncbidb/fasta/nr.faa"
 output="${cdir}/output/NCBI"
 tmp_db="${output}/nt.tmp"
 threads=$((`/bin/nproc` -2))
@@ -17,15 +17,6 @@ if [[ -e $output ]]; then
   rm -rf ${output} 
 fi
 mkdir -p -m a=rwx ${output}
-
-#filter nr database for viral sequences 
-while read -r virus; do
-    awk -v name="${virus}" '
-        BEGIN {IGNORECASE=1}
-        /^>/ {ON = index($0, name) > 0}
-        ON {print}
-    ' ${db} >> ncbi_fasta
-done < virus.txt
 
 
 #make diamond protein database
