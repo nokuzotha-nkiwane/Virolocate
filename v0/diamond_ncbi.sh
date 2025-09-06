@@ -31,14 +31,6 @@ mkdir -p -m a=rwx ${output}
 
 
 
-while read -r virus; do
-    grep -i "^>.*${virus}" ${db} | \
-    awk '
-        /^>/ {title=$0; next}
-        {print title "\n" $0}
-    ' >> ncbi_fasta
-done < virus.txt
-
 
 while read -r virus; do
     awk -v name="${virus}" '
