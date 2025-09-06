@@ -18,20 +18,7 @@ if [[ -e $output ]]; then
 fi
 mkdir -p -m a=rwx ${output}
 
-# #filter full nr database for viral sequences
-# > ${tmp_db}
-# while read -r LN;do
-#   if [[ ${LN} == ">" ]]; then
-#     echo "" >> ${tmp_db}
-#   fi
-  
-#   echo -e -n "${LN}\t" >> ${tmp_db}
-# done < ${db}
-
-
-
-
-
+#filter nr database for viral sequences 
 while read -r virus; do
     awk -v name="${virus}" '
         BEGIN {IGNORECASE=1}
