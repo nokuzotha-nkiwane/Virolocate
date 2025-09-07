@@ -20,12 +20,16 @@ process TAXONOMY_ID {
     #combine rvdb_final_accessions.tsv and ncbi_final_accessions.tsv
     if [[ -s "\${rvdb_acc}" && -s "\${ncbi_acc}" ]];then
         cat "\${rvdb_acc}" "\${ncbi_acc}" > "\${fin_acc}"
-    
+
+    #if only rvdb accessions file exists
     elif [[ -s "\${rvdb_acc}" ]]; then
         cp "\${rvdb_acc}" "\${fin_acc}"
 
+    #if only ncbi accessions file exists
     elif [[ -s "\${ncbi_acc}" ]]; then
         cp "\${ncbi_acc}" "\${fin_acc}"
+    
+    #if neither accessions files exists
     else
         echo -e "Accessions file "\${fin_acc}" not found."
         exit 1
@@ -43,6 +47,8 @@ process TAXONOMY_ID {
     local columns=\$4
     local output=\$5
 
+    #progress check
+    echo "Fetching metadata for "\${acc_id}"
     #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
     local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${acc_id}&rettype=gb&retmode=text"
     local info=\$(curl -N -# \${url1})
