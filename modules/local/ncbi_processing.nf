@@ -1,8 +1,7 @@
 process NCBI_PROCESSING{
 
     input:
-    tuple val(meta) , path(ncbi_dir)
-     
+    path ncbi_dir
 
     output:
     path "ncbi_final_accessions.tsv", emit: ncbi_fin_acc

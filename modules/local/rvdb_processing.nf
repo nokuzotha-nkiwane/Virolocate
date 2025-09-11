@@ -1,8 +1,7 @@
 process RVDB_PROCESSING{
     
     input:
-    tuple val(meta) , path(rvdb_dir)
-    
+    path rvdb_dir
 
     output:
     path "rvdb_final_accessions.tsv", emit: rvdb_fin_acc
@@ -10,7 +9,7 @@ process RVDB_PROCESSING{
 
     script:
     """
-    rvdb_fin_acc="final_accessions.tsv"
+    rvdb_fin_acc="rvdb_final_accessions.tsv"
     #if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
     if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.tsv" | wc -l) -gt 0 ]]; then
     echo "Using RVDB directory to make final file for all Diamond Blastx outputs"
