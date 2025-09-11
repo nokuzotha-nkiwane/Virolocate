@@ -74,11 +74,36 @@ function get_meta {
     tax=$(echo "${info}" | awk '/\/db_xref/ { match($0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
 
     #split the other columns after the third one
-    IFS=$'\t' read -r -a rest_array <<< ${columns}
+    IFS=$'\t' read -r -a rest_array <<< "${columns}"
     rest=$(printf "%s\t" "${rest_array[@]}" )
 
+    #put NA if any of the fields are empty
+    if [[ -z "${host}" ]]; then
+        host="NA"
+    fi
+
+    if [[ -z "${geo_loc_name}" ]]; then
+        geo_loc_name="NA"
+    fi
+
+    if [[ -z "${date}" ]]; then
+        date="NA"
+    fi
+
+    if [[ -z "${gene}" ]]; then
+        gene="NA"
+    fi
+
+    if [[ -z "${product}" ]]; then
+        product="NA"
+    fi
+
+    if [[ -z "${tax}" ]]; then
+        tax="NA"
+    fi
+
     #print output
-    echo -e "${contig}\t${length}\t${acc_id}\t${rest}\t${host}\t${gene}\t${product}\t${geo_loc_name}\t${date}\t${tax}" >>${output}
+    echo -e "${contig}\t${length}\t${acc_id}\t${rest}\t${host}\t${gene}\t${product}\t${geo_loc_name}\t${date}\t${tax}" >>"${output}"
 
 
 } 
@@ -88,6 +113,6 @@ function get_meta {
 
 while IFS=$'\t' read -r col1 col2 col3 rest;do
     echo "[${col3}]"
-    get_meta ${col1} ${col2} ${col3} ${rest} ${output_tsv}
+    get_meta "${col1}" "${col2}" "${col3}" "${rest}" "${output_tsv}"
 done < ${out}/acc_ids.txt
 
