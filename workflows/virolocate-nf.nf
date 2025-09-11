@@ -6,14 +6,14 @@
 
 // import nf-core modules
 include { BLAST_BLASTN } from '../modules/nf-core/blast/blastn/main.nf'
-include { DIAMOND_BLASTX } from '../modules/nf-core/diamond/blastx/main.nf'
-include { FASTQC as FASTQC_POST  } from '../modules/nf-core/fastqc/main'
-include { FASTQC as FASTQC_PRE   } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_INIT  } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_FINAL   } from '../modules/nf-core/fastqc/main'
 include { MEGAHIT } from '../modules/nf-core/megahit/main.nf'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { MULTIQC } from '../modules/nf-core/multiqc/main.nf'
 include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
 include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
+include { DIAMOND_BLASTX as DIAMOND_BLASTX_INIT } from '../modules/nf-core/diamond/blastx/main.nf'
+include { DIAMOND_BLASTX as DIAMOND_BLASTX_FINAL } from '../modules/nf-core/diamond/blastx/main.nf'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_virolocate-nf_pipeline'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -46,26 +46,34 @@ workflow VIROLOCATE_NF {
     //
     // MODULE: Run FastQC
     //
-    FASTQC_PRE (
+    FASTQC_INIT (
         ch_samplesheet
     )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PRE.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC_PRE.out.versions.first())
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_INIT.out.zip.collect{it[1]})
+    ch_versions = ch_versions.mix(FASTQC_INIT.out.versions.first())
 
     //---------------------------------------
 
-
     //Trimmomatic run to trim reads
     //TODO: @nox Add a parameter to allow users to pass the folder location
-    ch_input_reads=channel.fromFilePairs()
-    TRIMMOMATIC(input_reads_ch)
+    ch_reads = ch_samplesheet.map { meta, fastq ->
+        // Assuming fastq is a list of files [R1, R2] for paired-end
+        [meta, fastq]
+    }
+    
+    TRIMMOMATIC(
+        ch_reads,
+        params.trimmomatic_adapters ?: []
+    )
+    ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
+
 
     //FastQC to check quality of trimmed reads
-    FASTQC_POST(
+    FASTQC_FINAL(
         TRIMMOMATIC.out.trimmed_reads
     )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_POST.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC_POST.out.versions.first())
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_FINAL.out.zip.collect{it[1]})
+    ch_versions = ch_versions.mix(FASTQC_FINAL.out.versions.first())
 
     //Megahit to assemble reads into contigs
     //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
@@ -86,25 +94,28 @@ workflow VIROLOCATE_NF {
     ch_diamond_db = params.diamond_db ? 
         Channel.fromPath(params.diamond_db, checkIfExists: true).map { db -> [[id: 'diamond_db'], db] } :
         Channel.empty()
-    
-    DIAMOND_BLASTX((
+
+    ch_diamond_input = MEGAHIT.out.contigs.combine(ch_diamond_db.map { meta, db -> db })
+
+
+    DIAMOND_BLASTX_INIT(
         ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
         ch_diamond_db.map { meta, db -> db },
         params.diamond_output_format ?: 'tsv',
-        []  // No additional columns
+        []  
     )
     
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX_CONTIGS.out.versions.first())
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX_INIT.out.versions.first())
 
 
     //get accession ids and taxonomy ids for taxonkit to use
-    NCBI_PROCESSINGNCBI_PROCESSING(
-        DIAMOND_BLASTX_CONTIGS.out.tsv
+    NCBI_PROCESSING(
+        DIAMOND_BLASTX_INIT.out.tsv
     )
     ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
     RVDB_PROCESSING(
-        DIAMOND_BLASTX_CONTIGS.out.tsv
+        DIAMOND_BLASTX_INIT.out.tsv
     )
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
