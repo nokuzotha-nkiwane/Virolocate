@@ -20,7 +20,10 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // import local modules
-include { TAXONOMY_ID } from '../modules/local/taxonomy_id.nf'
+include { NCBI_PROCESSING } from '../modules/local/ncbi_processing.nf'
+include { RVDB_PROCESSING } from '../modules/local/rvdb_processing.nf'
+include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,10 +33,14 @@ include { TAXONOMY_ID } from '../modules/local/taxonomy_id.nf'
 
 workflow VIROLOCATE_NF {
 
+    //take input data
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
+        ch_samplesheet
+    
+    //main starts main workflow logic
+    //ch_versions will collect software version info form each tool
+    //ch_multiqc_files will collect quality control reports for final aggregation
     main:
-
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
     //
@@ -47,35 +54,99 @@ workflow VIROLOCATE_NF {
 
     //---------------------------------------
 
+
     //Trimmomatic run to trim reads
     //TODO: @nox Add a parameter to allow users to pass the folder location
-    input_reads_ch=channel.fromFilePairs()
+    ch_input_reads=channel.fromFilePairs()
     TRIMMOMATIC(input_reads_ch)
 
     //FastQC to check quality of trimmed reads
-    FASTQC_POST(TRIMMOMATIC.out.trimmed_reads)
+    FASTQC_POST(
+        TRIMMOMATIC.out.trimmed_reads
+    )
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_POST.out.zip.collect{it[1]})
+    ch_versions = ch_versions.mix(FASTQC_POST.out.versions.first())
 
     //Megahit to assemble reads into contigs
     //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
     //such that it aligns with the expectation of MEGAHIT
-    MEGAHIT()
+    ch_megahit_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads ->
+    [meta, reads, []]
+    }
+
+    MEGAHIT(
+        ch_megahit_input
+    )
+    ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
     //Diamond to compare read proteins against known protiens in databases
     // NOTE: In the bash script, we have the output extension as `m8` which is
     // just a TSV, therefore we shall use TSV directly to call the nf-core module.
     //TODO: @nox we need to add more parameters to this process-call
-    DIAMOND_BLASTX(MEGAHIT.out.kfinal_contigs, params.diamond_db)
+    ch_diamond_db = params.diamond_db ? 
+        Channel.fromPath(params.diamond_db, checkIfExists: true).map { db -> [[id: 'diamond_db'], db] } :
+        Channel.empty()
+    
+    DIAMOND_BLASTX((
+        ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
+        ch_diamond_db.map { meta, db -> db },
+        params.diamond_output_format ?: 'tsv',
+        []  // No additional columns
+    )
+    
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX_CONTIGS.out.versions.first())
+
 
     //get accession ids and taxonomy ids for taxonkit to use
-    TAX_IDS(DIAMOND_BLASTX.out.tsv)
+    NCBI_PROCESSINGNCBI_PROCESSING(
+        DIAMOND_BLASTX_CONTIGS.out.tsv
+    )
+    ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
+    RVDB_PROCESSING(
+        DIAMOND_BLASTX_CONTIGS.out.tsv
+    )
+    ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
+
+
+    //get accession ids and taxonomy ids for taxonkit to use
+    TAXONOMY_ID(
+    RVDB_PROCESSING.out.rvdb_fin_acc,
+    NCBI_PROCESSING.out.ncbi_fin_acc
+    )
+
+    ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
-    TAXONKIT_LINEAGE(TAX_IDS.out.tsv)
+    ch_taxonkit_db = params.taxonkit_db ?
+        Channel.fromPath(params.taxonkit_db, checkIfExists: true) :
+        Channel.empty()
+
+    TAXONKIT_LINEAGE(
+        TAXONOMY_ID.out.tsv,
+        ch_taxonkit_db.ifEmpty([])
+    )
+    ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
+
     //Blastn for comparing contig sequences to knwon nucleotide sequences
-    BLAST_BLASTN(TAXONKIT_LINEAGE.out.tsv)
+    ch_blast_db = params.blast_db ?
+        Channel.fromPath("${params.blast_db}*", checkIfExists: true).collect().map { files -> [[id: 'blast_db'], files] } :
+        Channel.empty()
+
+    BLAST_BLASTN(
+        TAXONKIT_LINEAGE.out.tsv,
+        ch_blast_db.map { meta, db -> db }
+    )
+    ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
+
     //Blastx to compare proteins to check for distant orthologs
-    DIAMOND_BLASTX(BLAST_BLASTN.out.txt)
+    DIAMOND_BLASTX_FINAL(
+        BLAST_BLASTN.out.txt,
+        ch_diamond_db.map { meta, db -> db },
+        params.diamond_output_format ?: 'tsv',
+        []
+    )
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
 
     //---------------------------------------
