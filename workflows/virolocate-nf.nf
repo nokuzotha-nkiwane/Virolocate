@@ -42,6 +42,7 @@ params.ncbi_nr_fasta = null
 params.ncbi_nt_fasta = null
 params.taxonkit_db = null
 params.blast_db = null
+params.outdir=null
 params.diamond_output_format = 'tsv'
 
 
@@ -82,18 +83,22 @@ workflow VIROLOCATE_NF {
 
     //FastQC to check quality of trimmed reads
     FASTQC_FINAL(
-        TRIMMOMATIC.out.trimmed_reads
+        TRIMMOMATIC.out.unpaired_reads ?: TRIMMOMATIC.out.trimmed_reads
     )
 
     //Megahit to assemble reads into contigs
     //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
     //such that it aligns with the expectation of MEGAHIT
-    ch_megahit_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads ->
+    ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads ->
+    [meta, reads, []]
+    }
+
+    ch_megahit_unpaired_input = TRIMMOMATIC.out.unpaired_reads.map { meta, reads ->
     [meta, reads, []]
     }
 
     MEGAHIT(
-        ch_megahit_input
+        ch_megahit_unpaired_input ?: ch_megahit_unpaired_input
     )
     ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
