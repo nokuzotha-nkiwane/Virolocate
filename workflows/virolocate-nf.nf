@@ -34,10 +34,14 @@ include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-//parametes
+//parameters
 params.trimmomatic_adapters = 
 params.rvdb_fasta =
 params.ncbi_fasta =
+params.ncbi_nr_fasta =
+params.ncbi_nt_fasta =
+params.taxonkit_db =
+params.blast_db =
 
 workflow VIROLOCATE_NF {
 
@@ -64,8 +68,8 @@ workflow VIROLOCATE_NF {
 
     //Trimmomatic run to trim reads
     //TODO: @nox Add a parameter to allow users to pass the folder location
+    // Assuming fastq is a list of files [R1, R2] for paired-end
     ch_reads = ch_samplesheet.map { meta, fastq ->
-        // Assuming fastq is a list of files [R1, R2] for paired-end
         [meta, fastq]
     }
     
@@ -111,15 +115,14 @@ workflow VIROLOCATE_NF {
     //TODO: @nox we need to add more parameters to this process-call
     //could this check return true if db exits from other runs
     
-    DIAMOND_MAKE_RVDB.out.db
-    DIAMOND_MAKE_NCBI_DB.out.db
+    ch_diamond_rvdb_db = DIAMOND_MAKE_RVDB.out.db
+    ch_diamond_ncbi_db = DIAMOND_MAKE_NCBI_DB.out.db
 
     ch_diamond_input = (MEGAHIT.out.contigs.)
 
     DIAMOND_BLASTX_INIT_RVDB(
         ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
-        ch_diamond_db.map { meta, db -> db },
-        params.diamond_output_format ?: 'tsv',
+        ch_diamond_rvdb_db.map { meta, db -> db },
         []  
     )
     
@@ -127,8 +130,7 @@ workflow VIROLOCATE_NF {
 
      DIAMOND_BLASTX_INIT_NCBI(
         ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
-        ch_diamond_db.map { meta, db -> db },
-        params.diamond_output_format ?: 'tsv',
+        ch_diamond_ncbi_db.map { meta, db -> db },
         []  
     )
     
@@ -148,14 +150,14 @@ workflow VIROLOCATE_NF {
 
     //get accession ids and taxonomy ids for taxonkit to use
     TAXONOMY_ID(
-    RVDB_PROCESSING.out.rvdb_fin_acc,
+    RVDB_PROCESSING.out.rvdb_fin_acc
     NCBI_PROCESSING.out.ncbi_fin_acc
     )
 
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
-    ch_taxonkit_db = params.taxonkit_db ?
+    ch_taxonkit_db = params.taxonkit_db 
         Channel.fromPath(params.taxonkit_db, checkIfExists: true) :
         Channel.empty()
 
