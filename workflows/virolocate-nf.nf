@@ -35,13 +35,15 @@ include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
 */
 
 //parameters
-params.trimmomatic_adapters = 
-params.rvdb_fasta =
-params.ncbi_fasta =
-params.ncbi_nr_fasta =
-params.ncbi_nt_fasta =
-params.taxonkit_db =
-params.blast_db =
+params.trimmomatic_adapters = null
+params.rvdb_fasta = null
+params.ncbi_fasta = null
+params.ncbi_nr_fasta = null
+params.ncbi_nt_fasta = null
+params.taxonkit_db = null
+params.blast_db = null
+params.diamond_output_format = 'tsv'
+
 
 workflow VIROLOCATE_NF {
 
@@ -117,13 +119,13 @@ workflow VIROLOCATE_NF {
     
     ch_diamond_rvdb_db = DIAMOND_MAKE_RVDB.out.db
     ch_diamond_ncbi_db = DIAMOND_MAKE_NCBI_DB.out.db
-
-    ch_diamond_input = (MEGAHIT.out.contigs.)
+    ch_diamond_input = (MEGAHIT.out.contigs)
 
     DIAMOND_BLASTX_INIT_RVDB(
         ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
         ch_diamond_rvdb_db.map { meta, db -> db },
-        []  
+        params.diamond_output_format
+        []
     )
     
     ch_versions = ch_versions.mix(DIAMOND_BLASTX_INIT_RVDB.out.versions.first())
@@ -131,6 +133,7 @@ workflow VIROLOCATE_NF {
      DIAMOND_BLASTX_INIT_NCBI(
         ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
         ch_diamond_ncbi_db.map { meta, db -> db },
+        params.diamond_output_format
         []  
     )
     
@@ -150,14 +153,14 @@ workflow VIROLOCATE_NF {
 
     //get accession ids and taxonomy ids for taxonkit to use
     TAXONOMY_ID(
-    RVDB_PROCESSING.out.rvdb_fin_acc
+    RVDB_PROCESSING.out.rvdb_fin_acc,
     NCBI_PROCESSING.out.ncbi_fin_acc
     )
 
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
-    ch_taxonkit_db = params.taxonkit_db 
+    ch_taxonkit_db = params.taxonkit_db ?
         Channel.fromPath(params.taxonkit_db, checkIfExists: true) :
         Channel.empty()
 
