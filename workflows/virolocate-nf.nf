@@ -12,7 +12,10 @@ include { MEGAHIT } from '../modules/nf-core/megahit/main.nf'
 include { MULTIQC } from '../modules/nf-core/multiqc/main.nf'
 include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
 include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
-include { DIAMOND_BLASTX as DIAMOND_BLASTX_INIT } from '../modules/nf-core/diamond/blastx/main.nf'
+include { DIAMOND_MAKEDB as DIAMOND_MAKE_RVDB } from '../modules/nf-core/diamond/makedb/main' 
+include { DIAMOND_MAKEDB as DIAMOND_MAKE_NCBI_DB} from '../modules/nf-core/diamond/makedb/main' 
+include { DIAMOND_BLASTX as DIAMOND_BLASTX_INIT_RVDB} from '../modules/nf-core/diamond/blastx/main.nf'
+include { DIAMOND_BLASTX as DIAMOND_BLASTX_INIT_NCBI} from '../modules/nf-core/diamond/blastx/main.nf'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_FINAL } from '../modules/nf-core/diamond/blastx/main.nf'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_virolocate-nf_pipeline'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -30,6 +33,11 @@ include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+
+//parametes
+params.trimmomatic_adapters = 
+params.rvdb_fasta =
+params.ncbi_fasta =
 
 workflow VIROLOCATE_NF {
 
@@ -62,18 +70,14 @@ workflow VIROLOCATE_NF {
     }
     
     TRIMMOMATIC(
-        ch_reads,
-        params.trimmomatic_adapters ?: []
+        ch_reads, params.trimmomatic_adapters ?: []
     )
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
-
 
     //FastQC to check quality of trimmed reads
     FASTQC_FINAL(
         TRIMMOMATIC.out.trimmed_reads
     )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_FINAL.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC_FINAL.out.versions.first())
 
     //Megahit to assemble reads into contigs
     //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
@@ -87,35 +91,57 @@ workflow VIROLOCATE_NF {
     )
     ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
+    //Diamond make_db to create a diamond formatted rvdb and ncbi databases
+    DIAMOND_MAKE_RVDB(
+        params.rvdb_fasta  
+    )
+    //ch_rvdb_dmnd=DIAMOND_MAKE_RVDB_DB(params.rvdb_fasta)
+    ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
+
+    DIAMOND_MAKE_NCBI_DB(
+        params.ncbi_fasta 
+    )
+    //ch_ncbi_dmnd=DIAMOND_MAKE_NCBI_DB(params.ncbi_fasta)
+    ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
+
+
     //Diamond to compare read proteins against known protiens in databases
     // NOTE: In the bash script, we have the output extension as `m8` which is
     // just a TSV, therefore we shall use TSV directly to call the nf-core module.
     //TODO: @nox we need to add more parameters to this process-call
-    ch_diamond_db = params.diamond_db ? 
-        Channel.fromPath(params.diamond_db, checkIfExists: true).map { db -> [[id: 'diamond_db'], db] } :
-        Channel.empty()
+    //could this check return true if db exits from other runs
+    
+    DIAMOND_MAKE_RVDB.out.db
+    DIAMOND_MAKE_NCBI_DB.out.db
 
-    ch_diamond_input = MEGAHIT.out.contigs.combine(ch_diamond_db.map { meta, db -> db })
+    ch_diamond_input = (MEGAHIT.out.contigs.)
 
-
-    DIAMOND_BLASTX_INIT(
+    DIAMOND_BLASTX_INIT_RVDB(
         ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
         ch_diamond_db.map { meta, db -> db },
         params.diamond_output_format ?: 'tsv',
         []  
     )
     
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX_INIT.out.versions.first())
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX_INIT_RVDB.out.versions.first())
 
+     DIAMOND_BLASTX_INIT_NCBI(
+        ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
+        ch_diamond_db.map { meta, db -> db },
+        params.diamond_output_format ?: 'tsv',
+        []  
+    )
+    
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX_INIT_NCBI.out.versions.first())
 
     //get accession ids and taxonomy ids for taxonkit to use
     NCBI_PROCESSING(
-        DIAMOND_BLASTX_INIT.out.tsv
+        DIAMOND_BLASTX_INIT_RVDB.out.tsv
     )
     ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
     RVDB_PROCESSING(
-        DIAMOND_BLASTX_INIT.out.tsv
+        DIAMOND_BLASTX_INIT_NCBI.out.tsv
     )
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
