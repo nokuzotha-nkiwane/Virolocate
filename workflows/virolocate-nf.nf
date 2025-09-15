@@ -14,6 +14,7 @@ include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
 include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
 include { DIAMOND_MAKEDB as DIAMOND_MAKE_RVDB } from '../modules/nf-core/diamond/makedb/main' 
 include { DIAMOND_MAKEDB as DIAMOND_MAKE_NCBI_DB} from '../modules/nf-core/diamond/makedb/main' 
+include { DIAMOND_MAKEDB as DIAMOND_MAKE_NR_DB} from '../modules/nf-core/diamond/makedb/main' 
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_PRE_RVDB} from '../modules/nf-core/diamond/blastx/main.nf'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_PRE_NCBI} from '../modules/nf-core/diamond/blastx/main.nf'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_FINAL } from '../modules/nf-core/diamond/blastx/main.nf'
@@ -49,9 +50,7 @@ workflow VIROLOCATE_NF {
     //
     // MODULE: Run FastQC
     //
-    FASTQC_PRE (
-        ch_samplesheet
-    )
+    FASTQC_PRE (ch_samplesheet)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PRE.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC_PRE.out.versions.first())
 
@@ -64,16 +63,11 @@ workflow VIROLOCATE_NF {
         [meta, fastq]
     }
     
-    TRIMMOMATIC(
-        ch_reads, params.trimmomatic_adapters,
-        []
-    )
+    TRIMMOMATIC(ch_reads, params.trimmomatic_adapters,[])
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
 
     //FastQC to check quality of trimmed reads
-    FASTQC_POST(
-        TRIMMOMATIC.out.unpaired_reads ?: TRIMMOMATIC.out.trimmed_reads
-    )
+    FASTQC_POST(TRIMMOMATIC.out.trimmed_reads)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_POST.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC_POST.out.versions.first())
 
@@ -84,25 +78,14 @@ workflow VIROLOCATE_NF {
     [meta, reads]
     }
 
-    MEGAHIT(
-        ch_megahit_paired_input,
-        []
-    )
+    MEGAHIT(ch_megahit_paired_input, [])
     ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
-    //Diamond make_db to create a diamond formatted rvdb and ncbi databases
-    DIAMOND_MAKE_RVDB(
-        params.rvdb_fasta,
-        [] 
-    )
-    //ch_rvdb_dmnd=DIAMOND_MAKE_RVDB_DB(params.rvdb_fasta)
+    //Diamond make_db to create diamond formatted rvdb and ncbi databases
+    DIAMOND_MAKE_RVDB(params.rvdb_fasta, [])
     ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
-    DIAMOND_MAKE_NCBI_DB(
-        params.ncbi_fasta,
-        [] 
-    )
-    //ch_ncbi_dmnd=DIAMOND_MAKE_NCBI_DB(params.ncbi_fasta)
+    DIAMOND_MAKE_NCBI_DB(params.ncbi_fasta, [])
     ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
 
@@ -135,57 +118,36 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
 
     //get accession ids and taxonomy ids for taxonkit to use
-    NCBI_PROCESSING(
-        DIAMOND_BLASTX_PRE_RVDB.out.tsv
-    )
+    NCBI_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
     ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
-    RVDB_PROCESSING(
-        DIAMOND_BLASTX_PRE_NCBI.out.tsv
-    )
+    RVDB_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
 
     //get accession ids and taxonomy ids for taxonkit to use
-    TAXONOMY_ID(
-    RVDB_PROCESSING.out.rvdb_fin_acc,
-    NCBI_PROCESSING.out.ncbi_fin_acc
-    )
-
+    TAXONOMY_ID(RVDB_PROCESSING.out.rvdb_fin_acc, NCBI_PROCESSING.out.ncbi_fin_acc)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
-    ch_taxonkit_db = (params.taxonkit_db).ifEmpty([])
-        Channel.fromPath(params.taxonkit_db, checkIfExists: true) :
-        Channel.empty()
-
-    TAXONKIT_LINEAGE(
-        TAXONOMY_ID.out.tsv,
-        ch_taxonkit_db,
-        []
-    )
+    TAXONKIT_LINEAGE(TAXONOMY_ID.out.tsv, params.taxonkit_db, [])
     ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
     //Blastn for comparing contig sequences to knwon nucleotide sequences
-    ch_blastn_db = (params.blastn_db).map { meta, db -> db }
-        Channel.fromPath("${params.blastn_db}*", checkIfExists: true).collect().map { files -> [[id: 'blastn_db'], files] } :
-        Channel.empty()
-
-    BLAST_BLASTN(
-        TAXONKIT_LINEAGE.out.tsv,
-        ch_blastn_db,
-        []
-    )
+    ch_blastn_db = Channel.fromPath("${params.blastn_db}*", checkIfExists: true)
+    BLAST_BLASTN(TAXONKIT_LINEAGE.out.tsv, ch_blastn_db, [])
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
-    
+    //make module that extracts contigs that matched in blastn step as fasta file for blastx later
+
+    //Make nr database using nr fasta
+    DIAMOND_MAKE_NR_DB(params.blastx_nr_fasta, [])
+    ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
     //Blastx to compare proteins to check for distant orthologs
-    ch_final_diamond_db = (params.final_blastx_db).map { meta, db -> db }
-
     DIAMOND_BLASTX_FINAL(
-        BLAST_BLASTN.out.txt,
-        ch_final_diamond_db.map,
+        //add fasta file of contig matches
+        DIAMOND_MAKE_NR_DB.out.db,
         params.diamond_output_format ?: 'tsv',
         []
     )
