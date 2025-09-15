@@ -5,7 +5,7 @@ process RVDB_PROCESSING{
 
     output:
     path "rvdb_final_accessions.tsv", emit: rvdb_fin_acc
-    
+    val "RVDB_PROCESSING v1.0.0" into version
 
     script:
     """

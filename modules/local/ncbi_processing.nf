@@ -5,7 +5,7 @@ process NCBI_PROCESSING{
 
     output:
     path "ncbi_final_accessions.tsv", emit: ncbi_fin_acc
-    
+    val "NCBI_PROCESSING v1.0.0" into version
     
 
     script:

@@ -9,6 +9,7 @@ process TAXONOMY_ID {
     output:
     path "final_accessions.tsv"
     path "acc_tax_id.tsv", emit: tsv
+    val "TAXONOMY_ID v1.0.0" into version
 
     script:
     """
