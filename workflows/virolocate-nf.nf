@@ -6,16 +6,16 @@
 
 // import nf-core modules
 include { BLAST_BLASTN } from '../modules/nf-core/blast/blastn/main.nf'
-include { FASTQC as FASTQC_INIT  } from '../modules/nf-core/fastqc/main'
-include { FASTQC as FASTQC_FINAL   } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_PRE  } from '../modules/nf-core/fastqc/main'
+include { FASTQC as FASTQC_POST   } from '../modules/nf-core/fastqc/main'
 include { MEGAHIT } from '../modules/nf-core/megahit/main.nf'
 include { MULTIQC } from '../modules/nf-core/multiqc/main.nf'
 include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
 include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
 include { DIAMOND_MAKEDB as DIAMOND_MAKE_RVDB } from '../modules/nf-core/diamond/makedb/main' 
 include { DIAMOND_MAKEDB as DIAMOND_MAKE_NCBI_DB} from '../modules/nf-core/diamond/makedb/main' 
-include { DIAMOND_BLASTX as DIAMOND_BLASTX_INIT_RVDB} from '../modules/nf-core/diamond/blastx/main.nf'
-include { DIAMOND_BLASTX as DIAMOND_BLASTX_INIT_NCBI} from '../modules/nf-core/diamond/blastx/main.nf'
+include { DIAMOND_BLASTX as DIAMOND_BLASTX_PRE_RVDB} from '../modules/nf-core/diamond/blastx/main.nf'
+include { DIAMOND_BLASTX as DIAMOND_BLASTX_PRE_NCBI} from '../modules/nf-core/diamond/blastx/main.nf'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_FINAL } from '../modules/nf-core/diamond/blastx/main.nf'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_virolocate-nf_pipeline'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
@@ -34,18 +34,6 @@ include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-//parameters
-params.trimmomatic_adapters = null
-params.rvdb_fasta = null
-params.ncbi_fasta = null
-params.ncbi_nr_fasta = null
-params.ncbi_nt_fasta = null
-params.taxonkit_db = null
-params.blast_db = null
-params.outdir=null
-params.diamond_output_format = 'tsv'
-
-
 workflow VIROLOCATE_NF {
 
     //take input data
@@ -61,11 +49,11 @@ workflow VIROLOCATE_NF {
     //
     // MODULE: Run FastQC
     //
-    FASTQC_INIT (
+    FASTQC_PRE (
         ch_samplesheet
     )
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_INIT.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC_INIT.out.versions.first())
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PRE.out.zip.collect{it[1]})
+    ch_versions = ch_versions.mix(FASTQC_PRE.out.versions.first())
 
     //---------------------------------------
 
@@ -77,40 +65,42 @@ workflow VIROLOCATE_NF {
     }
     
     TRIMMOMATIC(
-        ch_reads, params.trimmomatic_adapters ?: []
+        ch_reads, params.trimmomatic_adapters,
+        []
     )
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
 
     //FastQC to check quality of trimmed reads
-    FASTQC_FINAL(
+    FASTQC_POST(
         TRIMMOMATIC.out.unpaired_reads ?: TRIMMOMATIC.out.trimmed_reads
     )
+    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_POST.out.zip.collect{it[1]})
+    ch_versions = ch_versions.mix(FASTQC_POST.out.versions.first())
 
     //Megahit to assemble reads into contigs
     //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
     //such that it aligns with the expectation of MEGAHIT
     ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads ->
-    [meta, reads, []]
-    }
-
-    ch_megahit_unpaired_input = TRIMMOMATIC.out.unpaired_reads.map { meta, reads ->
-    [meta, reads, []]
+    [meta, reads]
     }
 
     MEGAHIT(
-        ch_megahit_unpaired_input ?: ch_megahit_unpaired_input
+        ch_megahit_paired_input,
+        []
     )
     ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
     //Diamond make_db to create a diamond formatted rvdb and ncbi databases
     DIAMOND_MAKE_RVDB(
-        params.rvdb_fasta  
+        params.rvdb_fasta,
+        [] 
     )
     //ch_rvdb_dmnd=DIAMOND_MAKE_RVDB_DB(params.rvdb_fasta)
     ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
     DIAMOND_MAKE_NCBI_DB(
-        params.ncbi_fasta 
+        params.ncbi_fasta,
+        [] 
     )
     //ch_ncbi_dmnd=DIAMOND_MAKE_NCBI_DB(params.ncbi_fasta)
     ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
@@ -120,38 +110,38 @@ workflow VIROLOCATE_NF {
     // NOTE: In the bash script, we have the output extension as `m8` which is
     // just a TSV, therefore we shall use TSV directly to call the nf-core module.
     //TODO: @nox we need to add more parameters to this process-call
-    //could this check return true if db exits from other runs
     
-    ch_diamond_rvdb_db = DIAMOND_MAKE_RVDB.out.db
-    ch_diamond_ncbi_db = DIAMOND_MAKE_NCBI_DB.out.db
-    ch_diamond_input = (MEGAHIT.out.contigs)
+    //are these channels structured correctly to catch dmnd dbs made by diamond make_db
+    ch_diamond_rvdb_db = (DIAMOND_MAKE_RVDB.out.db).map { meta, db -> db }
+    ch_diamond_ncbi_db = (DIAMOND_MAKE_NCBI_DB.out.db).map { meta, db -> db }
+    ch_diamond_input = (MEGAHIT.out.contigs).map { meta, contigs, db -> [meta, contigs] }
 
-    DIAMOND_BLASTX_INIT_RVDB(
-        ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
-        ch_diamond_rvdb_db.map { meta, db -> db },
-        params.diamond_output_format
+    DIAMOND_BLASTX_PRE_RVDB(
+        ch_diamond_input,
+        ch_diamond_rvdb_db,
+        params.diamond_output_format ?: 'tsv',
         []
     )
     
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX_INIT_RVDB.out.versions.first())
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
 
-     DIAMOND_BLASTX_INIT_NCBI(
-        ch_diamond_input.map { meta, contigs, db -> [meta, contigs] },
-        ch_diamond_ncbi_db.map { meta, db -> db },
-        params.diamond_output_format
+     DIAMOND_BLASTX_PRE_NCBI(
+        ch_diamond_input,
+        ch_diamond_ncbi_db,
+        params.diamond_output_format ?: 'tsv',
         []  
     )
     
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX_INIT_NCBI.out.versions.first())
+    ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
 
     //get accession ids and taxonomy ids for taxonkit to use
     NCBI_PROCESSING(
-        DIAMOND_BLASTX_INIT_RVDB.out.tsv
+        DIAMOND_BLASTX_PRE_RVDB.out.tsv
     )
     ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
     RVDB_PROCESSING(
-        DIAMOND_BLASTX_INIT_NCBI.out.tsv
+        DIAMOND_BLASTX_PRE_NCBI.out.tsv
     )
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
@@ -165,31 +155,37 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
-    ch_taxonkit_db = params.taxonkit_db ?
+    ch_taxonkit_db = (params.taxonkit_db).ifEmpty([])
         Channel.fromPath(params.taxonkit_db, checkIfExists: true) :
         Channel.empty()
 
     TAXONKIT_LINEAGE(
         TAXONOMY_ID.out.tsv,
-        ch_taxonkit_db.ifEmpty([])
+        ch_taxonkit_db,
+        []
     )
     ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
     //Blastn for comparing contig sequences to knwon nucleotide sequences
-    ch_blast_db = params.blast_db ?
-        Channel.fromPath("${params.blast_db}*", checkIfExists: true).collect().map { files -> [[id: 'blast_db'], files] } :
+    ch_blastn_db = (params.blastn_db).map { meta, db -> db }
+        Channel.fromPath("${params.blastn_db}*", checkIfExists: true).collect().map { files -> [[id: 'blastn_db'], files] } :
         Channel.empty()
 
     BLAST_BLASTN(
         TAXONKIT_LINEAGE.out.tsv,
-        ch_blast_db.map { meta, db -> db }
+        ch_blastn_db,
+        []
     )
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
+    
+
     //Blastx to compare proteins to check for distant orthologs
+    ch_final_diamond_db = (params.final_blastx_db).map { meta, db -> db }
+
     DIAMOND_BLASTX_FINAL(
         BLAST_BLASTN.out.txt,
-        ch_diamond_db.map { meta, db -> db },
+        ch_final_diamond_db.map,
         params.diamond_output_format ?: 'tsv',
         []
     )
