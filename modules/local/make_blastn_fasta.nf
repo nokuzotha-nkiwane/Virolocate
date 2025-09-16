@@ -1,10 +1,10 @@
 process MAKE_BLASTN_FASTA {
 
     input:
-    path "viral_contig_list.txt"
+    tuple val(meta), path("*.txt")
 
     output:
-    path "blastn_contigs.fasta", emit: blastn_contigs_fasta
+    tuple val(meta) , path(fasta), emit: blastn_contigs_fasta
 
     script:      
     """

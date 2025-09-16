@@ -3,12 +3,12 @@ process TAXONOMY_ID {
     conda 'bioconda::curl'
 
     input:
-    path rvdb_acc
-    path ncbi_acc
+    tuple val(meta), path('*.tsv')
+    tuple val(meta), path('*.tsv')
 
     output:
-    path "final_accessions.tsv"
-    path "acc_tax_id.tsv", emit: tsv
+    tuple val(meta), path('*.tsv'), emit: final_accessions_tsv
+    tuple val(meta), path('*.tsv'), emit: acc_tax_id_tsv
     val "TAXONOMY_ID v1.0.0" into version
 
     script:

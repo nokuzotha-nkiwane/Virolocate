@@ -12,7 +12,7 @@ process BLAST_BLASTN {
     tuple val(meta2), path(db)
 
     output:
-    tuple val(meta), path('*.txt'), emit: txt
+    tuple val(meta), path('*.tsv'), emit: tsv
     path "versions.yml"           , emit: versions
 
     when:
@@ -41,7 +41,6 @@ process BLAST_BLASTN {
         -query ${fasta_name} \\
         -strand both \\
         -evalue 1E-5 \\
-        -outfmt "6 qseqid qlen sseqid stitle pident length qstart qend evalue bitscore" \\
         -perc_identity 80 \\
         -max_target_seqs 20 \\
         ${args} \\

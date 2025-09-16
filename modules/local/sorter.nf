@@ -1,10 +1,10 @@
 process CONTIG_UNIQUE_SORTER {
 
     input:
-    path "viral_contig_metadata.tsv"
+    ptuple val(meta), path("*.tsv")
 
     output:
-    path "viral_contig_list.txt"
+    tuple val(meta), path("*.txt"), emit:viral_contig_list
 
     script: 
     """

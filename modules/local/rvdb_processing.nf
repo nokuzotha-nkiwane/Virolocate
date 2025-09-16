@@ -1,13 +1,15 @@
 process RVDB_PROCESSING{
     
     input:
-    path rvdb_dir
+    tuple val(meta), path(tsv)
 
     output:
-    path "rvdb_final_accessions.tsv", emit: rvdb_fin_acc
+    tuple val(meta), path('*.tsv'), emit: rvdb_fin_acc
     val "RVDB_PROCESSING v1.0.0" into version
 
     script:
+    def diamond_tsv = 
+    def rvdb_final_acc = task.ext.prefix ?: "${meta.id}"
     """
     rvdb_fin_acc="rvdb_final_accessions.tsv"
     #if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
@@ -30,12 +32,12 @@ process RVDB_PROCESSING{
             else 
                 echo "Skipping empty or non-existent files"
             fi
-        done >> "\${rvdb_fin_acc}"
+        done >> "${rvdb_final_acc}"
 
     #if directory or files empty
     else
         echo "RVDB directory does not exist or is empty. Searching for NCBI directory."
-        echo "# No RVDB data processed" > "\${rvdb_fin_acc}"
+        echo "# No RVDB data processed" > "${rvdb_final_acc}"
     fi
     
     """
