@@ -105,4 +105,9 @@ process TAXONOMY_ID {
     done < "\${fin_acc}"
 
     """
+
+    stub:
+    """
+
+    """
 }

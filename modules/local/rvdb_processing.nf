@@ -39,4 +39,9 @@ process RVDB_PROCESSING{
     fi
     
     """
+
+    stub:
+    """
+
+    """
 }

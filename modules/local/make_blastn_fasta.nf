@@ -1,5 +1,10 @@
-    
-    
+process MAKE_BLASTN_FASTA {
+
+    input:
+
+    output:
+
+    script:      
     """
     #find the contig matches in the final.contigs.fa file
 
@@ -14,3 +19,9 @@
         echo "Sequence for ${hit} found"
     done < ${params.u_match_out}
     """
+
+    stub:
+    """
+
+    """
+}

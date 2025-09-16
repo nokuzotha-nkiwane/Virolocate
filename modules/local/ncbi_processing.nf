@@ -25,4 +25,8 @@ process NCBI_PROCESSING{
     fi
 
     """
+    stub:
+    """
+
+    """
 }
