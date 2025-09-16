@@ -1,21 +1,22 @@
 process CONTIG_FILTER {
 
     input:
-    path "acc_tax_id.tsv"
+    tuple val(meta), path("*.tsv")
+    //path "acc_tax_id.tsv"
 
     output:
-    path "blastn_contigs.fasta", emit: blastn_contigs_fasta
-
+    path "viral_contigs.tsv", emit: viral_contigs_tsv
+    
     script:
     """
-    blastn_contigs_fasta="blastn_contigs.fasta"
+    viral_contigs_tsv = "viral_contigs.tsv"
     #contig filtering according to kingdom viruses
     #extract contig matches that are part of viruses
     while IFS=$'\t' read -r col1 col2 col3 col4 rest; do
-        if [[ ${col4} == *Virus* ]]; then
-            echo -e "${col1}\t${col2}\t${col4}\t${rest}" >> ${params.viral_contigs}
+        if [[ \${col4} == *Virus* ]]; then
+            echo -e "\${col1}\t${col2}\t${col4}\t${rest}" >> "\${viral_contigs_tsv}"
         fi
-    done < ${lineage_out}
+    done < ${path("*.tsv")}
     """
 
     stub:

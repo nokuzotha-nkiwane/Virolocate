@@ -39,6 +39,11 @@ process BLAST_BLASTN {
         -num_threads ${task.cpus} \\
         -db \$DB \\
         -query ${fasta_name} \\
+        -strand both \\
+        -evalue 1E-5 \\
+        -outfmt "6 qseqid qlen sseqid stitle pident length qstart qend evalue bitscore" \\
+        -perc_identity 80 \\
+        -max_target_seqs 20 \\
         ${args} \\
         -out ${prefix}.txt
 
