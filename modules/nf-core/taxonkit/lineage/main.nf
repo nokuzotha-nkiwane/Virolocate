@@ -29,8 +29,6 @@ process TAXONKIT_LINEAGE {
         --data-dir $taxdb \\
         --threads $task.cpus \\
         --out-file ${prefix}.tsv \\
-        --i 3 \\
-        -- $'\\t'
         ${taxid? "<<< '$taxid'": taxidfile}
 
     cat <<-END_VERSIONS > versions.yml

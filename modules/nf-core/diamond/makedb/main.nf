@@ -28,7 +28,7 @@ process DIAMOND_MAKEDB {
     def insert_taxonmap = taxonmap ? "--taxonmap ${taxonmap}" : ""
     def insert_taxonnodes = taxonnodes ? "--taxonnodes ${taxonnodes}" : ""
     def insert_taxonnames = taxonnames ? "--taxonnames ${taxonnames}" : ""
-
+    meta.fast_name 
     """
     if [ "${is_compressed}" == "true" ]; then
         gzip -c -d ${fasta} > ${fasta_name}

@@ -35,11 +35,6 @@ process TRIMMOMATIC {
         -threads $task.cpus \\
         -trimlog ${prefix}_trim.log \\
         -summary ${prefix}.summary \\
-        -phred33 \\
-        
-        #is this the correct way to implement illuminaclip
-        #should $ADAPTERS be linked to the parmams version
-        ILLUMINACLIP:"$ADAPTERS":2:30:10 LEADING:5 TRAILING:5 SLIDINGWINDOW:4:5 MINLEN:25\\
         $reads \\
         $output \\
         $qual_trim \\

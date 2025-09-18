@@ -39,10 +39,6 @@ process BLAST_BLASTN {
         -num_threads ${task.cpus} \\
         -db \$DB \\
         -query ${fasta_name} \\
-        -strand both \\
-        -evalue 1E-5 \\
-        -perc_identity 80 \\
-        -max_target_seqs 20 \\
         ${args} \\
         -out ${prefix}.txt
 
