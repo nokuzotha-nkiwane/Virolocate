@@ -1,21 +1,28 @@
 process CONTIG_UNIQUE_SORTER {
+    
 
     input:
-    ptuple val(meta), path("*.tsv")
+    tuple val(meta), path("*.tsv")
 
     output:
     tuple val(meta), path("*.txt"), emit:viral_contig_list
 
     script: 
+    def viral_contigs_metadata = task.ext.viral_contigs_metadata ?: ''
+    def viral_contig_list = task.ext.viral_contig_list ?: ''
     """
-    viral_contigs_metadata = "viral_contigs.tsv"
-    viral_contig_list = "viral_contig_list.txt"
     #get unique contig matches
-    awk '{print \$1}' "\${viral_contigs_metadata}"  | sort -u  -o ${viral_contig_list}
+    awk '{print \$1}' "${viral_contigs_metadata}"  | sort -u  -o ${viral_contig_list}
     """
 
     stub:
     """
+    touch "${viral_contig_list}"
+    
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        contig_unique_sorter: \$(echo \$(contig_unique_sorter -v 2>&1) | sed 's/CONTIG_UNIQUE_SORTER v//')
+    END_VERSIONS
 
     """
 }
