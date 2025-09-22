@@ -59,9 +59,7 @@ workflow VIROLOCATE_NF {
     //Trimmomatic run to trim reads
     //TODO: @nox Add a parameter to allow users to pass the folder location
     // Assuming fastq is a list of files [R1, R2] for paired-end
-    ch_reads = ch_samplesheet.map { meta, fastq ->
-        [meta, fastq]
-    }
+    ch_reads = ch_samplesheet.map { meta, fastq -> [meta, fastq] }
     
     TRIMMOMATIC(ch_reads, params.trimmomatic_adapters,[])
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
@@ -74,9 +72,7 @@ workflow VIROLOCATE_NF {
     //Megahit to assemble reads into contigs
     //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
     //such that it aligns with the expectation of MEGAHIT
-    ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads ->
-    [meta, reads]
-    }
+    ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> [meta, reads] }
 
     MEGAHIT(ch_megahit_paired_input, [])
     ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
@@ -102,7 +98,7 @@ workflow VIROLOCATE_NF {
     DIAMOND_BLASTX_PRE_RVDB(
         ch_diamond_input,
         ch_diamond_rvdb_db,
-        params.diamond_output_format ?: 'tsv',
+        params.diamond_output_format,
         []
     )
     
@@ -111,7 +107,7 @@ workflow VIROLOCATE_NF {
      DIAMOND_BLASTX_PRE_NCBI(
         ch_diamond_input,
         ch_diamond_ncbi_db,
-        params.diamond_output_format ?: 'tsv',
+        params.diamond_output_format,
         []  
     )
     
@@ -138,7 +134,13 @@ workflow VIROLOCATE_NF {
     BLAST_BLASTN(TAXONKIT_LINEAGE.out.tsv, ch_blastn_db, [])
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
+    //
     //make module that extracts contigs that matched in blastn step as fasta file for blastx later
+
+
+
+
+
 
     //Make nr database using nr fasta
     DIAMOND_MAKE_NR_DB(params.blastx_nr_fasta, [])
@@ -148,7 +150,7 @@ workflow VIROLOCATE_NF {
     DIAMOND_BLASTX_FINAL(
         //add fasta file of contig matches
         DIAMOND_MAKE_NR_DB.out.db,
-        params.diamond_output_format ?: 'tsv',
+        params.diamond_output_format,
         []
     )
     ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
