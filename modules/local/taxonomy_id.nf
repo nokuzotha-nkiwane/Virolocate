@@ -71,14 +71,12 @@ process TAXONOMY_ID {
 
     while IFS=$'\\t' read -r col1 col2 col3 rest;do
         echo "[\${col3}]"
-        get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "${output_tsv}"
+        get_meta "\${col1}" "\${col2}" "\${col3}" "${output_tsv}"
     done < "${final_accessions_tsv}"
 
     """
 
     stub:
-    def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
-    def ncbi_final_acc = task.ext.ncbi_final_acc ?: ""
     def final_accessions_tsv = task.ext.final_accessions_tsv ?: ""
     def output_tsv = task.ext.output_tsv ?: ""
     """
