@@ -16,14 +16,14 @@ process MAKE_BLASTN_FASTA {
     #find the contig matches in the final.contigs.fa file
 
     while read -r hit; do
-        awk -v contig=">${hit} " '
-            index($0, contig) == 1 {print; ON=1; next}
+        awk -v contig=">\${hit} " '
+            index(\$0, contig) == 1 {print; ON=1; next}
             ON && /^>/ {exit}
             ON {print}
         ' ${kfinal_contigs} >> "${blastn_contigs_fasta}"
 
         #progress check
-        echo "Sequence for ${hit} found"
+        echo "Sequence for \${hit} found"
     done < "${viral_contig_list}"
     """
 

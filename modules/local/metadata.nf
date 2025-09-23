@@ -32,10 +32,10 @@ process FETCH_METADATA {
         local date=\$(echo "\${info}" | awk -F'"' '/\\/collection_date/ {print \$2}')
         local gene=\$(echo "\${info}" | awk -F'"' '/\\/coded_by/ {print \$2}')
         local product=\$(echo "\${info}" | awk -F'"' '/\\/product/ {print \$2}')
-        local tax=$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
+        local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
 
         #split the other columns after the third one
-        IFS=$'\\t' read -r -a rest_array <<< "\${columns}"
+        IFS=\$'\\t' read -r -a rest_array <<< "\${columns}"
         rest=\$(printf "%s\\t" "\${rest_array[@]}" )
 
         #put NA if any of the fields are empty
@@ -68,7 +68,7 @@ process FETCH_METADATA {
 
     }
 
-    while IFS=$'\\t' read -r col1 col2 col3 rest;do
+    while IFS=\$'\\t' read -r col1 col2 col3 rest;do
         echo "[\${col3}]"
         get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "${blastn_metadata_tsv}"
     done < "${blasatn_output}"

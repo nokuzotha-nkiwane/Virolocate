@@ -58,7 +58,7 @@ process TAXONOMY_ID {
         local info=\$(curl -N -# \${url1})
 
         #taxonomic number
-        local tax=$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
+        local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
 
         if [[ -z "\${tax}" ]]; then
             tax="NA"
@@ -69,7 +69,7 @@ process TAXONOMY_ID {
 
     }
 
-    while IFS=$'\\t' read -r col1 col2 col3 rest;do
+    while IFS=\$'\\t' read -r col1 col2 col3 rest;do
         echo "[\${col3}]"
         get_meta "\${col1}" "\${col2}" "\${col3}" "${output_tsv}"
     done < "${final_accessions_tsv}"
