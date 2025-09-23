@@ -46,6 +46,7 @@ ch_samplesheet = Channel.fromPath(params.samplesheet)
 
 workflow VIROLOCATE_NF {
     
+    ch_samplesheet = Channel.fromPath(params.samplesheet)
     //take input data
     take:
         ch_samplesheet 
