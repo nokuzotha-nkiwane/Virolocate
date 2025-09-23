@@ -41,12 +41,11 @@ include { FETCH_METADATA } from '../modules/local/metadata.nf'
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-params.samplesheet = '../disc_pipe/s_sheet.csv'
-ch_samplesheet = Channel.fromPath(params.samplesheet)
+
+
 
 workflow VIROLOCATE_NF {
-    
-    ch_samplesheet = Channel.fromPath(params.samplesheet)
+    ch_samplesheet = Channel.fromPath(params.samplesheet, checkIfExists: true)
     //take input data
     take:
         ch_samplesheet 
