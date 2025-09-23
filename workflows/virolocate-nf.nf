@@ -4,6 +4,9 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+nextflow.enable.dsl=2
+
+
 // import nf-core modules
 include { BLAST_BLASTN } from '../modules/nf-core/blast/blastn/main.nf'
 include { FASTQC as FASTQC_PRE  } from '../modules/nf-core/fastqc/main'
@@ -27,6 +30,10 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { NCBI_PROCESSING } from '../modules/local/ncbi_processing.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb_processing.nf'
 include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
+include { CONTIG_FILTER } from '../modules/local/contig_filter.nf'
+include { CONTIG_UNIQUE_SORTER } from '../modules/local/sorter.nf'
+include { MAKE_BLASTN_FASTA } from '../modules/local/make_blastn_fasta.nf'
+include { FETCH_METADATA } from '../modules/local/metadata.nf'
 
 
 /*
@@ -34,12 +41,14 @@ include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+// params.samplesheet = '../disc_pipe/s_sheet.csv'
+// ch_samplesheet = Channel.fromPath(params.samplesheet)
 
 workflow VIROLOCATE_NF {
-
+    
     //take input data
     take:
-        ch_samplesheet
+        ch_samplesheet 
     
     //main starts main workflow logic
     //ch_versions will collect software version info form each tool
@@ -47,10 +56,30 @@ workflow VIROLOCATE_NF {
     main:
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
-    //
+    
+    //Parse samplesheet to get reads
+    //assumes paired end readsa as default
+    ch_reads = ch_samplesheet
+        .splitCsv(header: true)
+        .map { row ->
+            def meta = [:]
+            meta.id = row.sample
+            meta.single_end = false 
+            
+            def reads = []
+            if (row.fastq_1 && row.fastq_2) {
+                reads = [file(row.fastq_1), file(row.fastq_2)]
+            } else if (row.fastq_1) {
+                reads = [file(row.fastq_1)]
+                meta.single_end = true
+            }
+            
+            return [meta, reads]
+        }
+
     // MODULE: Run FastQC
-    //
-    FASTQC_PRE (ch_samplesheet)
+    
+    FASTQC_PRE (ch_reads)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PRE.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC_PRE.out.versions.first())
 
@@ -59,7 +88,8 @@ workflow VIROLOCATE_NF {
     //Trimmomatic run to trim reads
     //TODO: @nox Add a parameter to allow users to pass the folder location
     // Assuming fastq is a list of files [R1, R2] for paired-end
-    ch_reads = ch_samplesheet.map { meta, fastq -> [meta, fastq] }
+    
+    // ch_reads = ch_samplesheet.map { meta, fastq -> [meta, fastq] }
     
     TRIMMOMATIC(ch_reads, params.trimmomatic_adapters,'')
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
@@ -72,20 +102,24 @@ workflow VIROLOCATE_NF {
     //Megahit to assemble reads into contigs
     //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
     //such that it aligns with the expectation of MEGAHIT
-    ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> [meta, reads] }
-
-    MEGAHIT(ch_megahit_paired_input, '')
+    
+    // ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> [meta, reads] }
+    MEGAHIT(TRIMMOMATIC.out.trimmed_reads, '')
     ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
     //Diamond make_db to create diamond formatted rvdb and ncbi databases
-    DIAMOND_MAKE_RVDB(params.rvdb_fasta, '')
+    ch_rvdb_fasta = Channel.fromPath(params.rvdb_fasta, checkIfExists: true)
+        .map { fasta -> [[id: 'rvdb'], fasta] }
+    DIAMOND_MAKE_RVDB(ch_rvdb_fasta, '')
     ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
-    DIAMOND_MAKE_NCBI_DB(params.ncbi_fasta, '')
+    ch_ncbi_fasta = Channel.fromPath(params.ncbi_fasta, checkIfExists: true)
+        .map { fasta -> [[id: 'ncbi'], fasta] }
+    DIAMOND_MAKE_NCBI_DB(ch_ncbi_fasta, '')
     ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
 
-    //Diamond to compare read proteins against known protiens in databases
+    //Diamond to compare read proteins against known proteins in databases
     // NOTE: In the bash script, we have the output extension as `m8` which is
     // just a TSV, therefore we shall use TSV directly to call the nf-core module.
     //TODO: @nox we need to add more parameters to this process-call
@@ -93,10 +127,10 @@ workflow VIROLOCATE_NF {
     //are these channels structured correctly to catch dmnd dbs made by diamond make_db
     ch_diamond_rvdb_db = (DIAMOND_MAKE_RVDB.out.db).map { meta, db -> db }
     ch_diamond_ncbi_db = (DIAMOND_MAKE_NCBI_DB.out.db).map { meta, db -> db }
-    ch_diamond_input = (MEGAHIT.out.contigs).map { meta, contigs, db -> [meta, contigs] }
+    // ch_diamond_input = (MEGAHIT.out.contigs).map { meta, contigs, db -> [meta, contigs] }
 
     DIAMOND_BLASTX_PRE_RVDB(
-        ch_diamond_input,
+        MEGAHIT.out.contigs,
         ch_diamond_rvdb_db,
         params.diamond_output_format,
         ''
@@ -105,7 +139,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
 
      DIAMOND_BLASTX_PRE_NCBI(
-        ch_diamond_input,
+        MEGAHIT.out.contigs,
         ch_diamond_ncbi_db,
         params.diamond_output_format,
         ''  
@@ -114,19 +148,19 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
 
     //get accession ids and taxonomy ids for taxonkit to use
-    NCBI_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
-    ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
-
     RVDB_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
+    NCBI_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
+    ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
     //get accession ids and taxonomy ids for taxonkit to use
     TAXONOMY_ID(RVDB_PROCESSING.out.rvdb_fin_acc, NCBI_PROCESSING.out.ncbi_fin_acc)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
-    TAXONKIT_LINEAGE(TAXONOMY_ID.out.tsv, params.taxonkit_db, '')
+    ch_taxonkit_db = Channel.fromPath(params.taxonkit_db, checkIfExists: true)
+    TAXONKIT_LINEAGE(TAXONOMY_ID.out.tsv, ch_taxonkit_db, '')
     ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
     //Contig_filter to extract sequences marked as viral only
@@ -141,9 +175,9 @@ workflow VIROLOCATE_NF {
     MAKE_BLASTN_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
     ch_versions = ch_versions.mix(MAKE_BLASTN_FASTA.out.versions.first())
 
-    //Blastn for comparing contig sequences to knwon nucleotide sequences
-    ch_blastn_db = Channel.fromPath("${params.blastn_db}*", checkIfExists: true)
-    BLAST_BLASTN(TAXONKIT_LINEAGE.out.tsv, ch_blastn_db, '')
+    //Blastn for comparing contig sequences to known nucleotide sequences
+    ch_blastn_db = Channel.fromPath("${params.blastn_db}*", checkIfExists: true).collect()
+    BLAST_BLASTN(MAKE_BLASTN_FASTA.out.blastn_contigs_fasta, ch_blastn_db, '')
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     //get metadata of the blastn hits
@@ -151,13 +185,16 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(FETCH_METADATA.out.versions.first())
 
     //Make nr database using nr fasta
-    DIAMOND_MAKE_NR_DB(params.blastx_nr_fasta, '')
+    ch_nr_fasta = Channel.fromPath(params.blastx_nr_fasta, checkIfExists: true)
+        .map { fasta -> [[id: 'nr'], fasta] }
+    DIAMOND_MAKE_NR_DB(ch_nr_fasta, '')
     ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
     //Blastx to compare proteins to check for distant orthologs
+    ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> db }
     DIAMOND_BLASTX_FINAL(
-        //add fasta file of contig matches
-        DIAMOND_MAKE_NR_DB.out.db,
+        MAKE_BLASTN_FASTA.out.blastn_contigs_fasta,
+        ch_diamond_nr_db,
         params.diamond_output_format,
         ''
     )
