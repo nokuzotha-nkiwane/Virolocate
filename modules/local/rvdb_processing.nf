@@ -9,7 +9,7 @@ process RVDB_PROCESSING{
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def diamond_tsv = task.ext.${prefix}_diamond_tsv ?: ""
+    def diamond_tsv = task.ext.diamond_tsv ?: ""
     def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
     """
     rvdb_fin_acc="rvdb_final_accessions.tsv"
