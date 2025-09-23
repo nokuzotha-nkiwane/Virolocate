@@ -4,7 +4,8 @@ process MAKE_BLASTN_FASTA {
     tuple val(meta), path("*.txt")
 
     output:
-    tuple val(meta) , path(fasta), emit: blastn_contigs_fasta
+    tuple val(meta) , path(fasta)   , emit: blastn_contigs_fasta
+    path "versions.yml"             , emit: versions
 
     script:
     def kfinal_contigs = task.ext.kfinal_contigs ?: ''

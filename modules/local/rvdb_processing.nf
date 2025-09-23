@@ -4,8 +4,8 @@ process RVDB_PROCESSING{
     tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path('*.tsv'), emit: rvdb_final_acc
-    val "RVDB_PROCESSING v1.0.0" into version
+    tuple val(meta), path('*.tsv')  , emit: rvdb_final_acc
+    path "versions.yml"             , emit: versions
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"

@@ -4,7 +4,8 @@ process CONTIG_FILTER {
     tuple val(meta), path("*.tsv")
     
     output:
-    tuple val(meta), path("*.tsv"), emit: viral_contigs_metadata
+    tuple val(meta), path("*.tsv")  , emit: viral_contigs_metadata
+    path "versions.yml"             , emit: versions
     
     script:
     //how does lineage file here link to the input file

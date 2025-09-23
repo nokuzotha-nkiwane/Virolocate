@@ -8,9 +8,9 @@ process TAXONOMY_ID {
     tuple val(meta), path('*.tsv')
 
     output:
-    tuple val(meta), path('*.tsv'), emit: final_accessions_tsv
-    tuple val(meta), path('*.tsv'), emit: acc_tax_id_tsv
-    val "TAXONOMY_ID v1.0.0" into version
+    tuple val(meta), path('*.tsv')  , emit: final_accessions_tsv
+    tuple val(meta), path('*.tsv')  , emit: acc_tax_id_tsv
+    path "versions.yml"             , emit: versions
 
     script:
     def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""

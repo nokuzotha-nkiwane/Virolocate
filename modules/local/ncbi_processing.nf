@@ -5,8 +5,8 @@ process NCBI_PROCESSING{
     tuple val(meta), path('*.tsv')
 
     output:
-    tuple val(meta), path('*.tsv'), emit: ncbi_final_acc
-    val "NCBI_PROCESSING v1.0.0" into version
+    tuple val(meta), path('*.tsv')  , emit: ncbi_final_acc
+    path "versions.yml"             , emit: versions
     
 
     script:

@@ -4,7 +4,8 @@ process FETCH_METADATA {
     tuple val(meta), path('*.tsv')
 
     output:
-    tuple val(meta), path('*.tsv'), emit: blastn_metadata_tsv
+    tuple val(meta), path('*.tsv')  , emit: blastn_metadata_tsv
+    path "versions.yml"             , emit: versions
 
     script:
     def blasatn_output = task.ext.blasatn_output

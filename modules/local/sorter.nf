@@ -5,7 +5,8 @@ process CONTIG_UNIQUE_SORTER {
     tuple val(meta), path("*.tsv")
 
     output:
-    tuple val(meta), path("*.txt"), emit:viral_contig_list
+    tuple val(meta), path("*.txt")  , emit:viral_contig_list
+    path "versions.yml"             , emit: versions
 
     script: 
     def viral_contigs_metadata = task.ext.viral_contigs_metadata ?: ''
