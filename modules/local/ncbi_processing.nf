@@ -11,7 +11,7 @@ process NCBI_PROCESSING{
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def diamond_tsv = task.ext.${prefix}_diamond_tsv ?: ""
+    def diamond_tsv = task.ext.diamond_tsv ?: ""
     def ncbi_final_acc = task.ext.ncbi_final_acc ?: ""
     """
     ncbi_acc="ncbi_final_accessions.tsv"
@@ -40,3 +40,4 @@ process NCBI_PROCESSING{
 
     """
 }
+
