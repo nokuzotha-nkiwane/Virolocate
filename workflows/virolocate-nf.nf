@@ -1,5 +1,31 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    VALIDATE INPUTS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+// def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
+
+// Check input path parameters to see if they exist
+def checkPathParamList = [ 
+    params.input, 
+    params.multiqc_config, 
+    params.rvdb_fasta,
+    params.ncbi_fasta,
+    params.blastx_nr_fasta,
+    params.taxonkit_db,
+    params.blastn_db,
+    params.trimmomatic_adapters
+]
+for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
+
+// Check mandatory parameters
+if (params.samplesheet) { ch_samplesheet = file(params.samplesheet) } else { exit 1, 'Input samplesheet not specified!' }
+
+/*
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -33,7 +59,8 @@ include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter.nf'
 include { CONTIG_UNIQUE_SORTER } from '../modules/local/sorter.nf'
 include { MAKE_BLASTN_FASTA } from '../modules/local/make_blastn_fasta.nf'
-include { FETCH_METADATA } from '../modules/local/metadata.nf'
+include { FETCH_METADATA as FETCH_METADATA_BLASTN} from '../modules/local/metadata.nf'
+include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/metadata.nf'
 
 
 /*
@@ -41,14 +68,10 @@ include { FETCH_METADATA } from '../modules/local/metadata.nf'
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-
+params.samplesheet = '../disc_pipe/s_sheet.csv'
+ch_samplesheet = Channel.fromPath(params.samplesheet)
 
 workflow VIROLOCATE_NF {
-    ch_samplesheet = Channel.fromPath(params.samplesheet, checkIfExists: true)
-    //take input data
-    take:
-        ch_samplesheet 
     
     //main starts main workflow logic
     //ch_versions will collect software version info form each tool
@@ -89,9 +112,10 @@ workflow VIROLOCATE_NF {
     //TODO: @nox Add a parameter to allow users to pass the folder location
     // Assuming fastq is a list of files [R1, R2] for paired-end
     
-    // ch_reads = ch_samplesheet.map { meta, fastq -> [meta, fastq] }
+    // ch_reads = ch_samplesheet.map { meta, fastq -> [meta, fastq] } //line kinda redundant since mapping handled earlier
     
-    TRIMMOMATIC(ch_reads, params.trimmomatic_adapters,'')
+    //TRIMMOMATIC(ch_reads, params.trimmomatic_adapters,'')
+    TRIMMOMATIC(ch_reads)
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
 
     //FastQC to check quality of trimmed reads
@@ -104,18 +128,25 @@ workflow VIROLOCATE_NF {
     //such that it aligns with the expectation of MEGAHIT
     
     // ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> [meta, reads] }
-    MEGAHIT(TRIMMOMATIC.out.trimmed_reads, '')
+    MEGAHIT(TRIMMOMATIC.out.trimmed_reads)
     ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
     //Diamond make_db to create diamond formatted rvdb and ncbi databases
     ch_rvdb_fasta = Channel.fromPath(params.rvdb_fasta, checkIfExists: true)
         .map { fasta -> [[id: 'rvdb'], fasta] }
-    DIAMOND_MAKE_RVDB(ch_rvdb_fasta, '')
+
+
+    //channels for stub test should i keep them??
+    ch_taxonmap = Channel.fromPath('dummy_taxonmap.txt')
+    ch_taxonnodes = Channel.fromPath('dummy_taxonnodes.txt')
+    ch_taxonnames = Channel.fromPath('dummy_taxonnames.txt')
+
+    DIAMOND_MAKE_RVDB(ch_rvdb_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
     ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
     ch_ncbi_fasta = Channel.fromPath(params.ncbi_fasta, checkIfExists: true)
         .map { fasta -> [[id: 'ncbi'], fasta] }
-    DIAMOND_MAKE_NCBI_DB(ch_ncbi_fasta, '')
+    DIAMOND_MAKE_NCBI_DB(ch_ncbi_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
     ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
 
@@ -155,12 +186,12 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
     //get accession ids and taxonomy ids for taxonkit to use
-    TAXONOMY_ID(RVDB_PROCESSING.out.rvdb_fin_acc, NCBI_PROCESSING.out.ncbi_fin_acc)
+    TAXONOMY_ID(RVDB_PROCESSING.out.rvdb_final_acc, NCBI_PROCESSING.out.ncbi_final_acc)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxonkit_db, checkIfExists: true)
-    TAXONKIT_LINEAGE(TAXONOMY_ID.out.tsv, ch_taxonkit_db, '')
+    TAXONKIT_LINEAGE(TAXONOMY_ID.out.acc_tax_id_tsv, ch_taxonkit_db)
     ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
     //Contig_filter to extract sequences marked as viral only
@@ -177,17 +208,17 @@ workflow VIROLOCATE_NF {
 
     //Blastn for comparing contig sequences to known nucleotide sequences
     ch_blastn_db = Channel.fromPath("${params.blastn_db}*", checkIfExists: true).collect()
-    BLAST_BLASTN(MAKE_BLASTN_FASTA.out.blastn_contigs_fasta, ch_blastn_db, '')
+    BLAST_BLASTN(MAKE_BLASTN_FASTA.out.blastn_contigs_fasta, ch_blastn_db)
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     //get metadata of the blastn hits
-    FETCH_METADATA(BLAST_BLASTN.out.tsv)
-    ch_versions = ch_versions.mix(FETCH_METADATA.out.versions.first())
+    FETCH_METADATA_BLASTN(BLAST_BLASTN.out.tsv)
+    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
     //Make nr database using nr fasta
     ch_nr_fasta = Channel.fromPath(params.blastx_nr_fasta, checkIfExists: true)
         .map { fasta -> [[id: 'nr'], fasta] }
-    DIAMOND_MAKE_NR_DB(ch_nr_fasta, '')
+    DIAMOND_MAKE_NR_DB(ch_nr_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
     ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
     //Blastx to compare proteins to check for distant orthologs
@@ -201,8 +232,8 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
     //get metadata of the blastx hits
-    FETCH_METADATA(DIAMOND_BLASTX_FINAL.out.tsv)
-    ch_versions = ch_versions.mix(FETCH_METADATA.out.versions.first())
+    FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
+    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
 
 
     //---------------------------------------
@@ -252,6 +283,23 @@ workflow VIROLOCATE_NF {
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
 
 }
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    COMPLETION EMAIL AND SUMMARY
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+workflow.onComplete {
+    if (params.email || params.email_on_fail) {
+        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+    }
+    NfcoreTemplate.summary(workflow, params, log)
+    if (params.hook_url) {
+        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
+    }
+}
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
