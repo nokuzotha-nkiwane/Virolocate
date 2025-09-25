@@ -18,9 +18,6 @@ process TAXONOMY_ID {
     def final_accessions_tsv = task.ext.final_accessions_tsv ?: ""
     def output_tsv = task.ext.output_tsv ?: ""
     """
-    
-    
-    output_tsv="acc_tax_id.tsv"
 
     #combine rvdb_final_accessions.tsv and ncbi_final_accessions.tsv
     if [[ -s "${rvdb_final_acc}" && -s "${ncbi_final_acc}" ]];then

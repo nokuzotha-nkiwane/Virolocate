@@ -12,7 +12,6 @@ process RVDB_PROCESSING{
     def diamond_tsv = task.ext.diamond_tsv ?: ""
     def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
     """
-    rvdb_fin_acc="rvdb_final_accessions.tsv"
     #if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
     if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.tsv" | wc -l) -gt 0 ]]; then
     echo "Using RVDB directory to make final file for all Diamond Blastx outputs"
