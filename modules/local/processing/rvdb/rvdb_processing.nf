@@ -1,7 +1,7 @@
-process RVDB_PROCESSING{
+process RVDB_PROCESSING {
     tag "$meta.id"
     conda "${moduleDir}/environment.yml"
-    container "${wave.seqera.io/wt/935142d6c1b1/wave/build:rvdb_processing--a737d7798a59a0c3}"
+    container "wave.seqera.io/wt/935142d6c1b1/wave/build:rvdb_processing--a737d7798a59a0c3"
     
     input:
     tuple val(meta), path(tsv)
@@ -46,7 +46,6 @@ process RVDB_PROCESSING{
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id}"
     def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
     """ 
     touch ${rvdb_final_acc}

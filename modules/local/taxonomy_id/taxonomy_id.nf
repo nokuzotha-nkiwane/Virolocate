@@ -1,6 +1,6 @@
 process TAXONOMY_ID {
     conda "${moduleDir}/environment.yml"
-    container "${wave.seqera.io/wt/80587b948893/wave/build:1.0.0--656709bd5c25c61b}"
+    container "wave.seqera.io/wt/80587b948893/wave/build:1.0.0--656709bd5c25c61b"
 
     tag "$meta.id"
     conda 'bioconda::curl'

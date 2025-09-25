@@ -1,6 +1,6 @@
 process CONTIG_FILTER {
     conda "${moduleDir}/environment.yml"
-    container "${wave.seqera.io/wt/67f4c80bd6c6/wave/build:contig_filter--f8e5cec565adc43e}"
+    container "wave.seqera.io/wt/67f4c80bd6c6/wave/build:contig_filter--f8e5cec565adc43e"
 
     input:
     tuple val(meta), path("*.tsv")
