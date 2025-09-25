@@ -1,7 +1,7 @@
-name: fetch_metadata_blastn
+name: fetch_metadata
 channels:
   - conda-forge
   - bioconda
   - defaults
 dependencies:
-  - bioconda::fetch_metadata_blastn=1.0.0
+  - bioconda::fetch_metadata=1.0.0
