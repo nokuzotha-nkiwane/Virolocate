@@ -53,14 +53,14 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // import local modules
-include { NCBI_PROCESSING } from '../modules/local/ncbi_processing.nf'
-include { RVDB_PROCESSING } from '../modules/local/rvdb_processing.nf'
-include { TAXONOMY_ID    } from '../modules/local/taxonomy_id.nf'
-include { CONTIG_FILTER } from '../modules/local/contig_filter.nf'
-include { CONTIG_UNIQUE_SORTER } from '../modules/local/sorter.nf'
-include { MAKE_BLASTN_FASTA } from '../modules/local/make_blastn_fasta.nf'
-include { FETCH_METADATA as FETCH_METADATA_BLASTN} from '../modules/local/metadata.nf'
-include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/metadata.nf'
+include { NCBI_PROCESSING } from '../modules/local/processing/ncbi/ncbi_processing.nf'
+include { RVDB_PROCESSING } from '../modules/local/processing/rvdb/rvdb_processing.nf'
+include { TAXONOMY_ID    } from '../modules/local/taxonomy_id/taxonomy_id.nf'
+include { CONTIG_FILTER } from '../modules/local/contig_filter/contig_filter.nf'
+include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/sorter.nf'
+include { MAKE_BLAST_FASTA } from '../modules/local/make_blast_fasta/make_blast_fasta.nf'
+include { FETCH_METADATA as FETCH_METADATA_BLASTN} from '../modules/local/fetch_metadata/metadata.nf'
+include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/fetch_metadata/metadata.nf'
 
 
 /*
@@ -203,12 +203,12 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
     //make fasta file to blastn against NT 
-    MAKE_BLASTN_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
-    ch_versions = ch_versions.mix(MAKE_BLASTN_FASTA.out.versions.first())
+    MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
+    ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
     //Blastn for comparing contig sequences to known nucleotide sequences
     ch_blastn_db = Channel.fromPath("${params.blastn_db}*", checkIfExists: true).collect()
-    BLAST_BLASTN(MAKE_BLASTN_FASTA.out.blastn_contigs_fasta, ch_blastn_db)
+    BLAST_BLASTN(MAKE_BLAST_FASTA.out.blastn_contigs_fasta, ch_blastn_db)
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     //get metadata of the blastn hits
@@ -224,7 +224,7 @@ workflow VIROLOCATE_NF {
     //Blastx to compare proteins to check for distant orthologs
     ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> db }
     DIAMOND_BLASTX_FINAL(
-        MAKE_BLASTN_FASTA.out.blastn_contigs_fasta,
+        MAKE_BLAST_FASTA.out.blastn_contigs_fasta,
         ch_diamond_nr_db,
         params.diamond_output_format,
         ''
