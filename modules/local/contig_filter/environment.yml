@@ -1,0 +1,7 @@
+name: contig_filter
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::contig_filter=1.0.0
