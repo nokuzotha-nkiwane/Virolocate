@@ -32,7 +32,7 @@ process CONTIG_FILTER {
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        contig_filter: \$(echo \$(contig_filter -v 2>&1) | sed 's/CONTIG_FILTER v//')
+        contig_filter: \$(contig_filter -v 2>&1 | sed 's/CONTIG_FILTER v//')
     END_VERSIONS
 
 

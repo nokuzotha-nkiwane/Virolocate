@@ -84,7 +84,7 @@ process TAXONOMY_ID {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        taxonomy_id: \$(echo \$(taxonomy_id -v 2>&1) | sed 's/TAXONOMY_ID v//')
+        taxonomy_id: \$(taxonomy_id -v 2>&1 | sed 's/TAXONOMY_ID v//')
     END_VERSIONS
 
     """

@@ -7,7 +7,7 @@ process EXTRACT_NR_VIRAL {
     tuple val(meta), path(nr_db)
 
     output:
-    tuple val(meta), path('*.txt'), emit: nr_viral_seqs
+    tuple val(meta), path(txt), emit: nr_viral_seqs
     tuple val(meta), path(fasta), emit: nr_db_fasta
     path "versions.yml"         , emit: versions
 
@@ -35,12 +35,13 @@ process EXTRACT_NR_VIRAL {
     def nr_db_fasta = task.ext.nr_db_fasta ?: ""
 
     """
-    touch "${nr_viral_seqs}.txt"
-    touch "${nr_db_fasta}.fasta"
+    touch fasta
+    touch txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        extract_nr_viral: \$(echo \$(extract_nr_viral -v 2>&1) | sed 's/EXTRACT_NR_VIRAL v//')
+        extract_nr_viral: \$(extract_nr_viral -v 2>&1 | sed 's/EXTRACT_NR_VIRAL v//')
     END_VERSIONS
+
     """
 }

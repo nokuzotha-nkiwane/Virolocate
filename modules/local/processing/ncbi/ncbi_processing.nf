@@ -34,9 +34,8 @@ process NCBI_PROCESSING {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        rvdb_processing: \$(echo \$(rvdb_processing -v 2>&1) | sed 's/RVDB_PROCESSING v//')
+        ncbi_processing: \$(ncbi_processing -v 2>&1 | sed 's/NCBI_PROCESSING v//')
     END_VERSIONS
 
     """
 }
-
