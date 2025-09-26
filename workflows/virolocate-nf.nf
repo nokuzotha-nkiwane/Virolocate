@@ -53,6 +53,7 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // import local modules
+include { EXTRACT_NR_VIRAL } from '../modules/local/extract_nr_viral/extract_nr_viral.nf'
 include { NCBI_PROCESSING } from '../modules/local/processing/ncbi/ncbi_processing.nf'
 include { RVDB_PROCESSING } from '../modules/local/processing/rvdb/rvdb_processing.nf'
 include { TAXONOMY_ID    } from '../modules/local/taxonomy_id/taxonomy_id.nf'
@@ -68,7 +69,6 @@ include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/fetch_
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-params.samplesheet = '../disc_pipe/s_sheet.csv'
 ch_samplesheet = Channel.fromPath(params.samplesheet)
 
 workflow VIROLOCATE_NF {
@@ -83,22 +83,13 @@ workflow VIROLOCATE_NF {
     //Parse samplesheet to get reads
     //assumes paired end readsa as default
     ch_reads = ch_samplesheet
-        .splitCsv(header: true)
-        .map { row ->
-            def meta = [:]
-            meta.id = row.sample
-            meta.single_end = false 
-            
-            def reads = []
-            if (row.fastq_1 && row.fastq_2) {
-                reads = [file(row.fastq_1), file(row.fastq_2)]
-            } else if (row.fastq_1) {
-                reads = [file(row.fastq_1)]
-                meta.single_end = true
-            }
-            
-            return [meta, reads]
-        }
+    .splitCsv(header:true)
+    .map { row ->
+        def meta = [ id: row.sample, single_end: row.fastq_2 ? false : true ]
+        def reads = row.fastq_2 ? [ file(row.fastq_1), file(row.fastq_2) ]
+                                : [ file(row.fastq_1) ]
+        tuple(meta, reads)
+    }
 
     // MODULE: Run FastQC
     
@@ -118,122 +109,128 @@ workflow VIROLOCATE_NF {
     TRIMMOMATIC(ch_reads)
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
 
-    //FastQC to check quality of trimmed reads
-    FASTQC_POST(TRIMMOMATIC.out.trimmed_reads)
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC_POST.out.zip.collect{it[1]})
-    ch_versions = ch_versions.mix(FASTQC_POST.out.versions.first())
+    // //FastQC to check quality of trimmed reads
+    // FASTQC_POST(TRIMMOMATIC.out.trimmed_reads)
+    // ch_multiqc_files = ch_multiqc_files.mix(FASTQC_POST.out.zip.collect{it[1]})
+    // ch_versions = ch_versions.mix(FASTQC_POST.out.versions.first())
 
-    //Megahit to assemble reads into contigs
-    //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
-    //such that it aligns with the expectation of MEGAHIT
+    // //Megahit to assemble reads into contigs
+    // //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
+    // //such that it aligns with the expectation of MEGAHIT
     
-    // ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> [meta, reads] }
-    MEGAHIT(TRIMMOMATIC.out.trimmed_reads)
-    ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
+    // // ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> [meta, reads] }
 
-    //Diamond make_db to create diamond formatted rvdb and ncbi databases
-    ch_rvdb_fasta = Channel.fromPath(params.rvdb_fasta, checkIfExists: true)
-        .map { fasta -> [[id: 'rvdb'], fasta] }
+    // ch_trimmed_for_megahit = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> tuple(meta, reads[0], reads[1]) }
 
+    // MEGAHIT(ch_trimmed_for_megahit)
+    // ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
-    //channels for stub test should i keep them??
-    ch_taxonmap = Channel.fromPath('dummy_taxonmap.txt')
-    ch_taxonnodes = Channel.fromPath('dummy_taxonnodes.txt')
-    ch_taxonnames = Channel.fromPath('dummy_taxonnames.txt')
-
-    DIAMOND_MAKE_RVDB(ch_rvdb_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
-    ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
-
-    ch_ncbi_fasta = Channel.fromPath(params.ncbi_fasta, checkIfExists: true)
-        .map { fasta -> [[id: 'ncbi'], fasta] }
-    DIAMOND_MAKE_NCBI_DB(ch_ncbi_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
-    ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
+    // //Diamond make_db to create diamond formatted rvdb and ncbi databases
+    // ch_rvdb_fasta = Channel.fromPath(params.rvdb_fasta, checkIfExists: true)
+    //     .map { fasta -> [[id: 'rvdb'], fasta] }
 
 
-    //Diamond to compare read proteins against known proteins in databases
-    // NOTE: In the bash script, we have the output extension as `m8` which is
-    // just a TSV, therefore we shall use TSV directly to call the nf-core module.
-    //TODO: @nox we need to add more parameters to this process-call
+    // //channels for stub test should i keep them??
+    // ch_taxonmap = Channel.fromPath('dummy_taxonmap.txt')
+    // ch_taxonnodes = Channel.fromPath('dummy_taxonnodes.txt')
+    // ch_taxonnames = Channel.fromPath('dummy_taxonnames.txt')
+
+    // DIAMOND_MAKE_RVDB(ch_rvdb_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
+    // ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
+
+    // ch_ncbi_fasta = Channel.fromPath(params.ncbi_fasta, checkIfExists: true)
+    //     .map { fasta -> [[id: 'ncbi'], fasta] }
+
+    // ch_extraction_input = Channel.fromPath(params.viral_csv)
+    // EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_fasta)
+    // DIAMOND_MAKE_NCBI_DB(EXTRACT_NR_VIRAL.out.nr_db_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
+    // ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
+
+
+    // //Diamond to compare read proteins against known proteins in databases
+    // // NOTE: In the bash script, we have the output extension as `m8` which is
+    // // just a TSV, therefore we shall use TSV directly to call the nf-core module.
+    // //TODO: @nox we need to add more parameters to this process-call
     
-    //are these channels structured correctly to catch dmnd dbs made by diamond make_db
-    ch_diamond_rvdb_db = (DIAMOND_MAKE_RVDB.out.db).map { meta, db -> db }
-    ch_diamond_ncbi_db = (DIAMOND_MAKE_NCBI_DB.out.db).map { meta, db -> db }
-    // ch_diamond_input = (MEGAHIT.out.contigs).map { meta, contigs, db -> [meta, contigs] }
+    // //are these channels structured correctly to catch dmnd dbs made by diamond make_db
+    // ch_diamond_rvdb_db = (DIAMOND_MAKE_RVDB.out.db).map { meta, db -> db }
+    // ch_diamond_ncbi_db = (DIAMOND_MAKE_NCBI_DB.out.db).map { meta, db -> db }
+    // // ch_diamond_input = (MEGAHIT.out.contigs).map { meta, contigs, db -> [meta, contigs] }
 
-    DIAMOND_BLASTX_PRE_RVDB(
-        MEGAHIT.out.contigs,
-        ch_diamond_rvdb_db,
-        params.diamond_output_format,
-        ''
-    )
+    // DIAMOND_BLASTX_PRE_RVDB(
+    //     MEGAHIT.out.contigs,
+    //     ch_diamond_rvdb_db,
+    //     params.diamond_output_format,
+    //     ''
+    // )
     
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
+    // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
 
-     DIAMOND_BLASTX_PRE_NCBI(
-        MEGAHIT.out.contigs,
-        ch_diamond_ncbi_db,
-        params.diamond_output_format,
-        ''  
-    )
+    //  DIAMOND_BLASTX_PRE_NCBI(
+    //     MEGAHIT.out.contigs,
+    //     ch_diamond_ncbi_db,
+    //     params.diamond_output_format,
+    //     ''  
+    // )
     
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
+    // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
 
-    //get accession ids and taxonomy ids for taxonkit to use
-    RVDB_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
-    ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
+    // //get accession ids and taxonomy ids for taxonkit to use
+    // RVDB_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
+    // ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
-    NCBI_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
-    ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
+    // NCBI_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
+    // ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
-    //get accession ids and taxonomy ids for taxonkit to use
-    TAXONOMY_ID(RVDB_PROCESSING.out.rvdb_final_acc, NCBI_PROCESSING.out.ncbi_final_acc)
-    ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
+    // //get accession ids and taxonomy ids for taxonkit to use
+    // TAXONOMY_ID(RVDB_PROCESSING.out.rvdb_final_acc, NCBI_PROCESSING.out.ncbi_final_acc)
+    // ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
-    //Taxonkit for lineage filtering and getting taxonomy ids
-    ch_taxonkit_db = Channel.fromPath(params.taxonkit_db, checkIfExists: true)
-    TAXONKIT_LINEAGE(TAXONOMY_ID.out.acc_tax_id_tsv, ch_taxonkit_db)
-    ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
+    // //Taxonkit for lineage filtering and getting taxonomy ids
+    // ch_taxonkit_db = Channel.fromPath(params.taxonkit_db, checkIfExists: true)
+    // TAXONKIT_LINEAGE(TAXONOMY_ID.out.acc_tax_id_tsv, ch_taxonkit_db)
+    // ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
-    //Contig_filter to extract sequences marked as viral only
-    CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
-    ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
+    // //Contig_filter to extract sequences marked as viral only
+    // CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
+    // ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
-    //sort the filtered list to remove duplicates
-    CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.viral_contigs_metadata)
-    ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
+    // //sort the filtered list to remove duplicates
+    // CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.viral_contigs_metadata)
+    // ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
-    //make fasta file to blastn against NT 
-    MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
-    ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
+    // //make fasta file to blastn against NT 
+    // MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
+    // ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
-    //Blastn for comparing contig sequences to known nucleotide sequences
-    ch_blastn_db = Channel.fromPath("${params.blastn_db}*", checkIfExists: true).collect()
-    BLAST_BLASTN(MAKE_BLAST_FASTA.out.blastn_contigs_fasta, ch_blastn_db)
-    ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
+    // //Blastn for comparing contig sequences to known nucleotide sequences
+    // ch_blastn_db = Channel.fromPath("${params.blastn_db}/*", checkIfExists: true).collect()
+    // BLAST_BLASTN(MAKE_BLAST_FASTA.out.blastn_contigs_fasta, ch_blastn_db)
+    // ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
-    //get metadata of the blastn hits
-    FETCH_METADATA_BLASTN(BLAST_BLASTN.out.tsv)
-    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
+    // //get metadata of the blastn hits
+    // FETCH_METADATA_BLASTN(BLAST_BLASTN.out.tsv)
+    // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
-    //Make nr database using nr fasta
-    ch_nr_fasta = Channel.fromPath(params.blastx_nr_fasta, checkIfExists: true)
-        .map { fasta -> [[id: 'nr'], fasta] }
-    DIAMOND_MAKE_NR_DB(ch_nr_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
-    ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
+    // //Make nr database using nr fasta
+    // ch_nr_fasta = Channel.fromPath(params.blastx_nr_fasta, checkIfExists: true)
+    //     .map { fasta -> [[id: 'nr'], fasta] }
+    // DIAMOND_MAKE_NR_DB(ch_nr_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
+    // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
-    //Blastx to compare proteins to check for distant orthologs
-    ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> db }
-    DIAMOND_BLASTX_FINAL(
-        MAKE_BLAST_FASTA.out.blastn_contigs_fasta,
-        ch_diamond_nr_db,
-        params.diamond_output_format,
-        ''
-    )
-    ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
+    // //Blastx to compare proteins to check for distant orthologs
+    // ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> db }
+    // DIAMOND_BLASTX_FINAL(
+    //     MAKE_BLAST_FASTA.out.blastn_contigs_fasta,
+    //     ch_diamond_nr_db,
+    //     params.diamond_output_format,
+    //     ''
+    // )
+    // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
-    //get metadata of the blastx hits
-    FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
-    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
+    // //get metadata of the blastx hits
+    // FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
+    // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
 
 
     //---------------------------------------
@@ -290,15 +287,15 @@ workflow VIROLOCATE_NF {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow.onComplete {
-    if (params.email || params.email_on_fail) {
-        NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
-    }
-    NfcoreTemplate.summary(workflow, params, log)
-    if (params.hook_url) {
-        NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
-    }
-}
+// workflow.onComplete {
+//     if (params.email || params.email_on_fail) {
+//         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
+//     }
+//     NfcoreTemplate.summary(workflow, params, log)
+//     if (params.hook_url) {
+//         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
+//     }
+// }
 
 
 /*
