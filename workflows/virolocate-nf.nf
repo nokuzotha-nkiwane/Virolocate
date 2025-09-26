@@ -105,7 +105,6 @@ workflow VIROLOCATE_NF {
     
     // ch_reads = ch_samplesheet.map { meta, fastq -> [meta, fastq] } //line kinda redundant since mapping handled earlier
     
-    //TRIMMOMATIC(ch_reads, params.trimmomatic_adapters,'')
     TRIMMOMATIC(ch_reads)
     ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
 
