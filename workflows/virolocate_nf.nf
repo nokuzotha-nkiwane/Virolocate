@@ -11,10 +11,9 @@ def checkPathParamList = [
     params.input, 
     params.multiqc_config, 
     params.rvdb_fasta,
-    params.ncbi_fasta,
-    params.blastx_nr_fasta,
+    params.ncbi_nr_fasta,
     params.taxonkit_db,
-    params.blastn_db,
+    params.ncbi_nt_fasta,
     params.trimmomatic_adapters
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
@@ -117,7 +116,7 @@ workflow VIROLOCATE_NF {
     // //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
     // //such that it aligns with the expectation of MEGAHIT
     
-    // // ch_megahit_paired_input = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> [meta, reads] }
+   
 
     // ch_trimmed_for_megahit = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> tuple(meta, reads[0], reads[1]) }
 
@@ -137,11 +136,11 @@ workflow VIROLOCATE_NF {
     // DIAMOND_MAKE_RVDB(ch_rvdb_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
     // ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
-    // ch_ncbi_fasta = Channel.fromPath(params.ncbi_fasta, checkIfExists: true)
+    // ch_ncbi_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
     //     .map { fasta -> [[id: 'ncbi'], fasta] }
 
     // ch_extraction_input = Channel.fromPath(params.viral_csv)
-    // EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_fasta)
+    // EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_nr_fasta)
     // DIAMOND_MAKE_NCBI_DB(EXTRACT_NR_VIRAL.out.nr_db_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
     // ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
@@ -203,8 +202,8 @@ workflow VIROLOCATE_NF {
     // ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
     // //Blastn for comparing contig sequences to known nucleotide sequences
-    // ch_blastn_db = Channel.fromPath("${params.blastn_db}/*", checkIfExists: true).collect()
-    // BLAST_BLASTN(MAKE_BLAST_FASTA.out.blastn_contigs_fasta, ch_blastn_db)
+    // ch_ncbi_nt_fasta = Channel.fromPath("${params.ncbi_nt_fasta", checkIfExists: true).collect()
+    // BLAST_BLASTN(MAKE_BLAST_FASTA.out.blastn_contigs_fasta, ch_ncbi_nt_fasta)
     // ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     // //get metadata of the blastn hits
@@ -212,7 +211,7 @@ workflow VIROLOCATE_NF {
     // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
     // //Make nr database using nr fasta
-    // ch_nr_fasta = Channel.fromPath(params.blastx_nr_fasta, checkIfExists: true)
+    // ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
     //     .map { fasta -> [[id: 'nr'], fasta] }
     // DIAMOND_MAKE_NR_DB(ch_nr_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
     // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
