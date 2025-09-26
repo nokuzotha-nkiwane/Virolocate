@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    CERI-KRISP/virolocate-nf
+    CERI-KRISP/virolocate_nf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/CERI-KRISP/virolocate-nf
+    Github : https://github.com/CERI-KRISP/virolocate_nf
 ----------------------------------------------------------------------------------------
 */
 
@@ -13,9 +13,9 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { VIROLOCATE-NF  } from './workflows/virolocate-nf'
-include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_virolocate-nf_pipeline'
-include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_virolocate-nf_pipeline'
+include { virolocate_nf  } from './workflows/virolocate_nf'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_virolocate_nf_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_virolocate_nf_pipeline'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
@@ -25,7 +25,7 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_viro
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow CERIKRISP_VIROLOCATE-NF {
+workflow CERIKRISP_virolocate_nf {
 
     take:
     samplesheet // channel: samplesheet read in from --input
@@ -35,11 +35,11 @@ workflow CERIKRISP_VIROLOCATE-NF {
     //
     // WORKFLOW: Run pipeline
     //
-    VIROLOCATE-NF (
+    virolocate_nf (
         samplesheet
     )
     emit:
-    multiqc_report = VIROLOCATE-NF.out.multiqc_report // channel: /path/to/multiqc_report.html
+    multiqc_report = virolocate_nf.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,7 +65,7 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-    CERIKRISP_VIROLOCATE-NF (
+    CERIKRISP_virolocate_nf (
         PIPELINE_INITIALISATION.out.samplesheet
     )
     //
@@ -77,7 +77,7 @@ workflow {
         params.plaintext_email,
         params.outdir,
         params.monochrome_logs,
-        CERIKRISP_VIROLOCATE-NF.out.multiqc_report
+        CERIKRISP_virolocate_nf.out.multiqc_report
     )
 }
 

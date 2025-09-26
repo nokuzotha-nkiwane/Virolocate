@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/CERI-KRISP/virolocate-nf/master/assets/schema_input.json",
-    "title": "CERI-KRISP/virolocate-nf pipeline - params.input schema",
+    "$id": "https://raw.githubusercontent.com/CERI-KRISP/virolocate_nf/master/assets/schema_input.json",
+    "title": "CERI-KRISP/virolocate_nf pipeline - params.input schema",
     "description": "Schema for the file provided with params.input",
     "type": "array",
     "items": {

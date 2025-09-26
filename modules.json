@@ -1,6 +1,6 @@
 {
-  "name": "CERI-KRISP/virolocate-nf",
-  "homePage": "https://github.com/CERI-KRISP/virolocate-nf",
+  "name": "CERI-KRISP/virolocate_nf",
+  "homePage": "https://github.com/CERI-KRISP/virolocate_nf",
   "repos": {
     "https://github.com/nf-core/modules.git": {
       "modules": {
