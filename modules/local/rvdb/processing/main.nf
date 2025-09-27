@@ -2,12 +2,12 @@ process RVDB_PROCESSING {
     tag "$meta.id"
     conda "${moduleDir}/environment.yml"
     container "wave.seqera.io/wt/935142d6c1b1/wave/build:rvdb_processing--a737d7798a59a0c3"
-    
+
     input:
     tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path('*.tsv')  , emit: rvdb_final_acc
+    tuple val(meta), path('*.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -32,7 +32,7 @@ process RVDB_PROCESSING {
                         echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}"
                     fi
                 done < "${diamond_tsv}"
-            else 
+            else
                 echo "Skipping empty or non-existent files"
             fi
         done >> "${rvdb_final_acc}"
@@ -42,13 +42,15 @@ process RVDB_PROCESSING {
         echo "RVDB directory does not exist or is empty. Searching for NCBI directory."
         echo "# No RVDB data processed" > "${rvdb_final_acc}"
     fi
-    
+
     """
 
     stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def diamond_tsv = task.ext.diamond_tsv ?: ""
     def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
-    """ 
-    touch ${rvdb_final_acc}
+    """
+    touch ${prefix}.rvdb.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

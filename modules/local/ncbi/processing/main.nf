@@ -7,9 +7,9 @@ process NCBI_PROCESSING {
     tuple val(meta), path('*.tsv')
 
     output:
-    tuple val(meta), path('*.tsv')  , emit: ncbi_final_acc
+    tuple val(meta), path('*.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
-    
+
 
     script:
     def prefix = task.ext.prefix ?: "${meta.id}"
@@ -20,7 +20,7 @@ process NCBI_PROCESSING {
         echo "Using NCBI folder for metadata file preparation"
 
        cat "${diamond_tsv}" >> "${ncbi_final_acc}"
-    
+
     else
         echo "Files in NCBI directory empty or do not exist."
         exit 1
@@ -28,9 +28,11 @@ process NCBI_PROCESSING {
 
     """
     stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def diamond_tsv = task.ext.diamond_tsv ?: ""
     def ncbi_final_acc = task.ext.ncbi_final_acc ?: ""
-    """ 
-    touch ${ncbi_final_acc}
+    """
+    touch ${prefix}.ncbi.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -3,11 +3,13 @@ process TAXONOMY_ID {
     container "wave.seqera.io/wt/80587b948893/wave/build:1.0.0--656709bd5c25c61b"
 
     tag "$meta.id"
+
+    //FIXME This needs to be fixed
     conda 'bioconda::curl'
 
     input:
-    tuple val(meta), path('*.tsv')
-    tuple val(meta), path('*.tsv')
+    tuple val(meta), path(ncbi_tsv)
+    tuple val(meta), path(rvdb_tsv)
 
     output:
     tuple val(meta), path('*.tsv')  , emit: final_accessions_tsv
@@ -32,7 +34,7 @@ process TAXONOMY_ID {
     #if only ncbi accessions file exists
     elif [[ -s "${ncbi_final_acc}" ]]; then
         cp "${ncbi_final_acc}" "${final_accessions_tsv}"
-    
+
     #if neither accessions files exists
     else
         echo -e "Accessions file "${final_accessions_tsv}" not found."
