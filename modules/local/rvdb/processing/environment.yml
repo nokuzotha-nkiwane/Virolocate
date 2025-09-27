@@ -1,0 +1,7 @@
+name: rvdb_processing
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::rvdb_processing=1.0.0

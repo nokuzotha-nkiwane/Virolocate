@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an idea for the CERI-KRISP/virolocate-nf pipeline
+description: Suggest an idea for the CERI-KRISP/virolocate_nf pipeline
 labels: enhancement
 body:
   - type: textarea

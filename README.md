@@ -1,8 +1,8 @@
-# CERI-KRISP/virolocate-nf
+# CERI-KRISP/virolocate_nf
 
 ## Introduction
 
-**CERI-KRISP/virolocate-nf** is a bioinformatics pipeline that ...
+**CERI-KRISP/virolocate_nf** is a bioinformatics pipeline that ...
 
 <!-- TODO nf-core:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
@@ -40,7 +40,7 @@ Now, you can run the pipeline using:
 <!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
-nextflow run CERI-KRISP/virolocate-nf \
+nextflow run CERI-KRISP/virolocate_nf \
    -profile <docker/singularity/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
@@ -51,7 +51,7 @@ nextflow run CERI-KRISP/virolocate-nf \
 
 ## Credits
 
-CERI-KRISP/virolocate-nf was originally written by nokuzotha-nkiwane,abhi18av.
+CERI-KRISP/virolocate_nf was originally written by nokuzotha-nkiwane,abhi18av.
 
 We thank the following people for their extensive assistance in the development of this pipeline:
 
@@ -64,7 +64,7 @@ If you would like to contribute to this pipeline, please see the [contributing g
 ## Citations
 
 <!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
-<!-- If you use CERI-KRISP/virolocate-nf for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
+<!-- If you use CERI-KRISP/virolocate_nf for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
 
 

@@ -1,5 +1,5 @@
 //
-// Subworkflow with functionality specific to the CERI-KRISP/virolocate-nf pipeline
+// Subworkflow with functionality specific to the CERI-KRISP/virolocate_nf pipeline
 //
 
 /*

@@ -7,9 +7,8 @@ module diamond
 wdir="/analyses/users/nokuzothan/disc_pipe"
 cdir="${wdir}/init_tools/diamond"
 input_reads_dir="${wdir}/init_tools/megahit/output/default"
-db="${wdir}/init_tools/ncbi_fasta.faa"
 output="${cdir}/output/NCBI"
-tmp_db="${output}/nt.tmp"
+db_fasta="${cdir}/input/ncbi_fasta.faa"
 threads=$((`/bin/nproc` -2))
 
 #clear existing output directory if any, make new output directory 
@@ -18,55 +17,9 @@ if [[ -e $output ]]; then
 fi
 mkdir -p -m a=rwx ${output}
 
-# #filter full nr database for viral sequences
-# > ${tmp_db}
-# while read -r LN;do
-#   if [[ ${LN} == ">" ]]; then
-#     echo "" >> ${tmp_db}
-#   fi
-  
-#   echo -e -n "${LN}\t" >> ${tmp_db}
-# done < ${db}
-
-
-
-
-while read -r virus; do
-    grep -i "^>.*${virus}" ${db} | \
-    awk '
-        /^>/ {title=$0; next}
-        {print title "\n" $0}
-    ' >> ncbi_fasta
-done < virus.txt
-
-
-while read -r virus; do
-    awk -v name="${virus}" '
-        BEGIN {IGNORECASE=1}
-        /^>/ {ON = index($0, name) > 0}
-        ON {print}
-    ' ${db} >> ncbi_fasta
-done < virus.txt
-
-#downloading protein fasta sequences from genbank and making them one file 
-# # Number of sequences per batch
-# batch=50000
-
-# # Step 1: Get total number of viral protein sequences
-# total=$(curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=protein&term=txid10239[Organism]&rettype=count&retmode=text")
-# echo "Total viral protein sequences: $total"
-
-# # Step 2: Fetch in batches
-# for start in $(seq 0 $batch $total); do
-#     echo "Fetching sequences $start to $((start+batch-1))..."
-#     curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&term=txid10239[Organism]&retstart=${start}&retmax=${batch}&rettype=fasta&retmode=text" >> ${db}
-# done
-
-# echo "Download complete. Sequences saved in ${db}"
-
 
 #make diamond protein database
-diamond makedb --in ${db} -d ${output}/nr
+diamond makedb --in ${db_fasta} -d ${output}/nr
 
 #loop through each of the files created in megahit output directory to find final.congtigs.fa files and run diamond
 for folder in ls ${input_reads_dir}/*; do

@@ -23,7 +23,7 @@ if [[ -d ${rv_dir} ]]; then
             name=$(echo ${col4} | cut -d "|" -f6)
             echo -e "${col1}\t${col2}\t${acc_id}\t${name}\t${rest}"
         done < ${matches} 
-    done >> ${rv_dir}/acc_ids.tsv
+    done >> ${rv_dir}/acc_ids.txt
 
 else
     echo "No RVDB folder exists. Searching for NCBI folder"
@@ -39,19 +39,19 @@ fi
 #merge the ncbi and rvdb acc_ids files and write out to diamond output directory
 #if the rvdb file exists and has a non-empty acc-ids.txt file
 if [[ -s ${rv_dir}/acc_ids.txt ]]; then
-    cat ${rv_dir}/acc_ids.tsv >> ${out}/acc_ids.tsv
+    cat ${rv_dir}/acc_ids.txt >> ${out}/acc_ids.txt
 fi
 
 #if the ncbi file exists and has a non-empty acc-ids.txt file
 if [[ -d ${nc_dir} ]]; then 
     echo "Using NCBI folder for metadata file preparation"
     for matches in ${nc_dir}/*.m8; do
-        cat ${matches} >> ${out}/acc_ids.tsv
+        cat ${matches} >> ${out}/acc_ids.txt
     done
 fi
 
 #sort and deduplicate acc_ids.txt
-sort -u ${out}/acc_ids.tsv -o ${out}/acc_ids.tsv
+sort -u ${out}/acc_ids.txt -o ${out}/acc_ids.txt
 
 #function to get metadata from eutils
 function get_meta {
@@ -74,11 +74,36 @@ function get_meta {
     tax=$(echo "${info}" | awk '/\/db_xref/ { match($0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
 
     #split the other columns after the third one
-    IFS=$'\t' read -r -a rest_array <<< ${columns}
+    IFS=$'\t' read -r -a rest_array <<< "${columns}"
     rest=$(printf "%s\t" "${rest_array[@]}" )
 
+    #put NA if any of the fields are empty
+    if [[ -z "${host}" ]]; then
+        host="NA"
+    fi
+
+    if [[ -z "${geo_loc_name}" ]]; then
+        geo_loc_name="NA"
+    fi
+
+    if [[ -z "${date}" ]]; then
+        date="NA"
+    fi
+
+    if [[ -z "${gene}" ]]; then
+        gene="NA"
+    fi
+
+    if [[ -z "${product}" ]]; then
+        product="NA"
+    fi
+
+    if [[ -z "${tax}" ]]; then
+        tax="NA"
+    fi
+
     #print output
-    echo -e "${contig}\t${length}\t${acc_id}\t${rest}\t${host}\t${gene}\t${product}\t${geo_loc_name}\t${date}\t${tax}" >>${output}
+    echo -e "${contig}\t${length}\t${acc_id}\t${rest}\t${host}\t${gene}\t${product}\t${geo_loc_name}\t${date}\t${tax}" >>"${output}"
 
 
 } 
@@ -88,6 +113,6 @@ function get_meta {
 
 while IFS=$'\t' read -r col1 col2 col3 rest;do
     echo "[${col3}]"
-    get_meta ${col1} ${col2} ${col3} ${rest} ${output_tsv}
-done < ${out}/acc_ids.tsv
+    get_meta "${col1}" "${col2}" "${col3}" "${rest}" "${output_tsv}"
+done < ${out}/acc_ids.txt
 

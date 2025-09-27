@@ -1,7 +1,7 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/CERI-KRISP/virolocate-nf/master/nextflow_schema.json",
-    "title": "CERI-KRISP/virolocate-nf pipeline parameters",
+    "$id": "https://raw.githubusercontent.com/CERI-KRISP/virolocate_nf/master/nextflow_schema.json",
+    "title": "CERI-KRISP/virolocate_nf pipeline parameters",
     "description": "A pipeline to explore environmental samples for putative viruses.",
     "type": "object",
     "$defs": {

@@ -1,4 +1,4 @@
-# CERI-KRISP/virolocate-nf: Output
+# CERI-KRISP/virolocate_nf: Output
 
 ## Introduction
 
