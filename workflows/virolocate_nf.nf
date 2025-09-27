@@ -7,9 +7,9 @@
 // def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 
 // Check input path parameters to see if they exist
-def checkPathParamList = [ 
-    params.input, 
-    params.multiqc_config, 
+def checkPathParamList = [
+    params.input,
+    params.multiqc_config,
     params.rvdb_fasta,
     params.ncbi_nr_fasta,
     params.taxonkit_db,
@@ -40,9 +40,9 @@ include { MEGAHIT } from '../modules/nf-core/megahit/main.nf'
 include { MULTIQC } from '../modules/nf-core/multiqc/main.nf'
 include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
 include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
-include { DIAMOND_MAKEDB as DIAMOND_MAKE_RVDB } from '../modules/nf-core/diamond/makedb/main' 
-include { DIAMOND_MAKEDB as DIAMOND_MAKE_NCBI_DB} from '../modules/nf-core/diamond/makedb/main' 
-include { DIAMOND_MAKEDB as DIAMOND_MAKE_NR_DB} from '../modules/nf-core/diamond/makedb/main' 
+include { DIAMOND_MAKEDB as DIAMOND_MAKE_RVDB } from '../modules/nf-core/diamond/makedb/main'
+include { DIAMOND_MAKEDB as DIAMOND_MAKE_NCBI_DB} from '../modules/nf-core/diamond/makedb/main'
+include { DIAMOND_MAKEDB as DIAMOND_MAKE_NR_DB} from '../modules/nf-core/diamond/makedb/main'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_PRE_RVDB} from '../modules/nf-core/diamond/blastx/main.nf'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_PRE_NCBI} from '../modules/nf-core/diamond/blastx/main.nf'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_FINAL } from '../modules/nf-core/diamond/blastx/main.nf'
@@ -71,14 +71,14 @@ include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/fetch_
 ch_samplesheet = Channel.fromPath(params.samplesheet)
 
 workflow VIROLOCATE_NF {
-    
+
     //main starts main workflow logic
     //ch_versions will collect software version info form each tool
     //ch_multiqc_files will collect quality control reports for final aggregation
     main:
     ch_versions = Channel.empty()
     ch_multiqc_files = Channel.empty()
-    
+
     //Parse samplesheet to get reads
     //assumes paired end readsa as default
     ch_reads = ch_samplesheet
@@ -91,7 +91,7 @@ workflow VIROLOCATE_NF {
     }
 
     // MODULE: Run FastQC
-    
+
     FASTQC_PRE (ch_reads)
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC_PRE.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC_PRE.out.versions.first())
@@ -101,11 +101,11 @@ workflow VIROLOCATE_NF {
     //Trimmomatic run to trim reads
     //TODO: @nox Add a parameter to allow users to pass the folder location
     // Assuming fastq is a list of files [R1, R2] for paired-end
-    
+
     // ch_reads = ch_samplesheet.map { meta, fastq -> [meta, fastq] } //line kinda redundant since mapping handled earlier
-    
-    TRIMMOMATIC(ch_reads)
-    ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
+
+    // TRIMMOMATIC(ch_reads)
+    // ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
 
     // //FastQC to check quality of trimmed reads
     // FASTQC_POST(TRIMMOMATIC.out.trimmed_reads)
@@ -115,8 +115,8 @@ workflow VIROLOCATE_NF {
     // //Megahit to assemble reads into contigs
     // //TODO: @nox we need to transform the shape of TRIMMOMATIC.out.trimmed_reads
     // //such that it aligns with the expectation of MEGAHIT
-    
-   
+
+
 
     // ch_trimmed_for_megahit = TRIMMOMATIC.out.trimmed_reads.map { meta, reads -> tuple(meta, reads[0], reads[1]) }
 
@@ -149,7 +149,7 @@ workflow VIROLOCATE_NF {
     // // NOTE: In the bash script, we have the output extension as `m8` which is
     // // just a TSV, therefore we shall use TSV directly to call the nf-core module.
     // //TODO: @nox we need to add more parameters to this process-call
-    
+
     // //are these channels structured correctly to catch dmnd dbs made by diamond make_db
     // ch_diamond_rvdb_db = (DIAMOND_MAKE_RVDB.out.db).map { meta, db -> db }
     // ch_diamond_ncbi_db = (DIAMOND_MAKE_NCBI_DB.out.db).map { meta, db -> db }
@@ -161,16 +161,16 @@ workflow VIROLOCATE_NF {
     //     params.diamond_output_format,
     //     ''
     // )
-    
+
     // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
 
     //  DIAMOND_BLASTX_PRE_NCBI(
     //     MEGAHIT.out.contigs,
     //     ch_diamond_ncbi_db,
     //     params.diamond_output_format,
-    //     ''  
+    //     ''
     // )
-    
+
     // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
 
     // //get accession ids and taxonomy ids for taxonkit to use
@@ -197,7 +197,7 @@ workflow VIROLOCATE_NF {
     // CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.viral_contigs_metadata)
     // ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
-    // //make fasta file to blastn against NT 
+    // //make fasta file to blastn against NT
     // MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
     // ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
