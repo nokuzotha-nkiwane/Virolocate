@@ -40,7 +40,7 @@ process EXTRACT_NR_VIRAL {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        extract_nr_viral: \$(extract_nr_viral -v 2>&1 | sed 's/EXTRACT_NR_VIRAL v//')
+        extract_nr_viral: "1.0.0"
     END_VERSIONS
 
     """

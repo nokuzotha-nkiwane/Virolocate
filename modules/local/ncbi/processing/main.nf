@@ -36,7 +36,7 @@ process NCBI_PROCESSING {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        ncbi_processing: \$(ncbi_processing -v 2>&1 | sed 's/NCBI_PROCESSING v//')
+        ncbi_processing: "1.0.0"
     END_VERSIONS
 
     """

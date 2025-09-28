@@ -36,7 +36,7 @@ process MAKE_BLAST_FASTA {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        make_blast_fasta: \$(make_blast_fasta -v 2>&1 | sed 's/MAKE_BLAST_FASTA v//')
+        make_blast_fasta: "1.0.0"
     END_VERSIONS
     """
 }

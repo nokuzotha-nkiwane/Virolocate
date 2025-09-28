@@ -54,7 +54,7 @@ process RVDB_PROCESSING {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        rvdb_processing: \$(rvdb_processing -v 2>&1 | sed 's/RVDB_PROCESSING v//')
+        rvdb_processing: "1.0.0"
     END_VERSIONS
 
     """

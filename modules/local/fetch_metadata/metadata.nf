@@ -83,7 +83,7 @@ process FETCH_METADATA {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        fetch_metadata: \$(fetch_metadata -v 2>&1 | sed 's/FETCH_METADATA v//')
+        fetch_metadata: "1.0.0"
     END_VERSIONS
     """
 }

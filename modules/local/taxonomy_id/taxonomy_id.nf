@@ -1,6 +1,6 @@
 process TAXONOMY_ID {
     conda "${moduleDir}/environment.yml"
-    container "wave.seqera.io/wt/b61a50f2e7d4/wave/build:taxonomy_id--89655142769f1c43"
+    container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
 
     input:
     tuple val(meta), path(ncbi_tsv) 
@@ -13,7 +13,7 @@ process TAXONOMY_ID {
 
     script:
     def final_accessions_txt = task.ext.final_accessions_txt ?: ""
-    def output_tsv = task.ext.output_tsv ?: ""
+    def acc_tax_id_tsv = task.ext.acc_tax_id_tsv ?: ""
     """
 
     #combine rvdb_final_accessions.tsv and ncbi_final_accessions.tsv
@@ -68,6 +68,10 @@ process TAXONOMY_ID {
         get_meta "\${col1}" "\${col2}" "\${col3}" "${output_tsv}"
     done < "${final_accessions_txt}"
 
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        taxonomy_id: "1.0.0"
+    END_VERSIONS
     """
 
     stub:
@@ -79,7 +83,7 @@ process TAXONOMY_ID {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        taxonomy_id: \$(taxonomy_id -v 2>&1 | sed 's/TAXONOMY_ID v//')
+        taxonomy_id: "1.0.0"
     END_VERSIONS
 
     """

@@ -23,7 +23,7 @@ process CONTIG_UNIQUE_SORTER {
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        contig_sorter: \$(contig_sorter -v 2>&1 | sed 's/CONTIG_SORTER v//')
+        contig_sorter: "1.0.0"
     END_VERSIONS
 
     """

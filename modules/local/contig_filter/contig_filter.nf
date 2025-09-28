@@ -11,6 +11,7 @@ process CONTIG_FILTER {
     
     script:
     //how does lineage file here link to the input file
+    //@ABHI lineage file should 
     //should these files be allowed the option of empty
     def lineage_file = task.ext.lineage_file ?: ''
     def viral_contigs_metadata = task.ext.viral_contigs_metadata ?: ''
@@ -32,7 +33,7 @@ process CONTIG_FILTER {
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        contig_filter: \$(contig_filter -v 2>&1 | sed 's/CONTIG_FILTER v//')
+        contig_filter: "1.0.0"
     END_VERSIONS
 
 
