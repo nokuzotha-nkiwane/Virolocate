@@ -1,48 +1,46 @@
 process TAXONOMY_ID {
     conda "${moduleDir}/environment.yml"
-    container "wave.seqera.io/wt/80587b948893/wave/build:1.0.0--656709bd5c25c61b"
-
-    tag "$meta.id"
+    container "wave.seqera.io/wt/b61a50f2e7d4/wave/build:taxonomy_id--89655142769f1c43"
 
     //FIXME This needs to be fixed
-    conda 'bioconda::curl'
+    // conda 'bioconda::curl'
 
     input:
-    tuple val(meta), path(ncbi_tsv)
+    tuple val(meta), path(ncbi_tsv) 
     tuple val(meta), path(rvdb_tsv)
 
     output:
-    tuple val(meta), path('*.tsv')  , emit: final_accessions_tsv
-    tuple val(meta), path('*.tsv')  , emit: acc_tax_id_tsv
+    tuple val(meta), path(txt)  , emit: final_accessions_txt
+    tuple val(meta), path(tsv)  , emit: acc_tax_id_tsv
     path "versions.yml"             , emit: versions
 
     script:
     def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
     def ncbi_final_acc = task.ext.ncbi_final_acc ?: ""
-    def final_accessions_tsv = task.ext.final_accessions_tsv ?: ""
+    def final_accessions_tsv = task.ext.final_accessions_txt ?: ""
     def output_tsv = task.ext.output_tsv ?: ""
     """
 
     #combine rvdb_final_accessions.tsv and ncbi_final_accessions.tsv
     if [[ -s "${rvdb_final_acc}" && -s "${ncbi_final_acc}" ]];then
-        cat "${rvdb_final_acc}" "${ncbi_final_acc}" > "${final_accessions_tsv}"
+        cat "${rvdb_final_acc}" "${ncbi_final_acc}" > "${final_accessions_txt}"
 
     #if only rvdb accessions file exists
     elif [[ -s "${rvdb_final_acc}" ]]; then
-        cp "${rvdb_final_acc}" "${final_accessions_tsv}"
+        cp "${rvdb_final_acc}" "${final_accessions_txt}"
 
     #if only ncbi accessions file exists
     elif [[ -s "${ncbi_final_acc}" ]]; then
-        cp "${ncbi_final_acc}" "${final_accessions_tsv}"
+        cp "${ncbi_final_acc}" "${final_accessions_txt}"
 
     #if neither accessions files exists
     else
-        echo -e "Accessions file "${final_accessions_tsv}" not found."
+        echo -e "Accessions file "${final_accessions_txt}" not found."
         exit 1
     fi
 
     #sort and deduplicate acc_ids.txt
-    sort -u "${final_accessions_tsv}" -o "${final_accessions_tsv}"
+    sort -u "${final_accessions_txt}" -o "${final_accessions_txt}"
 
     #function to get metadata from eutils
     get_meta() {
@@ -73,16 +71,16 @@ process TAXONOMY_ID {
     while IFS=\$'\\t' read -r col1 col2 col3 rest;do
         echo "[\${col3}]"
         get_meta "\${col1}" "\${col2}" "\${col3}" "${output_tsv}"
-    done < "${final_accessions_tsv}"
+    done < "${final_accessions_txt}"
 
     """
 
     stub:
-    def final_accessions_tsv = task.ext.final_accessions_tsv ?: ""
+    def final_accessions_txt = task.ext.final_accessions_txt ?: ""
     def output_tsv = task.ext.output_tsv ?: ""
     """
-    touch ${final_accessions_tsv}
-    touch ${output_tsv}
+    touch tsv
+    touch txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
