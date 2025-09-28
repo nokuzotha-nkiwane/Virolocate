@@ -2,36 +2,31 @@ process TAXONOMY_ID {
     conda "${moduleDir}/environment.yml"
     container "wave.seqera.io/wt/b61a50f2e7d4/wave/build:taxonomy_id--89655142769f1c43"
 
-    //FIXME This needs to be fixed
-    // conda 'bioconda::curl'
-
     input:
     tuple val(meta), path(ncbi_tsv) 
     tuple val(meta), path(rvdb_tsv)
 
     output:
-    tuple val(meta), path(txt)  , emit: final_accessions_txt
-    tuple val(meta), path(tsv)  , emit: acc_tax_id_tsv
+    tuple val(meta), path('final_accessions.txt')  , emit: final_accessions_txt
+    tuple val(meta), path('acc_tax_id.tsv')  , emit: acc_tax_id_tsv
     path "versions.yml"             , emit: versions
 
     script:
-    def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
-    def ncbi_final_acc = task.ext.ncbi_final_acc ?: ""
-    def final_accessions_tsv = task.ext.final_accessions_txt ?: ""
+    def final_accessions_txt = task.ext.final_accessions_txt ?: ""
     def output_tsv = task.ext.output_tsv ?: ""
     """
 
     #combine rvdb_final_accessions.tsv and ncbi_final_accessions.tsv
-    if [[ -s "${rvdb_final_acc}" && -s "${ncbi_final_acc}" ]];then
-        cat "${rvdb_final_acc}" "${ncbi_final_acc}" > "${final_accessions_txt}"
+    if [[ -s "${rvdb_tsv}" && -s "${ncbi_tsv}" ]];then
+        cat "${rvdb_tsv}" "${ncbi_tsv}" > "${final_accessions_txt}"
 
     #if only rvdb accessions file exists
-    elif [[ -s "${rvdb_final_acc}" ]]; then
-        cp "${rvdb_final_acc}" "${final_accessions_txt}"
+    elif [[ -s "${rvdb_tsv}" ]]; then
+        cp "${rvdb_tsv}" "${final_accessions_txt}"
 
     #if only ncbi accessions file exists
-    elif [[ -s "${ncbi_final_acc}" ]]; then
-        cp "${ncbi_final_acc}" "${final_accessions_txt}"
+    elif [[ -s "${ncbi_tsv}" ]]; then
+        cp "${ncbi_tsv}" "${final_accessions_txt}"
 
     #if neither accessions files exists
     else
@@ -79,8 +74,8 @@ process TAXONOMY_ID {
     def final_accessions_txt = task.ext.final_accessions_txt ?: ""
     def output_tsv = task.ext.output_tsv ?: ""
     """
-    touch tsv
-    touch txt
+    touch final_accessions.txt
+    touch acc_tax_id.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
