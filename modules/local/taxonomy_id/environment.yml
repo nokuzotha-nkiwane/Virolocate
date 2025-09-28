@@ -4,5 +4,5 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - curl
+  - bioconda::curl
   - bioconda::taxonomy_id=1.0.0
