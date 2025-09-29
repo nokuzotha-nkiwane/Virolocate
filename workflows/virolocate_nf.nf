@@ -146,7 +146,7 @@ workflow VIROLOCATE_NF {
     ch_extraction_input = Channel.fromPath(params.viral_csv)
     EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_nr_fasta)
     DIAMOND_MAKE_NCBI_DB(EXTRACT_NR_VIRAL.out.nr_db_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
-    // ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
+    //ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
 
     //Diamond to compare read proteins against known proteins in databases
@@ -180,18 +180,27 @@ workflow VIROLOCATE_NF {
 
     // //get accession ids and taxonomy ids for taxonkit to use
     RVDB_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
-    // ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
+    ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
     NCBI_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
-    // ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
+    ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
     //get accession ids and taxonomy ids for taxonkit to use
-    // TAXONOMY_ID(RVDB_PROCESSING.out.tsv, NCBI_PROCESSING.out.tsv)
-    // ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
+    TAXONOMY_ID(RVDB_PROCESSING.out.tsv, NCBI_PROCESSING.out.tsv)
+    ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
-    // //Taxonkit for lineage filtering and getting taxonomy ids
-    // ch_taxonkit_db = Channel.fromPath(params.taxonkit_db, checkIfExists: true)
-    // TAXONKIT_LINEAGE(TAXONOMY_ID.out.acc_tax_id_tsv, ch_taxonkit_db)
+    //Taxonkit for lineage filtering and getting taxonomy ids
+    ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
+    ch_taxonkit_input = TAXONOMY_ID.out.acc_tax_id_tsv.flatMap { meta, taxidfile ->
+        taxidfile.readLines().collect { line ->
+            def fields = line.split('\t')
+            def taxid  = fields[-1] 
+            tuple(meta, taxid, taxidfile)
+        }
+    }
+
+    TAXONKIT_LINEAGE(ch_taxonkit_input, ch_taxonkit_db)
+
     // ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
     // //Contig_filter to extract sequences marked as viral only
