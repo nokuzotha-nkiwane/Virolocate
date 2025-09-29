@@ -201,17 +201,17 @@ workflow VIROLOCATE_NF {
     CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
-    // //sort the filtered list to remove duplicates
-    // CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.viral_contigs_metadata)
-    // ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
+    //sort the filtered list to remove duplicates
+    CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.viral_contigs_metadata)
+    ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
-    // //make fasta file to blastn against NT
-    // MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
-    // ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
+    //make fasta file to blastn against NT
+    MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
+    ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
-    // //Blastn for comparing contig sequences to known nucleotide sequences
-    // ch_ncbi_nt_fasta = Channel.fromPath("${params.ncbi_nt_fasta", checkIfExists: true).collect()
-    // BLAST_BLASTN(MAKE_BLAST_FASTA.out.blastn_contigs_fasta, ch_ncbi_nt_fasta)
+    //Blastn for comparing contig sequences to known nucleotide sequences
+    ch_ncbi_nt_db = Channel.fromPath("${params.ncbi_nt_db}/*", checkIfExists: true).collect()
+    BLAST_BLASTN(MAKE_BLAST_FASTA.out.blast_contigs_fasta, ch_ncbi_nt_db)
     // ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     // //get metadata of the blastn hits
