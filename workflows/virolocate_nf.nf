@@ -103,7 +103,6 @@ workflow VIROLOCATE_NF {
     //TODO: @nox Add a parameter to allow users to pass the folder location
     // Assuming fastq is a list of files [R1, R2] for paired-end
 
-    // ch_reads = ch_samplesheet.map { meta, fastq -> [meta, fastq] } //line kinda redundant since mapping handled earlier
 
     TRIMMOMATIC(ch_reads)
     // NOTE: I'm not quite sure what's wrong with this line, the formatting
@@ -126,8 +125,7 @@ workflow VIROLOCATE_NF {
     // ch_versions = ch_versions.mix(MEGAHIT.out.versions.first())
 
     //Diamond make_db to create diamond formatted rvdb and ncbi databases
-    ch_rvdb_fasta = Channel.fromPath(params.rvdb_fasta)
-                        .map { fasta -> [[id: 'rvdb'], fasta] }
+    ch_rvdb_fasta = Channel.fromPath(params.rvdb_fasta).map { fasta -> [[id: 'rvdb'], fasta] }
 
     //channels for stub test should i keep them??
     ch_taxonmap = Channel.fromPath(params.taxonmap)
@@ -140,8 +138,7 @@ workflow VIROLOCATE_NF {
     // this one.
     // ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
-    ch_ncbi_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
-        .map { fasta -> [[id: 'ncbi'], fasta] }
+    ch_ncbi_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true).map { fasta -> [[id: 'ncbi'], fasta] }
 
     ch_extraction_input = Channel.fromPath(params.viral_csv)
     EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_nr_fasta)
@@ -191,21 +188,18 @@ workflow VIROLOCATE_NF {
 
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
-    ch_taxonkit_input = TAXONOMY_ID.out.acc_tax_id_tsv.flatMap { meta, taxidfile ->
-        taxidfile.readLines().collect { line ->
-            def fields = line.split('\t')
-            def taxid  = fields[-1] 
-            tuple(meta, taxid, taxidfile)
-        }
+    ch_taxonkit_input = TAXONOMY_ID.out.acc_tax_id_tsv.map { meta, taxidfile ->
+    tuple(meta, "ALL", taxidfile)
     }
+
 
     TAXONKIT_LINEAGE(ch_taxonkit_input, ch_taxonkit_db)
 
-    // ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
+    ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
-    // //Contig_filter to extract sequences marked as viral only
-    // CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
-    // ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
+    //Contig_filter to extract sequences marked as viral only
+    CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
+    ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
     // //sort the filtered list to remove duplicates
     // CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.viral_contigs_metadata)
@@ -225,8 +219,7 @@ workflow VIROLOCATE_NF {
     // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
     // //Make nr database using nr fasta
-    // ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
-    //     .map { fasta -> [[id: 'nr'], fasta] }
+    // ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true).map { fasta -> [[id: 'nr'], fasta] }
     // DIAMOND_MAKE_NR_DB(ch_nr_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
     // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
