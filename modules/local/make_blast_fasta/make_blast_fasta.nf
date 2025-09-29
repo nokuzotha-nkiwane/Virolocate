@@ -3,16 +3,16 @@ process MAKE_BLAST_FASTA {
     container "wave.seqera.io/wt/f0df4f3f12cd/wave/build:make_blast_fasta--b4fc6a3e025d3533"
 
     input:
-    tuple val(meta), path("*.txt")
+    tuple val(meta), path(txt)
 
     output:
-    tuple val(meta) , path(fasta)   , emit: blastn_contigs_fasta
+    tuple val(meta) , path('*.fasta')   , emit: blast_contigs_fasta
     path "versions.yml"             , emit: versions
 
     script:
-    def kfinal_contigs = task.ext.kfinal_contigs ?: ''
-    def viral_contig_list = task.ext.viral_contig_list ?: ''
-    def blastn_contigs_fasta = task.ext.blastn_contigs_fasta ?: ''
+    def kfinal_contigs = task.ext.kfinal_contigs 
+    def viral_contig_list = task.ext.viral_contig_list
+    def blast_contigs_fasta = task.ext.blast_contigs_fasta
 
     """
     #find the contig matches in the final.contigs.fa file
@@ -22,7 +22,7 @@ process MAKE_BLAST_FASTA {
             index(\$0, contig) == 1 {print; ON=1; next}
             ON && /^>/ {exit}
             ON {print}
-        ' ${kfinal_contigs} >> "${blastn_contigs_fasta}"
+        ' ${kfinal_contigs} >> "${blast_contigs_fasta}"
 
         #progress check
         echo "Sequence for \${hit} found"
@@ -30,9 +30,9 @@ process MAKE_BLAST_FASTA {
     """
 
     stub:
-    def blastn_contigs_fasta = task.ext.blastn_contigs_fasta ?: ''
+    def blast_contigs_fasta = task.ext.blast_contigs_fasta 
     """
-    touch ${blastn_contigs_fasta}
+    touch blastn_contigs_fasta.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -7,14 +7,14 @@ process EXTRACT_NR_VIRAL {
     tuple val(meta), path(nr_db)
 
     output:
-    tuple val(meta), path(txt), emit: nr_viral_seqs
-    tuple val(meta), path(fasta), emit: nr_db_fasta
+    tuple val(meta), path('*.txt'), emit: nr_viral_seqs
+    tuple val(meta), path('*.fasta'), emit: nr_db_fasta
     path "versions.yml"         , emit: versions
 
     script:
-    def viruses_csv = task.ext.viruses_csv ?: ""
-    def nr_viral_seqs = task.ext.nr_viral_seqs ?: ""
-    def nr_db_fasta = task.ext.nr_db_fasta ?: ""
+    def viruses_csv = task.ext.viruses_csv
+    def nr_viral_seqs = task.ext.nr_viral_seqs 
+    def nr_db_fasta = task.ext.nr_db_fasta 
 
     """
     #filter csv for viral sequences
@@ -31,12 +31,12 @@ process EXTRACT_NR_VIRAL {
     """
 
     stub:
-    def nr_viral_seqs = task.ext.nr_viral_seqs ?: ""
-    def nr_db_fasta = task.ext.nr_db_fasta ?: ""
+    def nr_viral_seqs = task.ext.nr_viral_seqs 
+    def nr_db_fasta = task.ext.nr_db_fasta 
 
     """
-    touch fasta
-    touch txt
+    touch nr_db.fasta
+    touch nr_viral_seqs.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
