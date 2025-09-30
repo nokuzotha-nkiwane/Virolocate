@@ -210,32 +210,38 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
     //Blastn for comparing contig sequences to known nucleotide sequences
-    ch_ncbi_nt_db = Channel.fromPath("${params.ncbi_nt_db}/*", checkIfExists: true).collect()
-    BLAST_BLASTN(MAKE_BLAST_FASTA.out.blast_contigs_fasta, ch_ncbi_nt_db)
-    // ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
+    ch_ncbi_nt_db = Channel.fromPath("${params.ncbi_nt_db}/*", checkIfExists: true)
+                    .map { db -> tuple("ncbi_nt", db) }
+    ch_empty_taxidlist = Channel.fromPath(params.taxidlist)
+    ch_empty_taxids = Channel.value([])
+    ch_negative_tax = Channel.value([])
 
-    // //get metadata of the blastn hits
-    // FETCH_METADATA_BLASTN(BLAST_BLASTN.out.tsv)
-    // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
+    BLAST_BLASTN(MAKE_BLAST_FASTA.out.blast_contigs_fasta, ch_ncbi_nt_db, ch_empty_taxidlist, ch_empty_taxids, ch_negative_tax)
+    ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
-    // //Make nr database using nr fasta
-    // ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true).map { fasta -> [[id: 'nr'], fasta] }
-    // DIAMOND_MAKE_NR_DB(ch_nr_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
+    //get metadata of the blastn hits
+    FETCH_METADATA_BLASTN(BLAST_BLASTN.out.txt)
+    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
+
+    //Make nr database using nr fasta
+    ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
+                .map { fasta -> [[id: 'nr'], fasta] }
+    DIAMOND_MAKE_NR_DB(ch_nr_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
     // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
-    // //Blastx to compare proteins to check for distant orthologs
-    // ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> db }
-    // DIAMOND_BLASTX_FINAL(
-    //     MAKE_BLAST_FASTA.out.blastn_contigs_fasta,
-    //     ch_diamond_nr_db,
-    //     params.diamond_output_format,
-    //     ''
-    // )
+    //Blastx to compare proteins to check for distant orthologs
+    ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> [[id: 'nr'], db] }
+    DIAMOND_BLASTX_FINAL(
+        MAKE_BLAST_FASTA.out.blast_contigs_fasta,
+        ch_diamond_nr_db,
+        params.diamond_output_format,
+        ''
+    )
     // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
-    // //get metadata of the blastx hits
-    // FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
-    // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
+    //get metadata of the blastx hits
+    FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
+    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
 
 
     //---------------------------------------
