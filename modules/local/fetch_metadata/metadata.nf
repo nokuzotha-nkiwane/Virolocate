@@ -79,7 +79,7 @@ process FETCH_METADATA {
     stub:
     def blastn_metadata_tsv = task.ext.blastn_metadata_tsv
     """
-    touch ${blastn_metadata_tsv}
+    touch blastn_metadata.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
