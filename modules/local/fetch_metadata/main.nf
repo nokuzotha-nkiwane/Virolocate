@@ -10,7 +10,7 @@ process FETCH_METADATA {
     path "versions.yml"             , emit: versions
 
     script:
-    def blasatn_output = task.ext.blasatn_output
+    def blastn_output = task.ext.blastn_output
     def blastn_metadata_tsv = task.ext.blastn_metadata_tsv
 
     """
