@@ -12,8 +12,8 @@ def checkPathParamList = [
     params.multiqc_config,
     params.rvdb_fasta,
     params.ncbi_nr_fasta,
-    params.taxonkit_db,
-    params.ncbi_nt_fasta,
+    params.taxdb,
+    params.ncbi_nt_db,
     params.trimmomatic_adapters
 ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
@@ -52,15 +52,15 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // import local modules
-include { EXTRACT_NR_VIRAL } from '../modules/local/extract_nr_viral/extract_nr_viral.nf'
+include { EXTRACT_NR_VIRAL } from '../modules/local/extract_nr_viral/main.nf'
 include { NCBI_PROCESSING } from '../modules/local/ncbi/processing/main.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
-include { TAXONOMY_ID    } from '../modules/local/taxonomy_id/taxonomy_id.nf'
-include { CONTIG_FILTER } from '../modules/local/contig_filter/contig_filter.nf'
-include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/sorter.nf'
-include { MAKE_BLAST_FASTA } from '../modules/local/make_blast_fasta/make_blast_fasta.nf'
-include { FETCH_METADATA as FETCH_METADATA_BLASTN} from '../modules/local/fetch_metadata/metadata.nf'
-include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/fetch_metadata/metadata.nf'
+include { TAXONOMY_ID    } from '../modules/local/taxonomy_id/main.nf'
+include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
+include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/main.nf'
+include { MAKE_BLAST_FASTA } from '../modules/local/make_blast_fasta/main.nf'
+include { FETCH_METADATA as FETCH_METADATA_BLASTN} from '../modules/local/fetch_metadata/main.nf'
+include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/fetch_metadata/main.nf'
 
 
 /*
@@ -85,8 +85,7 @@ workflow VIROLOCATE_NF {
     .splitCsv(header:true)
     .map { row ->
         def meta = [ id: row.sample, single_end: row.fastq_2 ? false : true ]
-        def reads = row.fastq_2 ? [ file(row.fastq_1), file(row.fastq_2) ]
-                                : [ file(row.fastq_1) ]
+        def reads = [ file(row.fastq_1), file(row.fastq_2) ]
         tuple(meta, reads)
     }
 
@@ -105,10 +104,10 @@ workflow VIROLOCATE_NF {
 
 
     TRIMMOMATIC(ch_reads)
-    // NOTE: I'm not quite sure what's wrong with this line, the formatting
-    // seems to be fine. Therefore for the meantime, we can simply comment out
-    // this one.
-    // ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
+    // // NOTE: I'm not quite sure what's wrong with this line, the formatting
+    // // seems to be fine. Therefore for the meantime, we can simply comment out
+    // // this one.
+    // // ch_versions = ch_versions.mix(TRIMMOMATIC.out.versions.first())
 
     //FastQC to check quality of trimmed reads
     FASTQC_POST(TRIMMOMATIC.out.trimmed_reads)
@@ -187,7 +186,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
-    ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
+    ch_taxonkit_db = Channel.fromPath("${params.taxdb}/*", checkIfExists: true)
     ch_taxonkit_input = TAXONOMY_ID.out.acc_tax_id_tsv.map { meta, taxidfile ->
     tuple(meta, "ALL", taxidfile)
     }
