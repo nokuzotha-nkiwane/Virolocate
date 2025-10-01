@@ -13,7 +13,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { virolocate_nf  } from './workflows/virolocate_nf'
+include { VIROLOCATE_NF  } from './workflows/virolocate_nf'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_virolocate_nf_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_virolocate_nf_pipeline'
 /*
@@ -28,18 +28,18 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_viro
 workflow CERIKRISP_virolocate_nf {
 
     take:
-    samplesheet // channel: samplesheet read in from --input
+    ch_samplesheet // channel: samplesheet read in from --input
 
     main:
 
     //
     // WORKFLOW: Run pipeline
     //
-    virolocate_nf (
+    VIROLOCATE_NF (
         samplesheet
     )
     emit:
-    multiqc_report = virolocate_nf.out.multiqc_report // channel: /path/to/multiqc_report.html
+    multiqc_report = VIROLOCATE_NF.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
