@@ -101,7 +101,7 @@ workflow VIROLOCATE_NF {
     //Trimmomatic run to trim reads
     //TODO: @nox Add a parameter to allow users to pass the folder location
     // Assuming fastq is a list of files [R1, R2] for paired-end
-
+    ch_adapters = Channel.fromPath(params.trimmomatic_adapters)
 
     TRIMMOMATIC(ch_reads)
     // // NOTE: I'm not quite sure what's wrong with this line, the formatting
