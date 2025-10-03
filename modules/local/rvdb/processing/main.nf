@@ -7,7 +7,7 @@ process RVDB_PROCESSING {
     tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path('*.tsv')  , emit: tsv
+    tuple val(meta), path('acc_tax_id.tsv ')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -15,32 +15,29 @@ process RVDB_PROCESSING {
     def diamond_tsv = task.ext.diamond_tsv ?: ""
     def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
     """
-    #if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
-    if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.tsv" | wc -l) -gt 0 ]]; then
-    echo "Using RVDB directory to make final file for all Diamond Blastx outputs"
+    ##if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
+    #if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.tsv" | wc -l) -gt 0 ]]; then
+    #echo "Using RVDB directory to make final file for all Diamond Blastx outputs"
 
-        #check for empty files and skip them
-        for matches in "${rvdb_dir}"/*.tsv;do
-            if [[ -s "${diamond_tsv}" ]]; then
-                echo -e "Processing ${diamond_tsv}"
+        ##check for empty files and skip them
+        #for matches in "${rvdb_dir}"/*.tsv;do
+            #if [[ -s "${diamond_tsv}" ]]; then
+                #echo -e "Processing ${diamond_tsv}"
 
-                #take nucleotide acc_id from diamond output file
-                while IFS=\$'\\t' read -r col1 col2 col3 col4 rest; doyh
-                    if [[ -n "\${col1}" ]] && [[ "\${col1}" != "#"* ]]; then
-                        acc_id=\$(echo "\${col3}" | cut -d "|" -f3)
-                        name=\$(echo "\${col4}" | cut -d "|" -f6)
-                        echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}"
-                    fi
-                done < "${diamond_tsv}"
-            else
-                echo "Skipping empty or non-existent files"
+    #take nucleotide acc_id from diamond output file
+    if [[ -f "${tsv}" ]];then
+        while IFS=\$'\\t' read -r col1 col2 col3 col4 rest; do
+            if [[ -n "\${col1}" ]] && [[ "\${col1}" != "#"* ]]; then
+                acc_id=\$(echo "\${col3}" | cut -d "|" -f3)
+                name=\$(echo "\${col4}" | cut -d "|" -f6)
+                echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}" >> acc_tax_id.tsv 
             fi
-        done >> "${rvdb_final_acc}"
+        done < "${tsv}"
 
     #if directory or files empty
     else
         echo "RVDB directory does not exist or is empty. Searching for NCBI directory."
-        echo "# No RVDB data processed" > "${rvdb_final_acc}"
+        echo "# No RVDB data processed" > acc_tax_id.tsv 
     fi
 
     """
