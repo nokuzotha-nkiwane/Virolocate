@@ -1,6 +1,6 @@
 process EXTRACT_NR_VIRAL {
-    conda "${moduleDir}/environment.yml"
-    container "wave.seqera.io/wt/4e50bd9df908/wave/build:extract_nr_viral--fea8de4b0b5f4627"
+    // conda "${moduleDir}/environment.yml"
+    // container "wave.seqera.io/wt/4e50bd9df908/wave/build:extract_nr_viral--fea8de4b0b5f4627"
 
     input:
     val viruses_csv

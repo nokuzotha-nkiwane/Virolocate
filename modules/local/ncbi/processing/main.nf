@@ -1,7 +1,7 @@
 process NCBI_PROCESSING {
     tag "${meta.id}"
-    conda "${moduleDir}/environment.yml"
-    container "wave.seqera.io/wt/15d0d9436d7f/wave/build:ncbi_processing--b61e3e84fb1e5c3f"
+    // conda "${moduleDir}/environment.yml"
+    // container "wave.seqera.io/wt/15d0d9436d7f/wave/build:ncbi_processing--b61e3e84fb1e5c3f"
 
     input:
     tuple val(meta), path('*.tsv')

@@ -1,6 +1,6 @@
 process FETCH_METADATA {
-    conda "${moduleDir}/environment.yml"
-    container "wave.seqera.io/wt/9dc43bf827c0/wave/build:fetch_metadata--94bd174222c6a1e2"
+    // conda "${moduleDir}/environment.yml"
+    // container "wave.seqera.io/wt/9dc43bf827c0/wave/build:fetch_metadata--94bd174222c6a1e2"
     
     input:
     tuple val(meta), path('*.tsv')

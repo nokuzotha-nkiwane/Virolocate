@@ -1,6 +1,6 @@
 process TAXONOMY_ID {
-    conda "${moduleDir}/environment.yml"
-    container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
+    // conda "${moduleDir}/environment.yml"
+    // container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
 
     input:
     tuple val(meta), path(ncbi_tsv) 
