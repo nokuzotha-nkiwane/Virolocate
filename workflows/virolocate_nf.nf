@@ -139,7 +139,9 @@ workflow VIROLOCATE_NF {
 
     ch_extraction_input = Channel.fromPath(params.viral_csv)
     EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_nr_fasta)
-    // DIAMOND_MAKE_NCBI_DB(EXTRACT_NR_VIRAL.out.nr_db_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
+
+    ch_ncbi_viral = (EXTRACT_NR_VIRAL.out.nr_db_fasta).map {fasta -> [[id: 'ncbi_viral']: fasta] }
+    DIAMOND_MAKE_NCBI_DB(ch_ncbi_viral)
     // //ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
 
@@ -150,22 +152,22 @@ workflow VIROLOCATE_NF {
 
     // // //are these channels structured correctly to catch dmnd dbs made by diamond make_db
 
-    // DIAMOND_BLASTX_PRE_RVDB(
-    //     MEGAHIT.out.contigs,
-    //     DIAMOND_MAKE_RVDB.out.db,
-    //     params.diamond_output_format,
-    //     ''
-    // )
+    DIAMOND_BLASTX_PRE_RVDB(
+        MEGAHIT.out.contigs,
+        DIAMOND_MAKE_RVDB.out.db,
+        params.diamond_output_format,
+        ''
+    )
 
     // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
+    
 
-
-    //  DIAMOND_BLASTX_PRE_NCBI(
-    //     MEGAHIT.out.contigs,
-    //     DIAMOND_MAKE_NCBI_DB.out.db,
-    //     params.diamond_output_format,
-    //     ''
-    // )
+     DIAMOND_BLASTX_PRE_NCBI(
+        MEGAHIT.out.contigs,
+        DIAMOND_MAKE_NCBI_DB.out.db,
+        params.diamond_output_format,
+        ''
+    )
 
     // // NOTE: I'm not quite sure what's wrong with this line, the formatting
     // // seems to be fine. Therefore for the meantime, we can simply comment out
@@ -221,9 +223,9 @@ workflow VIROLOCATE_NF {
     // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
     // //Make nr database using nr fasta
-    // ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
-    //             .map { fasta -> [[id: 'nr'], fasta] }
-    // DIAMOND_MAKE_NR_DB(ch_nr_fasta, ch_taxonmap, ch_taxonnodes, ch_taxonnames)
+    ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
+                .map { fasta -> [[id: 'nr'], fasta] }
+    DIAMOND_MAKE_NR_DB(ch_nr_fasta)
     // // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
     // //Blastx to compare proteins to check for distant orthologs
