@@ -1,7 +1,7 @@
 process RVDB_PROCESSING {
     tag "$meta.id"
-    conda "${moduleDir}/environment.yml"
-    container "wave.seqera.io/wt/935142d6c1b1/wave/build:rvdb_processing--a737d7798a59a0c3"
+    // conda "${moduleDir}/environment.yml"
+    // container "wave.seqera.io/wt/935142d6c1b1/wave/build:rvdb_processing--a737d7798a59a0c3"
 
     input:
     tuple val(meta), path(tsv)
@@ -54,7 +54,7 @@ process RVDB_PROCESSING {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        rvdb_processing: \$(rvdb_processing -v 2>&1 | sed 's/RVDB_PROCESSING v//')
+        rvdb_processing: "1.0.0"
     END_VERSIONS
 
     """

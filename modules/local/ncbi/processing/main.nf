@@ -1,7 +1,7 @@
 process NCBI_PROCESSING {
     tag "${meta.id}"
-    conda "${moduleDir}/environment.yml"
-    container "wave.seqera.io/wt/15d0d9436d7f/wave/build:ncbi_processing--b61e3e84fb1e5c3f"
+    // conda "${moduleDir}/environment.yml"
+    // container "wave.seqera.io/wt/15d0d9436d7f/wave/build:ncbi_processing--b61e3e84fb1e5c3f"
 
     input:
     tuple val(meta), path('*.tsv')
@@ -36,7 +36,7 @@ process NCBI_PROCESSING {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        ncbi_processing: \$(ncbi_processing -v 2>&1 | sed 's/NCBI_PROCESSING v//')
+        ncbi_processing: "1.0.0"
     END_VERSIONS
 
     """
