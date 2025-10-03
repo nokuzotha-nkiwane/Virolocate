@@ -137,11 +137,11 @@ workflow VIROLOCATE_NF {
 
     ch_ncbi_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true).map { fasta -> [[id: 'ncbi'], fasta] }
 
-    ch_extraction_input = Channel.fromPath(params.viral_csv)
-    EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_nr_fasta)
+    // ch_extraction_input = Channel.fromPath(params.viral_csv)
+    // EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_nr_fasta)
 
-    ch_ncbi_viral = (EXTRACT_NR_VIRAL.out.nr_db_fasta).map {fasta -> [[id: 'ncbi_viral']: fasta] }
-    DIAMOND_MAKE_NCBI_DB(ch_ncbi_viral)
+    // ch_ncbi_viral = (EXTRACT_NR_VIRAL.out.nr_db_fasta).map {fasta -> [[id: 'ncbi_viral']: fasta] }
+    // DIAMOND_MAKE_NCBI_DB(ch_ncbi_viral)
     // //ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
 
@@ -151,23 +151,24 @@ workflow VIROLOCATE_NF {
     // //TODO: @nox we need to add more parameters to this process-call
 
     // // //are these channels structured correctly to catch dmnd dbs made by diamond make_db
-
+    ch_rvdb_dmnd_db = (DIAMOND_MAKE_RVDB.out.db).toList().map { it[0] }
     DIAMOND_BLASTX_PRE_RVDB(
         MEGAHIT.out.contigs,
-        DIAMOND_MAKE_RVDB.out.db,
+        ch_rvdb_dmnd_db,
         params.diamond_output_format,
         ''
     )
 
     // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
     
+    // ch_ncbi_dmnd_db = (DIAMOND_MAKE_NCBI_DB.out.db).toList().map { it[0] }
 
-     DIAMOND_BLASTX_PRE_NCBI(
-        MEGAHIT.out.contigs,
-        DIAMOND_MAKE_NCBI_DB.out.db,
-        params.diamond_output_format,
-        ''
-    )
+    //  DIAMOND_BLASTX_PRE_NCBI(
+    //     MEGAHIT.out.contigs,
+    //     ch_ncbi_dmnd_db,
+    //     params.diamond_output_format,
+    //     ''
+    // )
 
     // // NOTE: I'm not quite sure what's wrong with this line, the formatting
     // // seems to be fine. Therefore for the meantime, we can simply comment out
@@ -175,10 +176,10 @@ workflow VIROLOCATE_NF {
     // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
 
     // // //get accession ids and taxonomy ids for taxonkit to use
-    // RVDB_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
+    RVDB_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
     // ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
-    // NCBI_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
+    // NCBI_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
     // ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
     // //get accession ids and taxonomy ids for taxonkit to use
