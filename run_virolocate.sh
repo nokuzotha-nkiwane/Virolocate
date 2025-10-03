@@ -9,8 +9,8 @@ NAME="test-$1-rid$RANDOM"
 
 nextflow run 'https://github.com/nokuzotha-nkiwane/Virolocate.git' \
                  -name "$NAME" \
-                 -profile monitor,singularity \
-                 -c /analyses/users/nokuzothan/Virolocate/nextflow.config \
-                 -r master -latest -resume  \
+                 -profile singularity \
+                 -c /analyses/users/nokuzothan/Virolocate/custom.config \
+                 -r develop -latest -resume  \
                  --outdir "results/$NAME" \
                  -work-dir "work/$NAME"
