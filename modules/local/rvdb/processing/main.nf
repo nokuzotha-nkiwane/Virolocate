@@ -1,5 +1,4 @@
 process RVDB_PROCESSING {
-    tag "$meta.id"
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/935142d6c1b1/wave/build:rvdb_processing--a737d7798a59a0c3"
 
@@ -11,20 +10,9 @@ process RVDB_PROCESSING {
     path "versions.yml"             , emit: versions
 
     script:
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def diamond_tsv = task.ext.diamond_tsv ?: ""
-    def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
     """
-    ##if working with RVDB, check if RVDB folder exists and isn't empty; if it doesnt only run ncbi part
-    #if [[ -d "${rvdb_dir}" ]] && [[ \$(find "${rvdb_dir}" -name "*.tsv" | wc -l) -gt 0 ]]; then
-    #echo "Using RVDB directory to make final file for all Diamond Blastx outputs"
-
-        ##check for empty files and skip them
-        #for matches in "${rvdb_dir}"/*.tsv;do
-            #if [[ -s "${diamond_tsv}" ]]; then
-                #echo -e "Processing ${diamond_tsv}"
-
     #take nucleotide acc_id from diamond output file
+    
     if [[ -f "${tsv}" ]];then
         while IFS=\$'\\t' read -r col1 col2 col3 col4 rest; do
             if [[ -n "\${col1}" ]] && [[ "\${col1}" != "#"* ]]; then
@@ -32,20 +20,20 @@ process RVDB_PROCESSING {
                 name=\$(echo "\${col4}" | cut -d "|" -f6)
                 echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}" >> acc_tax_id.tsv 
             fi
-        done < "${tsv}"
+        done < "${tsv}" 
+        
 
     #if directory or files empty
     else
         echo "RVDB directory does not exist or is empty. Searching for NCBI directory."
         echo "# No RVDB data processed" > acc_tax_id.tsv 
     fi
+    
 
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def diamond_tsv = task.ext.diamond_tsv ?: ""
-    def rvdb_final_acc = task.ext.rvdb_final_acc ?: ""
     """
     touch ${prefix}.rvdb.tsv
 
