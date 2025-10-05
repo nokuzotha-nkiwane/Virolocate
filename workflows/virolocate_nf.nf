@@ -182,20 +182,24 @@ workflow VIROLOCATE_NF {
     // NCBI_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
     // ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
 
+
+    // collect CONTIG_FILTER output
+    // ch_rvdb = (DIAMOND_BLASTX_PRE_RVDB.out.tsv) ?: Channel.empty()
+    // ch_ncbi = (DIAMOND_BLASTX_NCBI.out.tsv) ?: Channel.empty()
+    // ch_combined_diamond_output = (ch_rvdb).mix(ch_ncbi).map {it[1]}
    
 
     // //get accession ids and taxonomy ids for taxonkit to use
     TAXONOMY_ID(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
     // ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
-    // //Taxonkit for lineage filtering and getting taxonomy ids
-    // ch_taxonkit_db = Channel.fromPath("${params.taxdb}/*", checkIfExists: true)
-    // ch_taxonkit_input = TAXONOMY_ID.out.acc_tax_id_tsv.map { meta, taxidfile ->
-    // tuple(meta, "ALL", taxidfile)
-    // }
+    //Taxonkit for lineage filtering and getting taxonomy ids
+    ch_taxonkit_db = Channel.fromPath("${params.taxdb}/*", checkIfExists: true)
+    ch_taxonkit_input = TAXONOMY_ID.out.tsv.map { meta, taxidfile ->
+    tuple(meta, "ALL", taxidfile)
+    }
 
-
-    // TAXONKIT_LINEAGE(ch_taxonkit_input, ch_taxonkit_db)
+    TAXONKIT_LINEAGE(ch_taxonkit_input, ch_taxonkit_db)
 
     // ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 

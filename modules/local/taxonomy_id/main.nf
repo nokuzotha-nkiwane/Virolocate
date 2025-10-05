@@ -8,8 +8,7 @@ process TAXONOMY_ID {
 
 
     output:
-    tuple val(meta), path('*_final_accessions.txt')  , emit: final_accessions_txt
-    tuple val(meta), path('acc_tax_id.tsv')  , emit: acc_tax_id_tsv
+    tuple val(meta), path('*_final_accessions.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -29,7 +28,7 @@ process TAXONOMY_ID {
         echo "Fetching metadata for "\${acc_id}""
         #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
         local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${acc_id}&rettype=gb&retmode=text"
-        local info=\$(curl -N -# \${url1})
+        local info=\$(curl -N -# -L --retry 3 --connect-timeout 5 \${url1})
 
         #taxonomic number
         local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
@@ -40,13 +39,18 @@ process TAXONOMY_ID {
 
         #print output
         echo -e "\${contig}\\t\${length}\\t\${acc_id}\\t\${rest}\\t\${tax}" >>\${output}
+        sleep 0.34
 
     }
 
     while IFS=\$'\\t' read -r col1 col2 col3 rest;do
         echo "[\${col3}]"
-        get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "${prefix}"_final_accessions.txt
-    done < "${tsv}"
+        tmpfile=\$(mktemp)
+        get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "\$tmpfile"
+        cat "\$tmpfile" >> "${prefix}_final_accessions.tsv"
+        rm "\$tmpfile"
+
+    done < ${tsv}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -57,8 +61,7 @@ process TAXONOMY_ID {
     stub:
 
     """
-    touch final_accessions.txt
-    touch acc_tax_id.tsv
+    touch final_accessions.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
