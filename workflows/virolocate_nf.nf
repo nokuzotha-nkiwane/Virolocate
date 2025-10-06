@@ -54,7 +54,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 // import local modules
 include { EXTRACT_NR_VIRAL } from '../modules/local/extract_nr_viral/main.nf'
 include { DIAMOND_PROCESSING } from '../modules/local/ncbi/processing/main.nf'
-//include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
+include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
 include { TAXONOMY_ID    } from '../modules/local/taxonomy_id/main.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
 include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/main.nf'
@@ -125,23 +125,17 @@ workflow VIROLOCATE_NF {
 
     //Diamond make_db to create diamond formatted rvdb and ncbi databases
     ch_rvdb_fasta = Channel.fromPath(params.rvdb_fasta).map { fasta -> [[id: 'rvdb'], fasta] }
-
-    //channels for stub test should i keep them??
-    
-
     DIAMOND_MAKE_RVDB(ch_rvdb_fasta)
+    
     // NOTE: I'm not quite sure what's wrong with this line, the formatting
     // seems to be fine. Therefore for the meantime, we can simply comment out
     // this one.
     // ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
-    ch_ncbi_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true).map { fasta -> [[id: 'ncbi'], fasta] }
+    ch_ncbi_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true).map { fasta -> [[id: 'ncbi_viral'], fasta] }
 
-    // ch_extraction_input = Channel.fromPath(params.viral_csv)
-    // EXTRACT_NR_VIRAL(ch_extraction_input, ch_ncbi_nr_fasta)
-
-    // ch_ncbi_viral = (EXTRACT_NR_VIRAL.out.nr_db_fasta).map {fasta -> [[id: 'ncbi_viral']: fasta] }
-    // DIAMOND_MAKE_NCBI_DB(ch_ncbi_viral)
+    
+    // DIAMOND_MAKE_NCBI_DB(ch_ncbi_nr_fasta)
     // //ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
 
@@ -150,7 +144,6 @@ workflow VIROLOCATE_NF {
     // // just a TSV, therefore we shall use TSV directly to call the nf-core module.
     // //TODO: @nox we need to add more parameters to this process-call
 
-    // // //are these channels structured correctly to catch dmnd dbs made by diamond make_db
     ch_rvdb_dmnd_db = (DIAMOND_MAKE_RVDB.out.db).toList().map { it[0] }
     DIAMOND_BLASTX_PRE_RVDB(
         MEGAHIT.out.contigs,
@@ -158,56 +151,45 @@ workflow VIROLOCATE_NF {
         params.diamond_output_format,
         ''
     )
-
     // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
     
     // ch_ncbi_dmnd_db = (DIAMOND_MAKE_NCBI_DB.out.db).toList().map { it[0] }
-
     //  DIAMOND_BLASTX_PRE_NCBI(
     //     MEGAHIT.out.contigs,
     //     ch_ncbi_dmnd_db,
     //     params.diamond_output_format,
     //     ''
     // )
-
     // // NOTE: I'm not quite sure what's wrong with this line, the formatting
     // // seems to be fine. Therefore for the meantime, we can simply comment out
     // // this one.
     // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
 
-    // // //get accession ids and taxonomy ids for taxonkit to use
-    //RVDB_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
+    RVDB_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
     // ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
-    // NCBI_PROCESSING(DIAMOND_BLASTX_PRE_NCBI.out.tsv)
-    // ch_versions = ch_versions.mix(NCBI_PROCESSING.out.versions.first())
-
-
-    // collect CONTIG_FILTER output
+    // //get accession ids and taxonomy ids for taxonkit to use
     // ch_rvdb = (DIAMOND_BLASTX_PRE_RVDB.out.tsv) ?: Channel.empty()
     // ch_ncbi = (DIAMOND_BLASTX_NCBI.out.tsv) ?: Channel.empty()
     // ch_combined_diamond_output = (ch_rvdb).mix(ch_ncbi).map {it[1]}
-   
-
-    // //get accession ids and taxonomy ids for taxonkit to use
-    TAXONOMY_ID(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
+    TAXONOMY_ID(RVDB_PROCESSING.out.tsv)
     // ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
-    ch_taxonkit_db = Channel.fromPath("${params.taxdb}/*", checkIfExists: true)
+    ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
+    ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
     ch_taxonkit_input = TAXONOMY_ID.out.tsv.map { meta, taxidfile ->
-    tuple(meta, "ALL", taxidfile)
+    [meta, null, taxidfile]
     }
 
-    TAXONKIT_LINEAGE(ch_taxonkit_input, ch_taxonkit_db)
+    TAXONKIT_LINEAGE(ch_taxonkit_input, ch_db_mapped)
+    // // ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
-    // ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
-
-    // //Contig_filter to extract sequences marked as viral only
-    // CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
+    //Contig_filter to extract sequences marked as viral only
+    CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
     // ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
-    // collect CONTIG_FILTER output
+    // collect CONTIG_FILTER output into one file
     // ch_rvdb = (DIAMOND_BLASTX_PRE_RVDB.out.tsv) ?: Channel.empty()
     // // ch_ncbi = (DIAMOND_BLASTX_NCBI.out.tsv) ?: Channel.empty()
     // // ch_combined_diamond_output = (ch_rvdb).mix(ch_ncbi).map {it[1]}.collect()
@@ -216,7 +198,7 @@ workflow VIROLOCATE_NF {
 
 
     // //sort the filtered list to remove duplicates
-    // CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.viral_contigs_metadata)
+    // CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.tsv)
     // ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
     // //make fasta file to blastn against NT
