@@ -19,7 +19,7 @@ def checkPathParamList = [
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
-if (params.samplesheet) { ch_samplesheet = Channel.fromPath(params.samplesheet) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.samplesheet) { ch_samplesheet = file(params.samplesheet) } else { exit 1, 'Input samplesheet not specified!' }
 
 /*
 
@@ -199,7 +199,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
     //make fasta file to blastn against NT
-    ch_joined = (CONTIG_UNIQUE_SORTER.out).join(MEGAHIT_RENAME.out)
+    ch_joined = (CONTIG_UNIQUE_SORTER.out.txt).join(MEGAHIT_RENAME.out.contigs)
     MAKE_BLAST_FASTA(ch_joined)
     ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
@@ -221,20 +221,20 @@ workflow VIROLOCATE_NF {
     // // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
     // // //Make nr database using nr fasta
-    // ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
-    //             .map { fasta -> [[id: 'nr'], fasta] }
-    // DIAMOND_MAKE_NR_DB(ch_nr_fasta)
-    // // // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
+    ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
+                .map { fasta -> [[id: 'nr'], fasta] }
+    DIAMOND_MAKE_NR_DB(ch_nr_fasta)
+    // // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
-    // // //Blastx to compare proteins to check for distant orthologs
+    // //Blastx to compare proteins to check for distant orthologs
     
-    // DIAMOND_BLASTX_FINAL(
-    //     ch_blast_fasta,
-    //     DIAMOND_MAKE_NR_DB.out.db,
-    //     params.diamond_output_format,
-    //     ''
-    // )
-    // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
+    DIAMOND_BLASTX_FINAL(
+        ch_blast_fasta,
+        DIAMOND_MAKE_NR_DB.out.db,
+        params.diamond_output_format,
+        ''
+    )
+    // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
     // //get metadata of the blastx hits
     // FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
