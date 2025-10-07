@@ -1,4 +1,5 @@
 process CONTIG_FILTER {
+    tag "${meta.id}"
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/67f4c80bd6c6/wave/build:contig_filter--f8e5cec565adc43e"
 
@@ -6,26 +7,29 @@ process CONTIG_FILTER {
     tuple val(meta), path(tsv)
     
     output:
-    tuple val(meta), path("*.tsv")  , emit: viral_contigs_metadata
+    tuple val(meta), path('*_viral_contigs_metadata.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
     
     script:
-    //how does lineage file here link to the input file 
-    //should these files be allowed the option of empty
-    def viral_contigs_metadata = task.ext.viral_contigs_metadata 
+    def prefix = "${meta.id}"
     """
     #contig filtering according to kingdom viruses
     #extract contig matches that are part of viruses
-    while IFS=\$'\\t' read -r col1 col2 col3 col4 rest; do
-        if [[ \${col4} == *Virus* ]]; then
-            echo -e "\${col1}\\t${col2}\\t${col4}\\t${rest}" >> "${viral_contigs_metadata}"
+    while IFS=\$'\\t' read -r -a fields; do
+        if [[ \${fields[9]} == *Viruses* ]]; then
+            echo "\${fields[2]}"
+            printf "%s\\t" "\${fields[@]}" >> "${prefix}_viral_contigs_metadata.tsv"
+            echo >> "${prefix}_viral_contigs_metadata.tsv"
         fi
-    done < ${tsv}
+    done < "${tsv}"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        contig_filter: "1.0.0"
+    END_VERSIONS
     """
 
     stub:
-
-    def viral_contigs_metadata = task.ext.viral_contigs_metadata 
     """
     touch viral_contigs_metadata.tsv
     
@@ -33,7 +37,5 @@ process CONTIG_FILTER {
     "${task.process}":
         contig_filter: "1.0.0"
     END_VERSIONS
-
-
     """
 }

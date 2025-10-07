@@ -166,14 +166,15 @@ workflow VIROLOCATE_NF {
     // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_NCBI.out.versions.first())
 
     RVDB_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
-    // ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
+    ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
-    // //get accession ids and taxonomy ids for taxonkit to use
+    // RENAME THE FILES IN THE CHANNELS SO THE SAME SAMPLE NAMES CAN BE PROCESSED SEPARATELY ADN NOT OVERWRITE EACH OTHER
+    //get accession ids and taxonomy ids for taxonkit to use 
     // ch_rvdb = (DIAMOND_BLASTX_PRE_RVDB.out.tsv) ?: Channel.empty()
     // ch_ncbi = (DIAMOND_BLASTX_NCBI.out.tsv) ?: Channel.empty()
     // ch_combined_diamond_output = (ch_rvdb).mix(ch_ncbi).map {it[1]}
     TAXONOMY_ID(RVDB_PROCESSING.out.tsv)
-    // ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
+    ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
@@ -183,26 +184,18 @@ workflow VIROLOCATE_NF {
     }
 
     TAXONKIT_LINEAGE(ch_taxonkit_input, ch_db_mapped)
-    // // ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
+    ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
 
     //Contig_filter to extract sequences marked as viral only
     CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
-    // ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
-
-    // collect CONTIG_FILTER output into one file
-    // ch_rvdb = (DIAMOND_BLASTX_PRE_RVDB.out.tsv) ?: Channel.empty()
-    // // ch_ncbi = (DIAMOND_BLASTX_NCBI.out.tsv) ?: Channel.empty()
-    // // ch_combined_diamond_output = (ch_rvdb).mix(ch_ncbi).map {it[1]}.collect()
-    // ch_combined_diamond_output = (ch_rvdb).map {it[1]}.collect()
-    // DIAMOND_PROCESSING(ch_combined_diamond_output)
-
+    ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
     // //sort the filtered list to remove duplicates
-    // CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.tsv)
-    // ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
+    CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.tsv)
+    ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
     // //make fasta file to blastn against NT
-    // MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.viral_contig_list)
+    // MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.txt)
     // ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
     // //Blastn for comparing contig sequences to known nucleotide sequences
