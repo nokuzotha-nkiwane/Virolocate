@@ -221,13 +221,13 @@ workflow VIROLOCATE_NF {
     // // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
     // //Blastx to compare proteins to check for distant orthologs
-    // ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> [[id: 'nr'], db] }
-    // DIAMOND_BLASTX_FINAL(
-    //     ch_final_blast_fasta,
-    //     ch_nr_fasta,
-    //     params.diamond_output_format,
-    //     ''
-    // )
+    ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> [[id: 'nr'], db] }
+    DIAMOND_BLASTX_FINAL(
+        ch_blast_fasta,
+        ch_diamond_nr_db,
+        params.diamond_output_format,
+        ''
+    )
     // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
     // //get metadata of the blastx hits
