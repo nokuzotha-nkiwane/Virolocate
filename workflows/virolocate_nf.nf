@@ -194,20 +194,21 @@ workflow VIROLOCATE_NF {
     CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
-    ch_all_files = (CONTIG_UNIQUE_SORTER.out.txt).collect({it[1]})
+    // ch_all_files = (CONTIG_UNIQUE_SORTER.out.txt).collect({it[1]})
 
-    // //make fasta file to blastn against NT
-    // MAKE_BLAST_FASTA(ch_all_files)
-    // ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
+    //make fasta file to blastn against NT
+    MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.txt, MEGAHIT.out.contigs)
+    ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
+    ch_blast_contigs_fasta = (MAKE_BLAST_FASTA.out.fasta).map {fasta -> [[id:'blast_contigs'], fasta]}
     // //Blastn for comparing contig sequences to known nucleotide sequences
-    // ch_ncbi_nt_db = Channel.fromPath("${params.ncbi_nt_db}/*", checkIfExists: true)
-    //                 .map { db -> tuple("ncbi_nt", db) }
-    // ch_empty_taxidlist = Channel.fromPath(params.taxidlist)
-    // ch_empty_taxids = Channel.value([])
+    // ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true)
+    //                 .map {db -> [[id:"ncbi_nt"], db]}
+    // ch_taxidlist = Channel.fromPath(params.taxidlist)
+    // ch_taxids = Channel.value([])
     // ch_negative_tax = Channel.value([])
 
-    // BLAST_BLASTN(MAKE_BLAST_FASTA.out.blast_contigs_fasta, ch_ncbi_nt_db, ch_empty_taxidlist, ch_empty_taxids, ch_negative_tax)
+    // BLAST_BLASTN(ch_blast_contigs_fasta, ch_ncbi_nt_db, ch_taxidlist, ch_taxids, ch_negative_tax)
     // ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     // //get metadata of the blastn hits

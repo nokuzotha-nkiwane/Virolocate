@@ -7,7 +7,7 @@ process CONTIG_UNIQUE_SORTER {
     tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path("*_viral_contig_list.txt")  , emit:txt
+    tuple val(meta), path("*_viral_contig_list.txt")  , emit: txt
     path "versions.yml"             , emit: versions
 
     script: 
@@ -17,7 +17,6 @@ process CONTIG_UNIQUE_SORTER {
         echo -e "${prefix}\\t\${col1}" >> "${prefix}_viral_contig_list.txt"
     done < "${tsv}"
 
-    #get unique contig matches
     sort -u "${prefix}_viral_contig_list.txt" -o "${prefix}_viral_contig_list.txt"
 
     cat <<-END_VERSIONS > versions.yml

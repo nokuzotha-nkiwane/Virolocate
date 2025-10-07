@@ -1,38 +1,53 @@
 process MAKE_BLAST_FASTA {
+    tag "${meta.id}"
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/f0df4f3f12cd/wave/build:make_blast_fasta--b4fc6a3e025d3533"
 
     input:
     tuple val(meta), path(txt)
+    tuple val(meta), path(contigs)
 
     output:
-    tuple val(meta) , path('*.fasta')   , emit: blast_contigs_fasta
+    tuple val(meta) , path('final_blast_contigs.fasta')   , emit: fasta
     path "versions.yml"             , emit: versions
 
     script:
-    def kfinal_contigs = task.ext.kfinal_contigs 
-    def viral_contig_list = task.ext.viral_contig_list
-    def blast_contigs_fasta = task.ext.blast_contigs_fasta
-
+    def prefix = "${meta.id}"
+    def is_compressed = contigs.getExtension() == "gz" ? true : false
+    def contig_file = is_compressed ? contigs.getBaseName() : contigs
     """
-    #find the contig matches in the final.contigs.fa file
+    if [ "${is_compressed}" == "true" ]; then
+        gzip -c -d ${contigs} > ${contig_file}
+    fi
+    
 
-    while read -r hit; do
-        awk -v contig=">\${hit} " '
-            index(\$0, contig) == 1 {print; ON=1; next}
-            ON && /^>/ {exit}
-            ON {print}
-        ' ${kfinal_contigs} >> "${blast_contigs_fasta}"
+    #find the contig matches in the final.contigs.fa file
+    while IFS=\$'\\t' read -r col1 col2 rest; do
+        awk -v sample="\${col1}" -v contig=">\${col2}" '
+            index(\$0, contig) == 1 {
+            print ">" sample ":" substr(\$0, 2)
+            ON = 1
+            next
+        }
+        ON && /^>/ {exit}
+        ON
+        ' ${contig_file} >> "${prefix}_blast_contigs.fasta"
 
         #progress check
-        echo "Sequence for \${hit} found"
-    done < "${viral_contig_list}"
+        echo "Sequence for \${col2} found"
+    done < "${txt}"
+
+    cat "${prefix}_blast_contigs.fasta" >> final_blast_contigs.fasta
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        make_blast_fasta: "1.0.0"
+    END_VERSIONS
     """
 
     stub:
-    def blast_contigs_fasta = task.ext.blast_contigs_fasta 
     """
-    touch blastn_contigs_fasta.fasta
+    touch final_blast_contigs.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
