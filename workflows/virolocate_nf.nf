@@ -53,7 +53,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 
 // import local modules
 include { EXTRACT_NR_VIRAL } from '../modules/local/extract_nr_viral/main.nf'
-include { DIAMOND_PROCESSING } from '../modules/local/ncbi/processing/main.nf'
+include { FASTA_PROCESSING } from '../modules/local/ncbi/processing/main.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
 include { TAXONOMY_ID    } from '../modules/local/taxonomy_id/main.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
@@ -194,24 +194,21 @@ workflow VIROLOCATE_NF {
     CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
-    // ch_all_files = (CONTIG_UNIQUE_SORTER.out.txt).collect({it[1]})
-
     //make fasta file to blastn against NT
     MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.txt, MEGAHIT.out.contigs)
     ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
-    ch_blast_contigs_fasta = (MAKE_BLAST_FASTA.out.fasta).collect()
-    //ch_all_fasta.collectFile(name: 'final_blast_contigs.fasta')
-    ch_final_blast_fasta = ch_blast_contigs_fasta.map {fasta -> [[id:'blast_contigs'], fasta]}
+    ch_all = MAKE_BLAST_FASTA.out.fasta.map {meta, fasta-> [fasta]}.collect()
+    FASTA_PROCESSING(ch_all)
+    ch_blast_fasta = (FASTA_PROCESSING.out.fasta).map { fasta -> tuple([id:'final'], fasta) }.view()
     //Blastn for comparing contig sequences to known nucleotide sequences
-    ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true)
-                    .map {db -> [[id:"ncbi_nt"], db]}
-    ch_taxidlist = Channel.fromPath(params.taxidlist)
-    ch_taxids = Channel.value([])
-    ch_negative_tax = Channel.value([])
+    ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map {db -> [[id:"ncbi_nt"], db]}.view()
+    ch_taxidlist = Channel.fromPath(params.taxidlist).view()
+    ch_taxids = Channel.value('').view()
+    ch_negative_tax = Channel.value('').view()
 
-    BLAST_BLASTN(ch_final_blast_fasta, ch_ncbi_nt_db, ch_taxidlist, ch_taxids, ch_negative_tax)
-    // ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
+    BLAST_BLASTN(ch_blast_fasta, ch_ncbi_nt_db, ch_taxidlist, ch_taxids, ch_negative_tax)
+    ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     // //get metadata of the blastn hits
     // FETCH_METADATA_BLASTN(BLAST_BLASTN.out.txt)
@@ -225,12 +222,12 @@ workflow VIROLOCATE_NF {
 
     // //Blastx to compare proteins to check for distant orthologs
     // ch_diamond_nr_db = DIAMOND_MAKE_NR_DB.out.db.map { meta, db -> [[id: 'nr'], db] }
-    DIAMOND_BLASTX_FINAL(
-        ch_final_blast_fasta,
-        ch_nr_fasta,
-        params.diamond_output_format,
-        ''
-    )
+    // DIAMOND_BLASTX_FINAL(
+    //     ch_final_blast_fasta,
+    //     ch_nr_fasta,
+    //     params.diamond_output_format,
+    //     ''
+    // )
     // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
     // //get metadata of the blastx hits
