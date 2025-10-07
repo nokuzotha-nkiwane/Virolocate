@@ -8,7 +8,7 @@ process MAKE_BLAST_FASTA {
     tuple val(meta), path(contigs)
 
     output:
-    tuple val(meta) , path('final_blast_contigs.fasta')   , emit: fasta
+    tuple val(meta) , path('*_blast_contigs.fasta'), emit: fasta
     path "versions.yml"             , emit: versions
 
     script:
@@ -23,21 +23,22 @@ process MAKE_BLAST_FASTA {
 
     #find the contig matches in the final.contigs.fa file
     while IFS=\$'\\t' read -r col1 col2 rest; do
-        awk -v sample="\${col1}" -v contig=">\${col2}" '
-            index(\$0, contig) == 1 {
-            print ">" sample ":" substr(\$0, 2)
-            ON = 1
-            next
-        }
-        ON && /^>/ {exit}
-        ON
+        awk -v sample="\${col1}" -v contig="\${col2}" '
+            /^>/ {
+                split(\$1, a, " ")
+                id = substr(a[1], 2)
+                if (id == contig) {
+                    ON = 1
+                    print ">" sample ":" substr(\$0, 2)}
+                    next
+                }
+                ON && /^>/ {ON = 0}
+            ON
         ' ${contig_file} >> "${prefix}_blast_contigs.fasta"
 
         #progress check
         echo "Sequence for \${col2} found"
     done < "${txt}"
-
-    cat "${prefix}_blast_contigs.fasta" >> final_blast_contigs.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
