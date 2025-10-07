@@ -194,8 +194,10 @@ workflow VIROLOCATE_NF {
     CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
+    ch_all_files = (CONTIG_UNIQUE_SORTER.out.txt).collect({it[1]})
+
     // //make fasta file to blastn against NT
-    // MAKE_BLAST_FASTA(CONTIG_UNIQUE_SORTER.out.txt)
+    // MAKE_BLAST_FASTA(ch_all_files)
     // ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
     // //Blastn for comparing contig sequences to known nucleotide sequences
