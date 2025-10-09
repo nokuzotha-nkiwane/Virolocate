@@ -19,7 +19,7 @@ def checkPathParamList = [
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
-if (params.samplesheet) { ch_samplesheet = file(params.samplesheet) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.samplesheet) { ch_samplesheet = Channel.fromPath(params.samplesheet) } else { exit 1, 'Input samplesheet not specified!' }
 
 /*
 
@@ -69,11 +69,11 @@ include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/fetch_
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
+ch_samplesheet= Channel.fromPath(params.samplesheet)
 
 workflow VIROLOCATE_NF {
-
-    take: 
-    ch_samplesheet
+//    take:
+//    ch_samplesheet
 
     //main starts main workflow logic
     //ch_versions will collect software version info form each tool
@@ -199,7 +199,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
     //make fasta file to blastn against NT
-    ch_joined = (CONTIG_UNIQUE_SORTER.out.txt).join(MEGAHIT_RENAME.out.contigs)
+    ch_joined = (CONTIG_UNIQUE_SORTER.out).join(MEGAHIT_RENAME.out)
     MAKE_BLAST_FASTA(ch_joined)
     ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
