@@ -14,7 +14,7 @@ process CONTIG_UNIQUE_SORTER {
     def prefix = "${meta.id}"
     """
     while IFS=\$'\\t' read -r col1 rest;do
-        echo -e "${prefix}\\t\${col1}" >> "${prefix}_viral_contig_list.txt"
+        awk '{print \$1}' >> "${prefix}_viral_contig_list.txt"
     done < "${tsv}"
 
     sort -u "${prefix}_viral_contig_list.txt" -o "${prefix}_viral_contig_list.txt"

@@ -4,8 +4,8 @@ process MAKE_BLAST_FASTA {
     // container "wave.seqera.io/wt/f0df4f3f12cd/wave/build:make_blast_fasta--b4fc6a3e025d3533"
 
     input:
-    tuple val(meta), path(txt)
-    tuple val(meta), path(contigs)
+    tuple val(meta), path(txt), path(contigs)
+
 
     output:
     tuple val(meta) , path('*_blast_contigs.fasta'), emit: fasta
@@ -19,25 +19,18 @@ process MAKE_BLAST_FASTA {
     if [ "${is_compressed}" == "true" ]; then
         gzip -c -d ${contigs} > ${contig_file}
     fi
-    
 
-    #find the contig matches in the final.contigs.fa file
-    while IFS=\$'\\t' read -r col1 col2 rest; do
-        awk -v sample="\${col1}" -v contig="\${col2}" '
-            /^>/ {
-                split(\$1, a, " ")
-                id = substr(a[1], 2)
-                if (id == contig) {
-                    ON = 1
-                    print ">" sample ":" substr(\$0, 2)}
-                    next
-                }
-                ON && /^>/ {ON = 0}
-            ON
+    while read -r hit; do
+    if grep -qF ">\${hit}" "${contig_file}"; then
+        awk -v contig=">\${hit}" '
+            \$0 ~ ("^"contig) {print; ON=1; next}
+            ON && /^>/ {exit}
+            ON {print}
         ' ${contig_file} >> "${prefix}_blast_contigs.fasta"
+    fi
 
-        #progress check
-        echo "Sequence for \${col2} found"
+    #progress check
+    echo "Sequence for \${hit} found"
     done < "${txt}"
 
     cat <<-END_VERSIONS > versions.yml

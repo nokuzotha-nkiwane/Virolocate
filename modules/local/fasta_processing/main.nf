@@ -24,7 +24,7 @@ process FASTA_PROCESSING {
     stub:
     
     """
-    touch final_acc.tsv
+    touch final_blast_contigs.fasta
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
