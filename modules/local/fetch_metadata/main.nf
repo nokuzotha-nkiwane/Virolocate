@@ -3,16 +3,13 @@ process FETCH_METADATA {
     // container "wave.seqera.io/wt/9dc43bf827c0/wave/build:fetch_metadata--94bd174222c6a1e2"
     
     input:
-    tuple val(meta), path('*.tsv')
+    tuple val(meta), path(txt)
 
     output:
-    tuple val(meta), path('*.tsv')  , emit: blastn_metadata_tsv
+    tuple val(meta), path('blastn_metadata.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
-    def blastn_output = task.ext.blastn_output
-    def blastn_metadata_tsv = task.ext.blastn_metadata_tsv
-
     """
     get_meta() {
 
@@ -35,10 +32,6 @@ process FETCH_METADATA {
         local gene=\$(echo "\${info}" | awk -F'"' '/\\/coded_by/ {print \$2}')
         local product=\$(echo "\${info}" | awk -F'"' '/\\/product/ {print \$2}')
         local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
-
-        #split the other columns after the third one
-        IFS=\$'\\t' read -r -a rest_array <<< "\${columns}"
-        rest=\$(printf "%s\\t" "\${rest_array[@]}" )
 
         #put NA if any of the fields are empty
         if [[ -z "\${host}" ]]; then
@@ -70,14 +63,18 @@ process FETCH_METADATA {
 
     }
 
-    while IFS=\$'\\t' read -r col1 col2 col3 rest;do
-        echo "[\${col3}]"
-        get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "${blastn_metadata_tsv}"
-    done < "${blasatn_output}"
+        while IFS=\$'\\t' read -r col1 col2 col3 rest;do
+            echo "[\${col3}]"
+            get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "blastn_metadata.tsv"
+        done < "${txt}"
+    
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        fetch_metadata: "1.0.0"
+    END_VERSIONS
     """
 
     stub:
-    def blastn_metadata_tsv = task.ext.blastn_metadata_tsv
     """
     touch blastn_metadata.tsv
 
