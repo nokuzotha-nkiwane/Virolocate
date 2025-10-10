@@ -131,7 +131,7 @@ workflow VIROLOCATE_NF {
     //Diamond make_db to create diamond formatted rvdb and ncbi databases
     ch_rvdb_fasta = Channel.fromPath(params.rvdb_fasta).map { fasta -> [[id: 'rvdb'], fasta] }
     DIAMOND_MAKE_RVDB(ch_rvdb_fasta)
-    
+
     // // NOTE: I'm not quite sure what's wrong with this line, the formatting
     // // seems to be fine. Therefore for the meantime, we can simply comment out
     // // this one.
@@ -139,7 +139,7 @@ workflow VIROLOCATE_NF {
 
     // // ch_ncbi_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true).map { fasta -> [[id: 'ncbi_viral'], fasta] }.view()
     // // EXTRACT_NR_VIRAL(params.viral_csv, ch_ncbi_nr_fasta)
-    
+
     // // ch_ncbi_viral = (EXTRACT_NR_VIRAL.out.fasta).map { fasta -> [[id: 'ncbi_viral'], fasta] }
     // // DIAMOND_MAKE_NCBI_DB(ch_ncbi_viral)
     // // // //ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
@@ -158,7 +158,7 @@ workflow VIROLOCATE_NF {
         ''
     )
     // // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
-    
+
     // // ch_ncbi_dmnd_db = (DIAMOND_MAKE_NCBI_DB.out.db).toList().map { it[0] }
     // //  DIAMOND_BLASTX_PRE_NCBI(
     // //     MEGAHIT_RENAME.out.contigs,
@@ -175,7 +175,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
     // // RENAME THE FILES IN THE CHANNELS SO THE SAME SAMPLE NAMES CAN BE PROCESSED SEPARATELY ADN NOT OVERWRITE EACH OTHER
-    // //get accession ids and taxonomy ids for taxonkit to use 
+    // //get accession ids and taxonomy ids for taxonkit to use
     // // ch_rvdb = (RVDB_PROCESSING.out.tsv) ?: Channel.empty()
     // // ch_ncbi = (DIAMOND_BLASTX_NCBI.out.tsv) ?: Channel.empty()
     // // ch_combined_diamond_output = (ch_rvdb).mix(ch_ncbi).map {it[1]}
@@ -209,8 +209,8 @@ workflow VIROLOCATE_NF {
     // Blastn for comparing contig sequences to known nucleotide sequences
     ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map {db -> [[id:"ncbi_nt"], db]}.view()
     ch_taxids = Channel.value(false).view()
-    ch_taxidlist = Channel.fromPath(params.taxidlist).view() 
-    
+    ch_taxidlist = Channel.fromPath(params.taxidlist).view()
+
     ch_negative_tax = Channel.value(false).view()
 
     BLAST_BLASTN(ch_blast_fasta, ch_ncbi_nt_db, ch_taxidlist, ch_taxids, ch_negative_tax)
@@ -227,10 +227,11 @@ workflow VIROLOCATE_NF {
     // // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
     // //Blastx to compare proteins to check for distant orthologs
-    
+    ch_diamond_blastx_final_in = Channel.fromPath(params.diamond_blastx_final) ?: DIAMOND_MAKE_NR_DB.out.db
+
     DIAMOND_BLASTX_FINAL(
         ch_blast_fasta,
-        DIAMOND_MAKE_NR_DB.out.db,
+        ch_diamond_blastx_final_in,
         params.diamond_output_format,
         ''
     )
