@@ -26,10 +26,6 @@ process FETCH_METADATA {
 
         #host source, gographical location name, collection date, gene, product, taxonomic number
         local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}')
-        local geo_loc_name=\$(echo "\${info}" | awk -F'"' '/\\/geo_loc_name/ {print \$2}')
-        local date=\$(echo "\${info}" | awk -F'"' '/\\/collection_date/ {print \$2}')
-        local gene=\$(echo "\${info}" | awk -F'"' '/\\/coded_by/ {print \$2}')
-        local product=\$(echo "\${info}" | awk -F'"' '/\\/product/ {print \$2}')
         local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
 
         #put NA if any of the fields are empty
@@ -39,34 +35,6 @@ process FETCH_METADATA {
             host=\$(printf "%s" "\$host" | tr -d '\\n')
         fi
 
-        if [[ -z "\${geo_loc_name}" ]]; then
-            geo_loc_name="NA"
-        else
-            geo_loc_name=\$(printf "%s" "\$geo_loc_name" | tr -d '\\n')
-        fi
-
-
-        if [[ -z "\${date}" ]]; then
-            date="NA"
-        else
-            date=\$(printf "%s" "\$date" | tr -d '\\n')
-        fi
-
-
-        if [[ -z "\${gene}" ]]; then
-            gene="NA"
-        else
-            gene=\$(printf "%s" "\$gene" | tr -d '\\n')
-        fi
-
-
-        if [[ -z "\${product}" ]]; then
-            product="NA"
-        else
-            product=\$(printf "%s" "\$product" | tr -d '\\n')
-        fi
-
-
         if [[ -z "\${tax}" ]]; then
             tax="NA"
         else
@@ -74,7 +42,7 @@ process FETCH_METADATA {
         fi
 
         #print output
-        echo -e "\${contig}\\t\${acc_id}\\t\${rest}\\t\${tax}\\t\${host}\\t\${gene}\\t\${product}\\t\${geo_loc_name}\\t\${date}" >>\${output}
+        echo -e "\${contig}\\t\${acc_id}\\t\${rest}\\t\${tax}\\t\${host}" >>\${output}
 
     }
 

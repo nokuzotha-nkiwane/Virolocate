@@ -172,9 +172,9 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
     //combine ncbi and rvdb diamond outputs
-    ch_ncbi = DIAMOND_BLASTX_PRE_NCBI.out.tsv.view()
-    ch_rvdb = RVDB_PROCESSING.out.tsv.view()
-    ch_combined_diamond_output = ch_ncbi.join(ch_rvdb, remainder: true).view()
+    ch_ncbi = DIAMOND_BLASTX_PRE_NCBI.out.tsv.dump(tag:'ch_ncbi')
+    ch_rvdb = RVDB_PROCESSING.out.tsv.dump(tag:'ch_rvdb')
+    ch_combined_diamond_output = ch_ncbi.join(ch_rvdb, remainder: true).dump(tag:'ch_combined_diamond_output')
     MERGER(ch_combined_diamond_output)
     ch_versions = ch_versions.mix(MERGER.out.versions.first())
 
@@ -199,7 +199,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
     //make fasta file to blastn against NT and blastx against NR
-    ch_joined = (CONTIG_UNIQUE_SORTER.out.txt).join(MEGAHIT_RENAME.out.contigs, by: 0).view()
+    ch_joined = (CONTIG_UNIQUE_SORTER.out.txt).join(MEGAHIT_RENAME.out.contigs, by: 0).dump(tag:'ch_joined')
     MAKE_BLAST_FASTA(ch_joined)
     ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
