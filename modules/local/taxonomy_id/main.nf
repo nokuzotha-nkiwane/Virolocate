@@ -35,6 +35,9 @@ process TAXONOMY_ID {
 
         if [[ -z "\${tax}" ]]; then
             tax="NA"
+
+        else
+            tax=\$(echo "\$tax" | tr -d '\\n' | tr '\\t' ' ')
         fi
 
         #print output
