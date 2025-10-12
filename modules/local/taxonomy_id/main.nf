@@ -37,7 +37,7 @@ process TAXONOMY_ID {
             tax="NA"
 
         else
-            tax=\$(echo "\$tax" | tr -d '\\n' | tr '\\t' ' ')
+            tax=\$(printf "%s" "\$tax" | tr -d '\\n')
         fi
 
         #print output
