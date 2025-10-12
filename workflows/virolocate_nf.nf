@@ -159,13 +159,16 @@ workflow VIROLOCATE_NF {
     )
     // // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
 
-    // // ch_ncbi_dmnd_db = (DIAMOND_MAKE_NCBI_DB.out.db).toList().map { it[0] }
-    // //  DIAMOND_BLASTX_PRE_NCBI(
-    // //     MEGAHIT_RENAME.out.contigs,
-    // //     ch_ncbi_dmnd_db,
-    // //     params.diamond_output_format,
-    // //     ''
-    // // )
+    ch_ncbi_dmnd_db = Channel.fromPath(params.ncbi_viral_dmnd)
+                    .map{db -> [[id:'ncbi_viral'], db]}
+                    .toList()
+                    .map { it[0] }
+    DIAMOND_BLASTX_PRE_NCBI(
+        MEGAHIT_RENAME.out.contigs,
+        ch_ncbi_dmnd_db,
+        params.diamond_output_format,
+        ''
+    )
     // // // NOTE: I'm not quite sure what's wrong with this line, the formatting
     // // // seems to be fine. Therefore for the meantime, we can simply comment out
     // // // this one.
@@ -216,9 +219,9 @@ workflow VIROLOCATE_NF {
     BLAST_BLASTN(ch_blast_fasta, ch_ncbi_nt_db, ch_taxidlist, ch_taxids, ch_negative_tax)
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
-    // // //get metadata of the blastn hits
-    // // FETCH_METADATA_BLASTN(BLAST_BLASTN.out.txt)
-    // // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
+    //get metadata of the blastn hits
+    FETCH_METADATA_BLASTN(BLAST_BLASTN.out.txt)
+    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
     // // //Make nr database using nr fasta
     ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
@@ -227,7 +230,8 @@ workflow VIROLOCATE_NF {
     // // ch_versions = ch_versions.mix(DIAMOND_MAKE_NR_DB.out.versions.first())
 
     // //Blastx to compare proteins to check for distant orthologs
-    ch_diamond_blastx_final_in = Channel.fromPath(params.diamond_blastx_final) ?: DIAMOND_MAKE_NR_DB.out.db
+    ch_diamond_blastx_final_in = (DIAMOND_MAKE_NR_DB.out.db).toList().map { it[0] }
+
 
     DIAMOND_BLASTX_FINAL(
         ch_blast_fasta,
