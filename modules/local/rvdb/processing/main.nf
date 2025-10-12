@@ -8,7 +8,7 @@ process RVDB_PROCESSING {
     tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path('*_acc_tax_id.tsv')  , emit: tsv
+    tuple val(meta), path('*.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -17,18 +17,21 @@ process RVDB_PROCESSING {
     #take nucleotide acc_id from diamond output file
     
     if [[ ! -f "${tsv}" ]]; then
-        echo "# No RVDB data processed" > "${prefix}_acc_tax_id.tsv"
+        echo "# No RVDB data processed" > "${prefix}.tsv"
         exit 0
     fi
 
     # process the file line by line
+    tmpfile="${prefix}.tsv.tmp"
     while IFS=\$'\\t' read -r col1 col2 col3 col4 rest; do
         if [[ -n "\${col1}" ]] && [[ "\${col1}" != "#"* ]]; then
-            acc_id=\$(echo "\${col3}" | cut -d "|" -f3)
-            name=\$(echo "\${col4}" | cut -d "|" -f6)
-            echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}" >> "${prefix}_acc_tax_id.tsv"
+            acc_id=\$(echo "\${col3}" | awk -F'|' '{print \$3}')
+            name=\$(echo "\${col4}" | awk -F'|' '{print \$6}')
+            echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}" >> "\${tmpfile}"
         fi
     done < "${tsv}"
+    mv -f "\${tmpfile}" "${prefix}.tsv"
+
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

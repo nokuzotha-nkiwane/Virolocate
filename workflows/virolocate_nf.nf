@@ -38,7 +38,9 @@ include { FASTQC as FASTQC_PRE  } from '../modules/nf-core/fastqc/main'
 include { FASTQC as FASTQC_POST   } from '../modules/nf-core/fastqc/main'
 include { MEGAHIT } from '../modules/nf-core/megahit/main.nf'
 include { MULTIQC } from '../modules/nf-core/multiqc/main.nf'
-include { TAXONKIT_LINEAGE } from '../modules/nf-core/taxonkit/lineage/main.nf'
+include { TAXONKIT_LINEAGE as LINEAGE_PRE } from '../modules/nf-core/taxonkit/lineage/main.nf'
+include { TAXONKIT_LINEAGE as LINEAGE_BLASTN } from '../modules/nf-core/taxonkit/lineage/main.nf'
+include { TAXONKIT_LINEAGE as LINEAGE_BLASTX } from '../modules/nf-core/taxonkit/lineage/main.nf'
 include { TRIMMOMATIC } from '../modules/nf-core/trimmomatic/main.nf'
 include { DIAMOND_MAKEDB as DIAMOND_MAKE_RVDB } from '../modules/nf-core/diamond/makedb/main'
 include { DIAMOND_MAKEDB as DIAMOND_MAKE_NCBI_DB} from '../modules/nf-core/diamond/makedb/main'
@@ -55,13 +57,14 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { EXTRACT_NR_VIRAL } from '../modules/local/extract_nr_viral/main.nf'
 include { FASTA_PROCESSING } from '../modules/local/fasta_processing/main.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
-include { TAXONOMY_ID    } from '../modules/local/taxonomy_id/main.nf'
+include { MERGER } from '../modules/local/merger/main.nf'
+include { TAXONOMY_ID } from '../modules/local/taxonomy_id/main.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
 include { MEGAHIT_RENAME } from '../modules/local/megahit_rename/main.nf'
 include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/main.nf'
 include { MAKE_BLAST_FASTA } from '../modules/local/make_blast_fasta/main.nf'
-include { FETCH_METADATA as FETCH_METADATA_BLASTN} from '../modules/local/fetch_metadata/main.nf'
-include { FETCH_METADATA as FETCH_METADATA_BLASTX} from '../modules/local/fetch_metadata/main.nf'
+include { FETCH_METADATA as FETCH_METADATA_BLASTN } from '../modules/local/fetch_metadata/main.nf'
+include { FETCH_METADATA_BLASTX } from '../modules/local/fetch_metadata_blastx/main.nf'
 
 
 /*
@@ -137,9 +140,6 @@ workflow VIROLOCATE_NF {
     // // this one.
     // // ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
-    // // ch_ncbi_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true).map { fasta -> [[id: 'ncbi_viral'], fasta] }.view()
-    // // EXTRACT_NR_VIRAL(params.viral_csv, ch_ncbi_nr_fasta)
-
     // // ch_ncbi_viral = (EXTRACT_NR_VIRAL.out.fasta).map { fasta -> [[id: 'ncbi_viral'], fasta] }
     // // DIAMOND_MAKE_NCBI_DB(ch_ncbi_viral)
     // // // //ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
@@ -177,12 +177,22 @@ workflow VIROLOCATE_NF {
     RVDB_PROCESSING(DIAMOND_BLASTX_PRE_RVDB.out.tsv)
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
+    //combine ncbi and rvdb diamond outputs
+    ch_ncbi = DIAMOND_BLASTX_PRE_NCBI.out.tsv.map {meta, tsv ->
+    def renamed = tsv.renameTo("${meta.id}_ncbi.tsv")
+    tuple(meta, renamed)
+    }
+    ch_rvdb = RVDB_PROCESSING.out.tsv
+    ch_combined_diamond_output = ch_ncbi.join(ch_rvdb, by: 0)
+    MERGER(ch_combined_diamond_output)
+    ch_versions = ch_versions.mix(MERGER.out.versions.first())
+
+
     // // RENAME THE FILES IN THE CHANNELS SO THE SAME SAMPLE NAMES CAN BE PROCESSED SEPARATELY ADN NOT OVERWRITE EACH OTHER
     // //get accession ids and taxonomy ids for taxonkit to use
-    // // ch_rvdb = (RVDB_PROCESSING.out.tsv) ?: Channel.empty()
-    // // ch_ncbi = (DIAMOND_BLASTX_NCBI.out.tsv) ?: Channel.empty()
-    // // ch_combined_diamond_output = (ch_rvdb).mix(ch_ncbi).map {it[1]}
-    TAXONOMY_ID(RVDB_PROCESSING.out.tsv)
+    
+    // // 
+    TAXONOMY_ID(MERGER.out.tsv)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
@@ -190,11 +200,11 @@ workflow VIROLOCATE_NF {
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
     ch_taxonkit_input = TAXONOMY_ID.out.tsv.map {meta, taxidfile -> [meta, null, taxidfile]}
 
-    TAXONKIT_LINEAGE(ch_taxonkit_input, ch_db_mapped)
-    ch_versions = ch_versions.mix(TAXONKIT_LINEAGE.out.versions.first())
+    LINEAGE_PRE(ch_taxonkit_input, ch_db_mapped)
+    ch_versions = ch_versions.mix(LINEAGE_PRE.out.versions.first())
 
     //Contig_filter to extract sequences marked as viral only
-    CONTIG_FILTER(TAXONKIT_LINEAGE.out.tsv)
+    CONTIG_FILTER(LINEAGE_PRE.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
     // //sort the filtered list to remove duplicates
@@ -202,7 +212,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
     //make fasta file to blastn against NT
-    ch_joined = (CONTIG_UNIQUE_SORTER.out.txt).join(MEGAHIT_RENAME.out.contigs)
+    ch_joined = (CONTIG_UNIQUE_SORTER.out.txt).join(MEGAHIT_RENAME.out.contigs,  by: 0)
     MAKE_BLAST_FASTA(ch_joined)
     ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
@@ -223,6 +233,10 @@ workflow VIROLOCATE_NF {
     FETCH_METADATA_BLASTN(BLAST_BLASTN.out.txt)
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
+    LINEAGE_BLASTN(FETCH_METADATA_BLASTN.out.tsv, ch_db_mapped)
+    ch_versions = ch_versions.mix(LINEAGE_BLASTN.out.versions.first())
+
+
     // // //Make nr database using nr fasta
     ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
                 .map { fasta -> [[id: 'nr'], fasta] }
@@ -241,9 +255,13 @@ workflow VIROLOCATE_NF {
     )
     // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
-    // //get metadata of the blastx hits
-    // FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
-    // ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
+    //get metadata of the blastx hits
+    FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
+    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
+
+    LINEAGE_BLASTX(FETCH_METADATA_BLASTX.out.tsv, ch_db_mapped)
+    ch_versions = ch_versions.mix(LINEAGE_BLASTX.out.versions.first())
+
 
 
     //---------------------------------------
