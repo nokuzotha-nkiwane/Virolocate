@@ -1,12 +1,12 @@
-process FETCH_METADATA {
+process FETCH_METADATA_BLASTX{
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/9dc43bf827c0/wave/build:fetch_metadata--94bd174222c6a1e2"
     
     input:
-    tuple val(meta), path(txt)
+    tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path('blastn_metadata.tsv')  , emit: tsv
+    tuple val(meta), path('blastx_metadata.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -21,7 +21,7 @@ process FETCH_METADATA {
         #progress check
         echo "Fetching metadata for "\${acc_id}""
         #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
-        local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=\${acc_id}&rettype=gb&retmode=text"
+        local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${acc_id}&rettype=gb&retmode=text"
         local info=\$(curl -N -# \${url1})
 
         #host source, gographical location name, collection date, gene, product, taxonomic number
@@ -79,23 +79,22 @@ process FETCH_METADATA {
     }
 
         while IFS=\$'\\t' read -r col1 col2 col3 rest;do
-            acc=\$(echo "\${col2}" | cut -d '|' -f4)
-            get_meta "\${col1}" "\${acc}" "\${rest}" "blastn_metadata.tsv"
-        done < "${txt}"
+            get_meta "\${col1}" "\${col2}" "\${rest}" "blastx_metadata.tsv"
+        done < "${tsv}"
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        fetch_metadata: "1.0.0"
+        fetch_metadata_blastx: "1.0.0"
     END_VERSIONS
     """
 
     stub:
     """
-    touch blastn_metadata.tsv
+    touch blastx_metadata.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        fetch_metadata: "1.0.0"
+        fetch_metadata_blastx: "1.0.0"
     END_VERSIONS
     """
 }
