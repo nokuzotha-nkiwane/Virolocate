@@ -1,0 +1,7 @@
+name: merger
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::merger=1.0.0
