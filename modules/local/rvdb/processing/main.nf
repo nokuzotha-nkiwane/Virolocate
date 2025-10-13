@@ -8,7 +8,7 @@ process RVDB_PROCESSING {
     tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path('*.tsv')  , emit: tsv
+    tuple val(meta), path('*_rvdb.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -30,7 +30,7 @@ process RVDB_PROCESSING {
             echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}" >> "\${tmpfile}"
         fi
     done < "${tsv}"
-    mv -f "\${tmpfile}" "${prefix}.tsv"
+    cat "\${tmpfile}" > "${prefix}_rvdb.tsv"
 
     
     cat <<-END_VERSIONS > versions.yml

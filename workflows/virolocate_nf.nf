@@ -178,20 +178,13 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(RVDB_PROCESSING.out.versions.first())
 
     //combine ncbi and rvdb diamond outputs
-    ch_ncbi = DIAMOND_BLASTX_PRE_NCBI.out.tsv.map {meta, tsv ->
-    def renamed = tsv.renameTo("${meta.id}_ncbi.tsv")
-    tuple(meta, renamed)
-    }
-    ch_rvdb = RVDB_PROCESSING.out.tsv
-    ch_combined_diamond_output = ch_ncbi.join(ch_rvdb, by: 0)
+    ch_ncbi = DIAMOND_BLASTX_PRE_NCBI.out.tsv.view()
+    ch_rvdb = RVDB_PROCESSING.out.tsv.view()
+    ch_combined_diamond_output = ch_ncbi.join(ch_rvdb, remainder: true).view()
     MERGER(ch_combined_diamond_output)
     ch_versions = ch_versions.mix(MERGER.out.versions.first())
 
-
-    // // RENAME THE FILES IN THE CHANNELS SO THE SAME SAMPLE NAMES CAN BE PROCESSED SEPARATELY ADN NOT OVERWRITE EACH OTHER
     // //get accession ids and taxonomy ids for taxonkit to use
-    
-    // // 
     TAXONOMY_ID(MERGER.out.tsv)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
@@ -207,24 +200,26 @@ workflow VIROLOCATE_NF {
     CONTIG_FILTER(LINEAGE_PRE.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
-    // //sort the filtered list to remove duplicates
+   //sort the filtered list to remove duplicates
     CONTIG_UNIQUE_SORTER(CONTIG_FILTER.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_UNIQUE_SORTER.out.versions.first())
 
-    //make fasta file to blastn against NT
-    ch_joined = (CONTIG_UNIQUE_SORTER.out.txt).join(MEGAHIT_RENAME.out.contigs,  by: 0)
+    //make fasta file to blastn against NT and blastx against NR
+    ch_joined = (CONTIG_UNIQUE_SORTER.out.txt).join(MEGAHIT_RENAME.out.contigs, by: 0).view()
     MAKE_BLAST_FASTA(ch_joined)
     ch_versions = ch_versions.mix(MAKE_BLAST_FASTA.out.versions.first())
 
     ch_all = MAKE_BLAST_FASTA.out.fasta.map {meta, fasta-> [fasta]}.collect({it})
     FASTA_PROCESSING(ch_all)
-    ch_blast_fasta = (FASTA_PROCESSING.out.fasta).map { fasta -> tuple([id:'final'], fasta) }.view()
-    // Blastn for comparing contig sequences to known nucleotide sequences
-    ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map {db -> [[id:"ncbi_nt"], db]}.view()
-    ch_taxids = Channel.value(false).view()
-    ch_taxidlist = Channel.fromPath(params.taxidlist).view()
+    ch_blast_fasta = (FASTA_PROCESSING.out.fasta).map { fasta -> tuple([id:'final'], fasta) }
 
-    ch_negative_tax = Channel.value(false).view()
+
+    // Blastn for comparing contig sequences to known nucleotide sequences
+    ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map {db -> [[id:"ncbi_nt"], db]}
+    ch_taxids = Channel.value(false)
+    ch_taxidlist = Channel.fromPath(params.taxidlist)
+
+    ch_negative_tax = Channel.value(false)
 
     BLAST_BLASTN(ch_blast_fasta, ch_ncbi_nt_db, ch_taxidlist, ch_taxids, ch_negative_tax)
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())

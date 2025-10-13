@@ -5,8 +5,7 @@ process MERGER{
     tuple val(meta), path(ncbi_tsv), path(rvdb_tsv)
 
     output:
-    tuple val(meta), path("${meta.id}_merged.tsv"), 
-    emit: tsv
+    tuple val(meta), path("${meta.id}_merged.tsv"), emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -22,7 +21,7 @@ process MERGER{
 
     stub:
     """
-    touch sample.tsv
+    touch sample_merged.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
