@@ -88,12 +88,15 @@ workflow VIROLOCATE_NF {
     //Parse samplesheet to get reads
     //assumes paired end readsa as default
     ch_reads = ch_samplesheet
-    .splitCsv(header:true)
-    .map { row ->
-        def meta = [ id: row.sample, single_end: row.fastq_2 ? false : true ]
-        def reads = [ file(row.fastq_1), file(row.fastq_2) ]
-        tuple(meta, reads)
-    }
+                    .splitCsv(header:true)
+                    .dump(tag:'ch_samplesheet')
+
+                    // .map { row ->
+                    //     def meta = [ id: row.sample, single_end: row.fastq_2 ? false : true ]
+                    //     def reads = [ file(row.fastq_1), file(row.fastq_2) ]
+                    //     tuple(meta, reads)
+                    // }
+
 
     // MODULE: Run FastQC
 
