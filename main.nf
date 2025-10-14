@@ -43,7 +43,7 @@ workflow CERIKRISP_virolocate_nf {
     // )
 
     emit:
-    multiqc_report = VIROLOCATE_NF.out.multiqc_report // channel: /path/to/multiqc_report.html
+    multiqc_report = [] // VIROLOCATE_NF.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
