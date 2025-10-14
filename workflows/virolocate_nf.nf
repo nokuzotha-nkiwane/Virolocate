@@ -72,11 +72,11 @@ include { FETCH_METADATA_BLASTX } from '../modules/local/fetch_metadata_blastx/m
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-ch_samplesheet= Channel.fromPath(params.samplesheet)
+//ch_samplesheet= Channel.fromPath(params.samplesheet)
 
 workflow VIROLOCATE_NF {
-//    take:
-//    ch_samplesheet
+    take:
+    ch_samplesheet
 
     //main starts main workflow logic
     //ch_versions will collect software version info form each tool
