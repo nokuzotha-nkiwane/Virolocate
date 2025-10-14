@@ -211,15 +211,13 @@ workflow VIROLOCATE_NF {
 
     ch_all = MAKE_BLAST_FASTA.out.fasta.map {meta, fasta-> [fasta]}.collect({it})
     FASTA_PROCESSING(ch_all)
-    ch_blast_fasta = (FASTA_PROCESSING.out.fasta).map { fasta -> tuple([id:'final'], fasta) }
-
-
+    ch_blast_fasta = (FASTA_PROCESSING.out.fasta).map { fasta -> tuple([id:'final'], fasta) }.dump(tag:'ch_blast_fasta')
     // Blastn for comparing contig sequences to known nucleotide sequences
-    ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map {db -> [[id:"ncbi_nt"], db]}
-    ch_taxids = Channel.value(false)
-    ch_taxidlist = Channel.fromPath(params.taxidlist)
+    ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map {db -> [[id:"ncbi_nt"], db]}.dump(tag:'ch_ncbi_nt_db')
+    ch_taxids = Channel.value(false).dump(tag:'ch_taxids')
+    ch_taxidlist = Channel.fromPath(params.taxidlist).dump(tag:'ch_taxidlist')
 
-    ch_negative_tax = Channel.value(false)
+    ch_negative_tax = Channel.value(false).dump(tag:'ch_negative_tax')
 
     BLAST_BLASTN(ch_blast_fasta, ch_ncbi_nt_db, ch_taxidlist, ch_taxids, ch_negative_tax)
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
