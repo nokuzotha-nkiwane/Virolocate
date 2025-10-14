@@ -32,12 +32,16 @@ workflow CERIKRISP_virolocate_nf {
 
     main:
 
-    //
-    // WORKFLOW: Run pipeline
-    //
-    VIROLOCATE_NF (
-        ch_samplesheet
-    )
+
+    ch_samplesheet.dump(tag:'samplesheet')
+
+    // //
+    // // WORKFLOW: Run pipeline
+    // //
+    // VIROLOCATE_NF (
+    //     ch_samplesheet
+    // )
+
     emit:
     multiqc_report = VIROLOCATE_NF.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
