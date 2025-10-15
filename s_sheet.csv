@@ -1,4 +1,4 @@
 sample,fastq_1,fastq_2
-K058681_S32,/analyses/users/nokuzothan/disc_pipe/init_data/K058681_S32_R1_001.fastq.gz,/analyses/users/nokuzothan/disc_pipe/init_data/K058681_S32_R2_001.fastq.gz
-K058760_S5,/analyses/users/nokuzothan/disc_pipe/init_data/K058760_S5_R1_001.fastq.gz,/analyses/users/nokuzothan/disc_pipe/init_data/K058760_S5_R2_001.fastq.gz
-K058762_S14,/analyses/users/nokuzothan/disc_pipe/init_data/K058762_S14_R1_001.fastq.gz,/analyses/users/nokuzothan/disc_pipe/init_data/K058762_S14_R2_001.fastq.gz
+SRR13765816,/analyses/projects/proj-virolocate-nokuzotha/init_data/SRR13765816_1.fastq.gz,/analyses/projects/proj-virolocate-nokuzotha/init_data/SRR13765816_2.fastq.gz
+SRR31521267,/analyses/projects/proj-virolocate-nokuzotha/init_data/SRR31521267_1.fastq.gz,/analyses/projects/proj-virolocate-nokuzotha/init_data/SRR31521267_2.fastq.gz
+SRR8048112,/analyses/projects/proj-virolocate-nokuzotha/init_data/SRR8048112_1.fastq.gz,/analyses/projects/proj-virolocate-nokuzotha/init_data/SRR8048112_2.fastq.gz
