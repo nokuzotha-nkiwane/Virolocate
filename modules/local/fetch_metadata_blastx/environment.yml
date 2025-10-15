@@ -1,7 +1,0 @@
-name: fetch_metadata_blastx
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
-dependencies:
-  - bioconda::fetch_metadata_blastx=1.0.0
