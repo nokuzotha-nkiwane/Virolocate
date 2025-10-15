@@ -1,0 +1,7 @@
+name: extract_nr_viral
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::extract_nr_viral=1.0.0

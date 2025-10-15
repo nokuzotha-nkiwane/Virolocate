@@ -1,0 +1,7 @@
+name: make_blast_fasta
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::make_blast_fasta=1.0.0

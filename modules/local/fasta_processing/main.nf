@@ -1,0 +1,37 @@
+process FASTA_PROCESSING {
+
+    // conda "${moduleDir}/environment.yml"
+    // container "wave.seqera.io/wt/15d0d9436d7f/wave/build:ncbi_processing--b61e3e84fb1e5c3f"
+
+    input:
+    path(fasta)
+
+    output:
+    path('final_blast_contigs.fasta')  , emit: fasta
+    path "versions.yml"             , emit: versions
+
+
+    script:
+    """
+    cat ${fasta} > "final_blast_contigs.fasta"
+    sed -i '/^>/ s/ /_/g' "final_blast_contigs.fasta"
+    dos2unix "final_blast_contigs.fasta"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        fasta_processing: "1.0.0"
+    END_VERSIONS
+    """
+    
+    stub:
+    
+    """
+    touch final_blast_contigs.fasta
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        fasta_processing: "1.0.0"
+    END_VERSIONS
+
+    """
+}

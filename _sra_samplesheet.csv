@@ -1,0 +1,4 @@
+sample,fastq_1,fastq_2
+SRR13765816,/analyses/users/nokuzothan/disc_pipe/init_data/SRR13765816_1.fastq,/analyses/users/nokuzothan/disc_pipe/init_data/SRR13765816_2.fastq
+SRR31521267,/analyses/users/nokuzothan/disc_pipe/init_data/SRR31521267_1.fastq,/analyses/users/nokuzothan/disc_pipe/init_data/SRR31521267_2.fastq
+SRR8048112,/analyses/users/nokuzothan/disc_pipe/init_data/SRR8048112_1.fastq,/analyses/users/nokuzothan/disc_pipe/init_data/SRR8048112_2.fastq

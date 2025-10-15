@@ -1,0 +1,7 @@
+name: fasta_processing
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::fasta_processing=1.0.0

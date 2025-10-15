@@ -1,0 +1,7 @@
+name: contig_sorter
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::contig_sorter=1.0.0
