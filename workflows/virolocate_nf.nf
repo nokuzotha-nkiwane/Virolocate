@@ -188,7 +188,7 @@ workflow VIROLOCATE_NF {
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
-    ch_taxonomy_id_collected = (TAXONOMY_ID.out.tsv).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected')
+    ch_taxonomy_id_collected = (TAXONOMY_ID.out.tsv).flatMap { meta, tsvs -> tsvs.collect { file -> [meta, file] }}.groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected')
     ch_taxonkit_input = (ch_taxonomy_id_collected).map {meta, taxidfile -> [meta, null, taxidfile]}
 
     
