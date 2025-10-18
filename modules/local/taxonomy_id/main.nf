@@ -12,7 +12,7 @@ process TAXONOMY_ID {
     path "versions.yml"             , emit: versions
 
     script:
-    def name = txt.getBaseName[]
+    def name = txt.getBaseName()
     """
 
     #function to get metadata from eutils
