@@ -17,7 +17,7 @@ process SPLITTER{
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        merger: "1.0.0"
+        splitter: "1.0.0"
     END_VERSIONS
     """
 
@@ -27,7 +27,7 @@ process SPLITTER{
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        merger: "1.0.0"
+        splitter: "1.0.0"
     END_VERSIONS
     """
 }

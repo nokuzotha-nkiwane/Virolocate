@@ -57,7 +57,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { EXTRACT_NR_VIRAL } from '../modules/local/extract_nr_viral/main.nf'
 include { FASTA_PROCESSING } from '../modules/local/fasta_processing/main.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
-include { MERGER } from '../modules/local/merger/main.nf'
+include { SPLITTER } from '../modules/local/splitter/main.nf'
 include { TAXONOMY_ID } from '../modules/local/taxonomy_id/main.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
 include { MEGAHIT_RENAME } from '../modules/local/megahit_rename/main.nf'
@@ -172,11 +172,11 @@ workflow VIROLOCATE_NF {
     ch_ncbi = DIAMOND_BLASTX_PRE_NCBI.out.tsv.dump(tag:'ch_ncbi')
     ch_rvdb = RVDB_PROCESSING.out.tsv.dump(tag:'ch_rvdb')
     ch_combined_diamond_output = ch_ncbi.join(ch_rvdb, remainder: true).dump(tag:'ch_combined_diamond_output')
-    MERGER(ch_combined_diamond_output)
-    ch_versions = ch_versions.mix(MERGER.out.versions.first())
+    SPLITTER(ch_combined_diamond_output)
+    ch_versions = ch_versions.mix(SPLITTER.out.versions.first())
 
     // //get accession ids and taxonomy ids for taxonkit to use
-    TAXONOMY_ID(MERGER.out.tsv)
+    TAXONOMY_ID(SPLITTER.out.tsv)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids

@@ -1,7 +1,7 @@
-name: merger
+name: splitter
 channels:
   - conda-forge
   - bioconda
   - defaults
 dependencies:
-  - bioconda::merger=1.0.0
+  - bioconda::splitter=1.0.0
