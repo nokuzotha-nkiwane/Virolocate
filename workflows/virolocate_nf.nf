@@ -60,6 +60,7 @@ include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
 include { SPLITTER } from '../modules/local/splitter/main.nf'
 include { MERGER } from '../modules/local/merger/main.nf'
 include { TAXONOMY_ID } from '../modules/local/taxonomy_id/main.nf'
+include { MERGER2 } from '../modules/local/merger2/main.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
 include { MEGAHIT_RENAME } from '../modules/local/megahit_rename/main.nf'
 include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/main.nf'
@@ -189,7 +190,10 @@ workflow VIROLOCATE_NF {
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
     ch_taxonomy_id_collected = (TAXONOMY_ID.out.tsv).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected')
-    ch_taxonkit_input = (ch_taxonomy_id_collected).map {meta, taxidfile -> [meta, null, taxidfile]}
+
+    MERGER2(ch_taxonomy_id_collected)
+
+    ch_taxonkit_input = (MERGER2.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
 
     
     LINEAGE_PRE(ch_taxonkit_input, ch_db_mapped)
