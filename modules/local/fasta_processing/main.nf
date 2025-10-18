@@ -1,4 +1,5 @@
 process FASTA_PROCESSING {
+    label 'process_low'
 
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/15d0d9436d7f/wave/build:ncbi_processing--b61e3e84fb1e5c3f"

@@ -1,5 +1,7 @@
 process MAKE_BLAST_FASTA {
     tag "${meta.id}"
+    label 'process_medium'
+
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/f0df4f3f12cd/wave/build:make_blast_fasta--b4fc6a3e025d3533"
 

@@ -1,5 +1,6 @@
 process MERGER{
     tag "${meta.id}"
+    label 'process_low'
 
     input:
     tuple val(meta), path(ncbi_tsv), path(rvdb_tsv)

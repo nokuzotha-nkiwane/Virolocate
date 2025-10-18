@@ -1,5 +1,7 @@
 process CONTIG_UNIQUE_SORTER {
     tag "${meta.id}"
+    label 'process_low'
+  
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/3b0bb1363235/wave/build:contig_sorter--c494d63b9df9105e"
 

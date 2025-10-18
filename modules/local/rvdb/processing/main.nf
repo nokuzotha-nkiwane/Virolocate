@@ -1,5 +1,6 @@
 process RVDB_PROCESSING {
     tag "${meta.id}"
+    label 'process_low'
 
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/935142d6c1b1/wave/build:rvdb_processing--a737d7798a59a0c3"

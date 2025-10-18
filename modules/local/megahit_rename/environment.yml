@@ -1,7 +1,7 @@
-name: extract_nr_viral
+name: megahit_rename
 channels:
   - conda-forge
   - bioconda
   - defaults
 dependencies:
-  - bioconda::extract_nr_viral=1.0.0
+  - bioconda::megahit_rename=1.0.0

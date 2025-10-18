@@ -1,5 +1,8 @@
 process TAXONOMY_ID {
     tag "${meta.id}"
+    label 'process_high'
+    label 'process_long'
+
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
 

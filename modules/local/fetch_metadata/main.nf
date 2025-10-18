@@ -1,4 +1,6 @@
 process FETCH_METADATA {
+    label 'process_high'
+    label 'process_long'
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/9dc43bf827c0/wave/build:fetch_metadata--94bd174222c6a1e2"
     

@@ -1,5 +1,7 @@
 process CONTIG_FILTER {
     tag "${meta.id}"
+    label 'process_low'
+
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/67f4c80bd6c6/wave/build:contig_filter--f8e5cec565adc43e"
 
