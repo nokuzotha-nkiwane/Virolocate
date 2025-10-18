@@ -1,6 +1,6 @@
 process SPLITTER{
     tag "${meta.id}"
-    label 'process_low'
+    label 'process_high'
 
     input:
     tuple val(meta), path(tsv)
