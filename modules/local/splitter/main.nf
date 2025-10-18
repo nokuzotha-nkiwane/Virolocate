@@ -13,7 +13,10 @@ process SPLITTER{
     cat "${ncbi_tsv}" > "${meta.id}_merged.tsv"
     cat "${rvdb_tsv}" >> "${meta.id}_merged.tsv"
 
-    split -n l/${task.cpus} "${meta.id}_merged.tsv" ${meta.id}_ -a .txt
+    split -n l/${task.cpus} "${meta.id}_merged.tsv" ${meta.id}_
+    for file in ${meta.id}_*; do
+        mv "\${file}" "\${file}.txt"
+    done
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
