@@ -13,9 +13,7 @@ process SPLITTER{
     """
     split -n l/${task.cpus} "${meta.id}_merged.tsv" ${meta.id}_
     rm "${meta.id}_merged.tsv"
-    for file in ${meta.id}_*; do
-        mv "\${file}" "\${file}.txt"
-    done
+    
     
 
     cat <<-END_VERSIONS > versions.yml
