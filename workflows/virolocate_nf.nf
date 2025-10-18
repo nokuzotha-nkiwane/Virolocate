@@ -134,9 +134,9 @@ workflow VIROLOCATE_NF {
     // // this one.
     // // ch_versions = ch_versions.mix(DIAMOND_MAKE_RVDB.out.versions.first())
 
-    // // ch_ncbi_viral = (EXTRACT_NR_VIRAL.out.fasta).map { fasta -> [[id: 'ncbi_viral'], fasta] }
-    // // DIAMOND_MAKE_NCBI_DB(ch_ncbi_viral)
-    // // // //ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
+    ch_ncbi_viral = Channel.fromPath(params.ncbi_viral_fasta).map{fasta -> [[id:'ncbi_viral'], fasta]}
+    DIAMOND_MAKE_NCBI_DB(ch_ncbi_viral)
+    // //ch_versions = ch_versions.mix(DIAMOND_MAKE_NCBI_DB.out.versions.first())
 
 
     // // //Diamond to compare read proteins against known proteins in databases
@@ -153,10 +153,7 @@ workflow VIROLOCATE_NF {
     )
     // // // ch_versions = ch_versions.mix(DIAMOND_BLASTX_PRE_RVDB.out.versions.first())
 
-    ch_ncbi_dmnd_db = Channel.fromPath(params.ncbi_viral_dmnd)
-                    .map{db -> [[id:'ncbi_viral'], db]}
-                    .toList()
-                    .map { it[0] }
+    ch_ncbi_dmnd_db = (DIAMOND_MAKE_NCBI_DB.out.db).toList().map { it[0] }
     DIAMOND_BLASTX_PRE_NCBI(
         MEGAHIT_RENAME.out.contigs,
         ch_ncbi_dmnd_db,
@@ -221,7 +218,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
     //get taxonomy
-    ch_taxonkit_blastn_input = FETCH_METADATA_BLASTX.out.tsv.map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonkit_blastn_input = FETCH_METADATA_BLASTN.out.tsv.map {meta, taxidfile -> [meta, null, taxidfile]}
 
     LINEAGE_BLASTN(FETCH_METADATA_BLASTN.out.tsv, ch_db_mapped)
     ch_versions = ch_versions.mix(LINEAGE_BLASTN.out.versions.first())
