@@ -4,7 +4,7 @@ process TAXONOMY_ID {
     // container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
 
     input:
-    tuple val(meta), path(tsv) 
+    tuple val(meta), path(txt) 
 
 
     output:
@@ -12,7 +12,7 @@ process TAXONOMY_ID {
     path "versions.yml"             , emit: versions
 
     script:
-    def prefix = "${meta.id}"
+    def name = txt.getBaseName()
     """
 
     #function to get metadata from eutils
@@ -50,10 +50,10 @@ process TAXONOMY_ID {
         echo "[\${col3}]"
         tmpfile=\$(mktemp)
         get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "\$tmpfile"
-        cat "\$tmpfile" >> "${prefix}_final_accessions.tsv"
+        cat "\$tmpfile" >> "${name}_final_accessions.tsv"
         rm "\$tmpfile"
 
-    done < ${tsv}
+    done < ${txt}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

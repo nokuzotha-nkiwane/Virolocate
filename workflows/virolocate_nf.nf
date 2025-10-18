@@ -172,8 +172,10 @@ workflow VIROLOCATE_NF {
     ch_ncbi = DIAMOND_BLASTX_PRE_NCBI.out.tsv.dump(tag:'ch_ncbi')
     ch_rvdb = RVDB_PROCESSING.out.tsv.dump(tag:'ch_rvdb')
     ch_combined_diamond_output = ch_ncbi.join(ch_rvdb, remainder: true).dump(tag:'ch_combined_diamond_output')
-    SPLITTER(ch_combined_diamond_output)
-    ch_versions = ch_versions.mix(SPLITTER.out.versions.first())
+    MERGER(ch_combined_diamond_output)
+    ch_versions = ch_versions.mix(MERGER.out.versions.first())
+
+    SPLITTER(MERGER.out.tsv)
 
     // //get accession ids and taxonomy ids for taxonkit to use
     TAXONOMY_ID(SPLITTER.out.txt)

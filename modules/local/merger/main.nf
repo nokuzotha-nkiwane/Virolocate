@@ -1,23 +1,21 @@
-process SPLITTER{
+process MERGER{
     tag "${meta.id}"
 
     input:
-    tuple val(meta), path(tsv)
+    tuple val(meta), path(ncbi_tsv), path(rvdb_tsv)
 
     output:
-    tuple val(meta), path("${meta.id}_*.txt"), emit: txt
+    tuple val(meta), path("${meta.id}_merged.tsv"), emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
     """
-    split -n l/${task.cpus} "${meta.id}_merged.tsv" ${meta.id}_
-    for file in ${meta.id}_*; do
-        mv "\${file}" "\${file}.txt"
-    done
+    cat "${ncbi_tsv}" > "${meta.id}_merged.tsv"
+    cat "${rvdb_tsv}" >> "${meta.id}_merged.tsv"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        splitter: "1.0.0"
+        merger: "1.0.0"
     END_VERSIONS
     """
 
@@ -27,7 +25,7 @@ process SPLITTER{
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        splitter: "1.0.0"
+        merger: "1.0.0"
     END_VERSIONS
     """
 }
