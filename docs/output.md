@@ -18,11 +18,29 @@ The outputs of Virolocate pipeline are stored in the following directory structu
 
 
 ```
-├── fastp
-├── fastqc
+├── fastqc_pre
+├── fastqc_post
 ├── multiqc
 │   ├── multiqc_data
 │   └── multiqc_plots
+├── assembly
+├── assembly_renamed
+├── blastn_metadata 
+├── blastn_results 
+├── blastx_metadata 
+├── contig_filtering
+├── contig_sorting 
+├── diamond
+├── fasta_processing
+├── ncbi_diamond_results
+├── ncbi_rvdb_merged
+├── nr_diamond_databases
+├── rvdb_collected
+├── rvdb_diamond_databases
+├── rvdb_diamond_results
+├── taxonomy
+├── taxonomy_id
+├── trimmomatic
 ├── pipeline_info
 └── utils
 
