@@ -179,9 +179,8 @@ workflow VIROLOCATE_NF {
     SPLITTER(MERGER.out.tsv)
 
 
-
     // //get accession ids and taxonomy ids for taxonkit to use
-    TAXONOMY_ID(ch_splitter)
+    TAXONOMY_ID(SPLITTER.out.txt)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
