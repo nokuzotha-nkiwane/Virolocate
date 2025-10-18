@@ -1,6 +1,6 @@
 process TAXONOMY_ID {
     tag "${meta.id}"
-    label 'process_high'
+    maxForks 3
     label 'process_long'
 
     // conda "${moduleDir}/environment.yml"
@@ -31,7 +31,7 @@ process TAXONOMY_ID {
         echo "Fetching metadata for "\${acc_id}""
         #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
         local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${acc_id}&rettype=gb&retmode=text"
-        local info=\$(curl -N -# -L --retry 5 --connect-timeout 5 \${url1})
+        local info=\$(curl -N -# -L --retry 5 --retry-delay 5 --max-time 15 -connect-timeout 10 \${url1})
 
         #taxonomic number
         local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
