@@ -5,7 +5,7 @@ process SPLITTER{
     tuple val(meta), path(ncbi_tsv), path(rvdb_tsv)
 
     output:
-    tuple val(meta), path("${meta.id}_*"), emit: tsv
+    tuple val(meta), path("${meta.id}_*.txt"), emit: txt
     path "versions.yml"             , emit: versions
 
     script:
@@ -13,7 +13,7 @@ process SPLITTER{
     cat "${ncbi_tsv}" > "${meta.id}_merged.tsv"
     cat "${rvdb_tsv}" >> "${meta.id}_merged.tsv"
 
-    split -n l/${task.cpus} "${meta.id}_merged.tsv" ${meta.id}_
+    split -n l/${task.cpus} "${meta.id}_merged.tsv" ${meta.id}_ -a .txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
