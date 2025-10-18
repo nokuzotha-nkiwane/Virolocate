@@ -220,6 +220,9 @@ workflow VIROLOCATE_NF {
     FETCH_METADATA_BLASTN(BLAST_BLASTN.out.txt)
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
+    //get taxonomy
+    ch_taxonkit_blastn_input = FETCH_METADATA_BLASTX.out.tsv.map {meta, taxidfile -> [meta, null, taxidfile]}
+
     LINEAGE_BLASTN(FETCH_METADATA_BLASTN.out.tsv, ch_db_mapped)
     ch_versions = ch_versions.mix(LINEAGE_BLASTN.out.versions.first())
 
@@ -246,7 +249,10 @@ workflow VIROLOCATE_NF {
     FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
 
-    LINEAGE_BLASTX(FETCH_METADATA_BLASTX.out.tsv, ch_db_mapped)
+    //get taxonomy
+    ch_taxonkit_blastx_input = FETCH_METADATA_BLASTX.out.tsv.map {meta, taxidfile -> [meta, null, taxidfile]}
+
+    LINEAGE_BLASTX(ch_taxonkit_blastx_input, ch_db_mapped)
     ch_versions = ch_versions.mix(LINEAGE_BLASTX.out.versions.first())
 
 
