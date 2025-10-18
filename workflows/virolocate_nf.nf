@@ -54,7 +54,6 @@ include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pi
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 
 // import local modules
-include { EXTRACT_NR_VIRAL } from '../modules/local/extract_nr_viral/main.nf'
 include { FASTA_PROCESSING } from '../modules/local/fasta_processing/main.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
 include { SPLITTER } from '../modules/local/splitter/main.nf'
