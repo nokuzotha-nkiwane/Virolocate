@@ -1,6 +1,6 @@
 # Usage
 
-`Virolocate`: a pipeline for data analysis Cholera outbreaks.
+`Virolocate`: A pipeline for viral metatranscriptomic data analysis
 
 ## Introduction
 
@@ -8,10 +8,12 @@
 
 ## Dataset
 
-We have created a multi-fasta reference with global cohort available on ... , available at the link below.
+Samples from the Kruger National Park were collected and subsampled using Seqkit to generate a test dataset. See link below.
 
 
 ## Samplesheet input
+
+You need to 
 
 You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
 
@@ -24,7 +26,7 @@ You will need to create a samplesheet with information about the samples you wou
 
 # Input
 
-The input samplesheet should be in CSV format, containing either of the three possibilities
+The input samplesheet should be in CSV format, containing either of the two possibilities
 
   1. Paired-end reads (e.g `SRR8364252`)
 
@@ -35,6 +37,9 @@ The input samplesheet should be in CSV format, containing either of the three po
 ```csv
 sample,fastq_1,fastq_2
 SRR8364252,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR836/002/SRR8364252/SRR8364252_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR836/002/SRR8364252/SRR8364252_2.fastq.gz
+SRR35709878,/path/to/paired-end/SRR35709878_1.fastq.gz,/path/to/paired-end/SRR35709878_2.fastq.gz
+SRR35366026,/path/to/single-end/SRR35366026.fastq.gz
+
 ```
 
 ## Running the pipeline
@@ -42,9 +47,10 @@ SRR8364252,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR836/002/SRR8364252/SRR8364252_1
 
 ### Test profiles
 
-A built-in test profile are available in the virolocate pipeline with different size of datasets. This profile can be used to run tests on the relevant infrastructure using the `test` profile, to help users identify and resolve any infrastructural issue before the analysis stage.
+Virolocate comes with a `test` profile that is available in the Virolocate pipeline. The `test` profile can use datasets of different sizes to test the pipeline's functionality before performing any analyses.
 
-**NOTE**: The snippets below assumes you have `docker` on the sever/machine you wish to test the pipeline. For other institutional configs please refer [nf-core/configs](https://nf-co.re/docs/usage/configuration#max-resources) project, which are all applicable to this pipeline.
+
+**NOTE**: The following code chuncks assume that the server/machine being used has `docker` on it. For other institutional configurations, visit [nf-core/configs](https://nf-co.re/docs/usage/configuration#max-resources) project, which are all applicable to this pipeline.
 
 ```bash
 
@@ -83,7 +89,7 @@ If you wish to repeatedly use the same parameters for multiple runs, rather than
 
 Pipeline settings can be provided in a `yaml` or `json` file via `-params-file <file>`.
 
-> ⚠️ Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources), other infrastructural tweaks (such as output directories), or module arguments (args).
+> ⚠️ Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources), other infrastructural tweaks (e.g.:output directories), or module arguments (args).
 
 The above pipeline run specified with a params file in yaml format:
 
