@@ -1,4 +1,4 @@
-# CERI-KRISP/virolocate_nf: Output
+# CERI-KRISP/virolocate_nf: A pipeline for viral metatranscriptomic data analysis
 
 ## Introduction
 
@@ -12,7 +12,28 @@ The directories listed below will be created in the results directory after the 
 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
+- [FastQC](#fastqc) - Raw reads QC
 - [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Trimmed reads QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+- [FastQC](#fastqc) - Raw read QC
+
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
