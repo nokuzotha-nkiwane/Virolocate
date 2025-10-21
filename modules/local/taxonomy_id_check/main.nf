@@ -19,10 +19,14 @@ process TAXONOMY_ID_CHECK {
     """
     while IFS=\$'\\t' read -r -a fields; do
         if [[ "\${fields[8]}" == "NA" ]]; then
-            printf "%s\\t" "\${fields[@]}"} >> "${name}_check.txt"
+            printf "%s\\t" "\${fields[@]}" >> "${name}_check.txt"
             echo >> "${name}_check.txt"
         fi
     done < "${tsv}"
+
+    if [[ ! -s "${name}_check.txt" ]]; then
+            : > "${name}_check.txt"
+    fi
             
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

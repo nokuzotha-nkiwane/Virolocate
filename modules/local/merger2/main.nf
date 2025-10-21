@@ -11,8 +11,10 @@ process MERGER2 {
 
     script:
     """
-    cat "${tsvs}" > "${meta.id}_collected.tsv"
-    cat "${tsvs2}" >> "${meta.id}_collected.tsv"
+    awk 'NF' "${tsvs}" > "${meta.id}_collected.tsv"
+    awk 'NF' "${tsvs2}" >> "${meta.id}_collected.tsv"
+
+    if [[ -z]]
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

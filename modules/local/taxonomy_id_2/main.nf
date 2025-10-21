@@ -49,13 +49,17 @@ process TAXONOMY_ID_2 {
 
     }
 
+    if [[ ! -s ${txt} ]]; then
+            : > "${name}_final_accessions2.tsv"
+            exit 0
+    fi
+
     while IFS=\$'\\t' read -r col1 col2 col3 rest;do
         echo "[\${col3}]"
         tmpfile=\$(mktemp)
         get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "\$tmpfile"
         cat "\$tmpfile" >> "${name}_final_accessions2.tsv"
         rm "\$tmpfile"
-
     done < ${txt}
 
     cat <<-END_VERSIONS > versions.yml
