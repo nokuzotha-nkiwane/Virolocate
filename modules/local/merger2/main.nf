@@ -3,7 +3,7 @@ process MERGER2 {
     label 'process_low'
 
     input:
-    tuple val(meta), path(tsvs)
+    tuple val(meta), path(tsvs), path(tsvs2)
 
     output:
     tuple val(meta), path("${meta.id}_collected.tsv"), emit: tsv
@@ -11,7 +11,8 @@ process MERGER2 {
 
     script:
     """
-    cat ${tsvs.join(' ')} > "${meta.id}_collected.tsv"
+    cat "${tsvs}" > "${meta.id}_collected.tsv"
+    cat "${tsvs2}" >> "${meta.id}_collected.tsv"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

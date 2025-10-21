@@ -1,0 +1,8 @@
+name: taxonomy_id_check
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::curl
+  - bioconda::taxonomy_id_check=1.0.0
