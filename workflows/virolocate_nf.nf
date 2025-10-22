@@ -189,7 +189,10 @@ workflow VIROLOCATE_NF {
 
     // check taxonomy id
     TAXONOMY_ID_CHECK(TAXONOMY_ID.out.tsv)
+    ch_versions = ch_versions.mix(TAXONOMY_ID_CHECK.out.versions)
+
     TAXONOMY_ID_2(TAXONOMY_ID_CHECK.out.txt)
+    ch_versions = ch_versions.mix(TAXONOMY_ID_2.out.versions)
 
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
