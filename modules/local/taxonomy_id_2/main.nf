@@ -53,12 +53,15 @@ process TAXONOMY_ID_2 {
             echo > "${name}_final_accessions2.tsv"
     else
         while IFS=\$'\\t' read -r col1 col2 col3 rest;do
-            [[ -z "\$col3" ]] && continue
-            echo "[\${col3}]"
-            tmpfile=\$(mktemp)
-            get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "\$tmpfile"
-            cat "\$tmpfile" >> "${name}_final_accessions2.tsv"
-            rm "\$tmpfile"
+            if [[ -z "\$col3" ]]; then
+                continue
+            else
+                echo "[\${col3}]"
+                tmpfile=\$(mktemp)
+                get_meta "\${col1}" "\${col2}" "\${col3}" "\${rest}" "\$tmpfile"
+                cat "\$tmpfile" >> "${name}_final_accessions2.tsv"
+                rm "\$tmpfile"
+            fi
         done < ${txt}
     fi
 
