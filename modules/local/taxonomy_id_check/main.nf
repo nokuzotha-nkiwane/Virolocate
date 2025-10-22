@@ -25,7 +25,7 @@ process TAXONOMY_ID_CHECK {
     done < "${tsv}"
 
     if [[ ! -s "${name}_check.txt" ]]; then
-            echo "${name}_check.txt"
+            echo > "${name}_check.txt"
     fi
             
     cat <<-END_VERSIONS > versions.yml
