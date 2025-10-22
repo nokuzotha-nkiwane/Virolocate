@@ -25,7 +25,7 @@ process TAXONOMY_ID_CHECK {
     done < "${tsv}"
 
     if [[ ! -s "${name}_check.txt" ]]; then
-            : > "${name}_check.txt"
+            echo "${name}_check.txt"
     fi
             
     cat <<-END_VERSIONS > versions.yml
@@ -37,7 +37,7 @@ process TAXONOMY_ID_CHECK {
     stub:
 
     """
-    touch final_accessions.tsv
+    touch _check.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

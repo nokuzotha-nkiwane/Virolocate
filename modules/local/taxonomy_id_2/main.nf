@@ -50,7 +50,7 @@ process TAXONOMY_ID_2 {
     }
 
     if [[ ! -s ${txt} ]]; then
-            : > "${name}_final_accessions2.tsv"
+            echo > "${name}_final_accessions2.tsv"
     else
         while IFS=\$'\\t' read -r col1 col2 col3 rest;do
             echo "[\${col3}]"
@@ -70,7 +70,7 @@ process TAXONOMY_ID_2 {
     stub:
 
     """
-    touch final_accessions.tsv
+    touch final_accessions2.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
