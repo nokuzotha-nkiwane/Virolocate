@@ -16,9 +16,11 @@ process FETCH_METADATA {
     get_meta() {
 
         local contig=\$1
-        local acc_id=\$2
+        local col=\$2
         local rest=\$3
         local output=\$4
+
+        "\${acc_id}" =\$(echo "\${col}" | cut -d '|' -f4)
 
         #progress check
         echo "Fetching metadata for "\${acc_id}""
@@ -44,13 +46,12 @@ process FETCH_METADATA {
         fi
 
         #print output
-        echo -e "\${contig}\\t\${acc_id}\\t\${rest}\\t\${tax}\\t\${host}" >>\${output}
+        echo -e "\${contig}\\t\${col}\\t\${rest}\\t\${tax}\\t\${host}" >>\${output}
 
     }
 
-        while IFS=\$'\\t' read -r col1 col2 col3 rest;do
-            acc=\$(echo "\${col2}" | cut -d '|' -f4)
-            get_meta "\${col1}" "\${acc}" "\${rest}" "blastn_metadata.tsv"
+        while IFS=\$'\\t' read -r col1 col2 rest;do
+            get_meta "\${col1}" "\${col2}" "\${rest}" "blastn_metadata.tsv"
         done < "${txt}"
     
     cat <<-END_VERSIONS > versions.yml
