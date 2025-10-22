@@ -49,7 +49,7 @@ process TAXONOMY_ID_2 {
 
     }
 
-    if [[ ! -s ${txt} || \$(grep -cv '^[[:space:]]*$' ${txt}) -eq 0 ]]; then
+    if [[ ! -s ${txt} || \$(grep -cv '^[[:space:]]*\$' ${txt}) -eq 0 ]]; then
             echo > "${name}_final_accessions2.tsv"
     else
         while IFS=\$'\\t' read -r col1 col2 col3 rest;do
