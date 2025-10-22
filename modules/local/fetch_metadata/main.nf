@@ -20,7 +20,7 @@ process FETCH_METADATA {
         local rest=\$3
         local output=\$4
 
-        local acc_id =\$(echo "\${col}" | cut -d '|' -f4)
+        local acc_id =\$(echo "\${col}" | awk -F'|' '{print \$4}')
 
         #progress check
         echo "Fetching metadata for "\${acc_id}""
