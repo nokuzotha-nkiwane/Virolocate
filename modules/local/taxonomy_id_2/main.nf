@@ -64,7 +64,7 @@ process TAXONOMY_ID_2 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        taxonomy_id: "1.0.0"
+        taxonomy_id_2: "1.0.0"
     END_VERSIONS
     """
 
@@ -75,7 +75,7 @@ process TAXONOMY_ID_2 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        taxonomy_id: "1.0.0"
+        taxonomy_id_2: "1.0.0"
     END_VERSIONS
 
     """
