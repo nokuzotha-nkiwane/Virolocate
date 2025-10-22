@@ -11,8 +11,10 @@ process MERGER2 {
 
     script:
     """
-    awk 'NF' ${tsvs} > "${meta.id}_collected.tsv"
-    awk 'NF' ${tsvs2} >> "${meta.id}_collected.tsv"
+    cat ${tsvs} > "${meta.id}_collect.tsv"
+    cat ${tsvs2} > "${meta.id}_collect.tsv"
+    awk -F'\\t' '\$9 != "NA"' "${meta.id}_collect.tsv" > "${meta.id}_collect2.tsv"
+    awk 'NF' "${meta.id}_collect2.tsv" >> "${meta.id}_collected.tsv"
 
 
     cat <<-END_VERSIONS > versions.yml
