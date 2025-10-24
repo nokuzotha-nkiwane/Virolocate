@@ -1,4 +1,4 @@
-process TAXONOMY_ID_CHECK {
+process TAXONOMY_ID_CHECK_2 {
     tag "${meta.id}"
     maxForks 3
     label 'process_long'
