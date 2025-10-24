@@ -237,15 +237,17 @@ workflow VIROLOCATE_NF {
 
     // Split fasta into smaller ones for faster processing
     FASTA_SPLIT(ch_blast_fasta)
+    ch_splitter_fasta = (FASTA_SPLIT.out.fasta).dump(tag:'ch_splitter_fasta')
+    ch_splitter_fasta_out = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta_out')
     // Blastn for comparing contig sequences to known nucleotide sequences
-    ch_ncbi_nt_db_in = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map { db -> tuple(id:'ncbi_nt', db) }.collect().flatMap { it }.dump(tag:'ch_ncbi_nt_db_in')
+    ch_ncbi_nt_db_in = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map { db -> tuple([id:'ncbi_nt'], db) }.dump(tag:'ch_ncbi_nt_db_in')
     // ch_ncbi_nt_db = ch_ncbi_nt_db_in.map { it[1] }.dump(tag:'ch_ncbi_nt_db')
     ch_taxids = Channel.value(false).dump(tag:'ch_taxids')
     ch_taxidlist = Channel.fromPath(params.taxidlist).map { it }.dump(tag:'ch_taxidlist')
 
     ch_negative_tax = Channel.value(false).dump(tag:'ch_negative_tax')
 
-    BLAST_BLASTN(FASTA_SPLIT.out.fasta, ch_ncbi_nt_db_in, ch_taxidlist, ch_taxids, ch_negative_tax)
+    BLAST_BLASTN(ch_splitter_fasta_out, ch_ncbi_nt_db_in, ch_taxidlist, ch_taxids, ch_negative_tax)
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     SPLITTER_2(BLAST_BLASTN.out.txt)
@@ -291,7 +293,7 @@ workflow VIROLOCATE_NF {
 
 
     DIAMOND_BLASTX_FINAL(
-        FASTA_SPLIT.out.fasta,
+        ch_splitter_fasta_out,
         ch_diamond_blastx_final_in,
         params.diamond_output_format,
         ''
