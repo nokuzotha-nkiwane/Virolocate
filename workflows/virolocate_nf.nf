@@ -56,18 +56,26 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 // import local modules
 include { FASTA_PROCESSING } from '../modules/local/fasta_processing/main.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
-include { SPLITTER } from '../modules/local/splitter/main.nf'
+include { SPLITTER as SPLITTER } from '../modules/local/splitter/main.nf'
+include { SPLITTER as SPLITTER_3} from '../modules/local/splitter/main.nf'
+include { SPLITTER_2 } from '../modules/local/splitter_2/main.nf'
 include { MERGER } from '../modules/local/merger/main.nf'
 include { TAXONOMY_ID } from '../modules/local/taxonomy_id/main.nf'
 include { TAXONOMY_ID_2 } from '../modules/local/taxonomy_id_2/main.nf'
 include { TAXONOMY_ID_CHECK } from '../modules/local/taxonomy_id_check/main.nf'
-include { MERGER2 } from '../modules/local/merger2/main.nf'
+include { TAXONOMY_ID_CHECK_2 } from '../modules/local/taxonomy_id_check_2/main.nf'
+include { TAXONOMY_ID_CHECK_3 } from '../modules/local/taxonomy_id_check_3/main.nf'
+include { MERGER2 as MERGER2 } from '../modules/local/merger2/main.nf'
+include { MERGER2 as MERGER3 } from '../modules/local/merger2/main.nf'
+include { MERGER2 as MERGER4 } from '../modules/local/merger2/main.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
 include { MEGAHIT_RENAME } from '../modules/local/megahit_rename/main.nf'
 include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/main.nf'
 include { MAKE_BLAST_FASTA } from '../modules/local/make_blast_fasta/main.nf'
-include { FETCH_METADATA as FETCH_METADATA_BLASTN } from '../modules/local/fetch_metadata/main.nf'
+include { FETCH_METADATA_BLASTN } from '../modules/local/fetch_metadata/main.nf'
+include { FETCH_METADATA_BLASTN_2 } from '../modules/local/fetch_metadata_2/main.nf'
 include { FETCH_METADATA_BLASTX } from '../modules/local/fetch_metadata_blastx/main.nf'
+include { FETCH_METADATA_BLASTX_2 } from '../modules/local/fetch_metadata_blastx_2/main.nf'
 
 
 /*
@@ -180,6 +188,7 @@ workflow VIROLOCATE_NF {
 
     SPLITTER(MERGER.out.tsv)
     ch_splitter = (SPLITTER.out.txt).dump(tag:'ch_splitter')
+    ch_versions = ch_versions.mix(SPLITTER_2.out.versions)
 
     ch_splitter_file = ch_splitter.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file')
 
@@ -234,14 +243,33 @@ workflow VIROLOCATE_NF {
     BLAST_BLASTN(ch_blast_fasta, ch_ncbi_nt_db, ch_taxidlist, ch_taxids, ch_negative_tax)
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
+    SPLITTER_2(BLAST_BLASTN.out.txt)
+    ch_versions = ch_versions.mix(SPLITTER_2.out.versions)
+    ch_splitter_2 = (SPLITTER_2.out.txt).dump(tag:'ch_splitter_2')
+
+    ch_splitter_file_2 = ch_splitter_2.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_2')
+
     //get metadata of the blastn hits
-    FETCH_METADATA_BLASTN(BLAST_BLASTN.out.txt)
+    FETCH_METADATA_BLASTN(ch_splitter_file_2)
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
+    // check taxonomy id
+    TAXONOMY_ID_CHECK_2(FETCH_METADATA_BLASTN.out.tsv)
+    ch_versions = ch_versions.mix(TAXONOMY_ID_CHECK_2.out.versions.first())
+
+    FETCH_METADATA_BLASTN_2(TAXONOMY_ID_CHECK_2.out.txt)
+    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN_2.out.versions.first())
+
+    
     //get taxonomy
     ch_taxonkit_db2 = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped2 = ch_taxonkit_db2.toList().map { it[0] }
-    ch_taxonkit_blastn_input = (FETCH_METADATA_BLASTN.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonomy_id_collected_2 = (FETCH_METADATA_BLASTN.out.tsv).join(FETCH_METADATA_BLASTN_2.out.tsv).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected_2')
+
+    MERGER3(ch_taxonomy_id_collected_2)
+    ch_versions = ch_versions.mix(MERGER3.out.versions.first())
+
+    ch_taxonkit_blastn_input = (MERGER3.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
 
     LINEAGE_BLASTN(ch_taxonkit_blastn_input, ch_db_mapped2)
     ch_versions = ch_versions.mix(LINEAGE_BLASTN.out.versions.first())
@@ -265,15 +293,32 @@ workflow VIROLOCATE_NF {
     )
     // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
+    SPLITTER_3(DIAMOND_BLASTX_FINAL.out.tsv)
+    ch_versions = ch_versions.mix(SPLITTER_3.out.versions)
+    ch_splitter_3 = (SPLITTER_3.out.txt).dump(tag:'ch_splitter_3')
+
+    ch_splitter_file_3 = ch_splitter_3.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_3')
+
     //get metadata of the blastx hits
-    FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
+    FETCH_METADATA_BLASTX(ch_splitter_file_3)
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
+
+    // check taxonomy id
+    TAXONOMY_ID_CHECK_3(FETCH_METADATA_BLASTX.out.tsv)
+    ch_versions = ch_versions.mix(TAXONOMY_ID_CHECK_3.out.versions.first())
+
+    FETCH_METADATA_BLASTX_2(TAXONOMY_ID_CHECK_3.out.txt)
+    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX_2.out.versions.first())
 
     //get taxonomy
     ch_taxonkit_db3 = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped3 = ch_taxonkit_db3.toList().map { it[0] }
-    ch_taxonkit_blastx_input = FETCH_METADATA_BLASTX.out.tsv.map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonomy_id_collected_3 = (FETCH_METADATA_BLASTX.out.tsv).join(FETCH_METADATA_BLASTX_2.out.tsv).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected_3')
 
+    MERGER4(ch_taxonomy_id_collected_3)
+    ch_versions = ch_versions.mix(MERGER4.out.versions.first())
+
+    ch_taxonkit_blastn_input = (MERGER4.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
     LINEAGE_BLASTX(ch_taxonkit_blastx_input, ch_db_mapped3)
     ch_versions = ch_versions.mix(LINEAGE_BLASTX.out.versions.first())
 

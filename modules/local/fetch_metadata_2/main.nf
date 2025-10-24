@@ -1,4 +1,4 @@
-process FETCH_METADATA_BLASTN {
+process FETCH_METADATA_BLASTN_2 {
     maxForks 3
     label 'process_long'
     // conda "${moduleDir}/environment.yml"
@@ -8,7 +8,7 @@ process FETCH_METADATA_BLASTN {
     tuple val(meta), path(txt)
 
     output:
-    tuple val(meta), path('*_blastn_metadata.tsv')  , emit: tsv
+    tuple val(meta), path('*_blastn_metadata2.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -51,26 +51,30 @@ process FETCH_METADATA_BLASTN {
 
     }
 
-    while IFS=\$'\\t' read -r col1 col2 rest;do
-        tmpfile=\$(mktemp)
-        get_meta "\${col1}" "\${col2}" "\${rest}" "\$tmpfile"
-        cat "\$tmpfile" >> "${name}_blastn_metadata.tsv"
-        rm "\$tmpfile"
-    done < "${txt}"
+    if [[ ! -s ${txt} || \$(grep -cv '^[[:space:]]*\$' ${txt}) -eq 0 ]]; then
+            echo > "${name}_blastn_metadata2.tsv"
+    else
+        while IFS=\$'\\t' read -r col1 col2 rest;do
+            tmpfile=\$(mktemp)
+            get_meta "\${col1}" "\${col2}" "\${rest}" "\$tmpfile"
+            cat "\$tmpfile" >> "${name}_blastn_metadata2.tsv"
+            rm "\$tmpfile"
+        done < "${txt}"
+    fi
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        fetch_metadata: "1.0.0"
+        fetch_metadata_2: "1.0.0"
     END_VERSIONS
     """
 
     stub:
     """
-    touch _blastn_metadata.tsv
+    touch _blastn_metadata2.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        fetch_metadata: "1.0.0"
+        fetch_metadata_2: "1.0.0"
     END_VERSIONS
     """
 }

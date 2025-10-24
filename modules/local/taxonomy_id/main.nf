@@ -67,7 +67,7 @@ process TAXONOMY_ID {
     stub:
 
     """
-    touch final_accessions.tsv
+    touch _final_accessions.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

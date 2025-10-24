@@ -1,4 +1,4 @@
-process FETCH_METADATA_BLASTX{
+process FETCH_METADATA_BLASTX_2{
     label 'process_high'
     label 'process_long'
     
@@ -13,7 +13,6 @@ process FETCH_METADATA_BLASTX{
     path "versions.yml"             , emit: versions
 
     script:
-    def name = txt.getBaseName()
     """
     get_meta() {
 
@@ -82,12 +81,16 @@ process FETCH_METADATA_BLASTX{
 
     }
 
-    while IFS=\$'\\t' read -r col1 col2 col3 rest;do
-        tmpfile=\$(mktemp)
-        get_meta "\${col1}" "\${col2}" "\${rest}" "\$tmpfile"
-        cat "\$tmpfile" >> "${name}_blastx_metadata.tsv"
-        rm "\$tmpfile"
-    done < "${txt}"
+    if [[ ! -s ${txt} || \$(grep -cv '^[[:space:]]*\$' ${txt}) -eq 0 ]]; then
+            echo > "${name}_blastn_metadata2.tsv"
+    else
+        while IFS=\$'\\t' read -r col1 col2 col3 rest;do
+            tmpfile=\$(mktemp)
+            get_meta "\${col1}" "\${col2}" "\${rest}" "\$tmpfile"
+            cat "\$tmpfile" >> "${name}_blastx_metadata.tsv"
+            rm "\$tmpfile"
+        done < "${txt}"
+    fi
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -97,7 +100,7 @@ process FETCH_METADATA_BLASTX{
 
     stub:
     """
-    touch sample_blastx_metadata.tsv
+    touch blastx_metadata.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

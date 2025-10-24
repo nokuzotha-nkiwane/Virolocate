@@ -1,0 +1,7 @@
+name: splitter_2
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::splitter_2=1.0.0

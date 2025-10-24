@@ -1,0 +1,7 @@
+name: fetch_metadata_2
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::fetch_metadata_2=1.0.0
