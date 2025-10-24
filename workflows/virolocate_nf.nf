@@ -269,9 +269,9 @@ workflow VIROLOCATE_NF {
     MERGER3(ch_taxonomy_id_collected_2)
     ch_versions = ch_versions.mix(MERGER3.out.versions.first())
 
-    ch_taxonkit_blastn_input = (MERGER3.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonkit_blastn_input_2 = (MERGER3.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
 
-    LINEAGE_BLASTN(ch_taxonkit_blastn_input, ch_db_mapped2)
+    LINEAGE_BLASTN(ch_taxonkit_blastn_input_2, ch_db_mapped2)
     ch_versions = ch_versions.mix(LINEAGE_BLASTN.out.versions.first())
 
 
@@ -318,8 +318,8 @@ workflow VIROLOCATE_NF {
     MERGER4(ch_taxonomy_id_collected_3)
     ch_versions = ch_versions.mix(MERGER4.out.versions.first())
 
-    ch_taxonkit_blastn_input = (MERGER4.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
-    LINEAGE_BLASTX(ch_taxonkit_blastx_input, ch_db_mapped3)
+    ch_taxonkit_blastn_input_3 = (MERGER4.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    LINEAGE_BLASTX(ch_taxonkit_blastx_input_3, ch_db_mapped3)
     ch_versions = ch_versions.mix(LINEAGE_BLASTX.out.versions.first())
 
 
