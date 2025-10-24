@@ -188,7 +188,7 @@ workflow VIROLOCATE_NF {
 
     SPLITTER(MERGER.out.tsv)
     ch_splitter = (SPLITTER.out.txt).dump(tag:'ch_splitter')
-    ch_versions = ch_versions.mix(SPLITTER_2.out.versions)
+    ch_versions = ch_versions.mix(SPLITTER.out.versions.first())
 
     ch_splitter_file = ch_splitter.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file')
 
