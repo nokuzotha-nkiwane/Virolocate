@@ -1,0 +1,7 @@
+name: fasta_split
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::fasta_split=1.0.0
