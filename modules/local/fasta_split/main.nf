@@ -14,9 +14,12 @@ process FASTA_SPLIT {
     split -n l/${task.cpus} "${fasta}" ${meta.id}_
     rm "${fasta}"
     for file in ${meta.id}_*; do
-        mv "\${file}" "\${file}.fasta"
+        if [[ \$(grep -cv '^[[:space:]]*\$' "\${file}") -eq 0 ]]; then
+            rm "\${file}"
+        else
+            mv "\${file}" "\${file}.fasta"
+        fi
     done
-    
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
