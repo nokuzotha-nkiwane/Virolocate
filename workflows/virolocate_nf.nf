@@ -48,6 +48,7 @@ include { DIAMOND_MAKEDB as DIAMOND_MAKE_NR_DB} from '../modules/nf-core/diamond
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_PRE_RVDB} from '../modules/nf-core/diamond/blastx/main.nf'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_PRE_NCBI} from '../modules/nf-core/diamond/blastx/main.nf'
 include { DIAMOND_BLASTX as DIAMOND_BLASTX_FINAL } from '../modules/nf-core/diamond/blastx/main.nf'
+include { SEQKIT_SPLIT2 } from '../modules/nf-core/seqkit/split2/main'    
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_virolocate_nf_pipeline'
 include { paramsSummaryMap       } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -233,11 +234,13 @@ workflow VIROLOCATE_NF {
 
     ch_all = MAKE_BLAST_FASTA.out.fasta.map {meta, fasta-> [fasta]}.collect({it})
     FASTA_PROCESSING(ch_all)
-    ch_blast_fasta = (FASTA_PROCESSING.out.fasta).map { fasta -> tuple([id:'final'], fasta) }.dump(tag:'ch_blast_fasta')
+    ch_blast_fasta = (FASTA_PROCESSING.out.reads).map { fasta -> tuple([id:'final'], fasta) }.dump(tag:'ch_blast_fasta')
 
     // Split fasta into smaller ones for faster processing
-    FASTA_SPLIT(ch_blast_fasta)
-    ch_splitter_fasta = (FASTA_SPLIT.out.fasta).dump(tag:'ch_splitter_fasta')
+    SEQKIT_SPLIT2(ch_blast_fasta)
+    ch_splitter_fasta = (SEQKIT_SPLIT2.out.reads).dump(tag:'ch_splitter_fasta')
+    ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions.first())
+
     ch_splitter_fasta_out = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta_out')
     // Blastn for comparing contig sequences to known nucleotide sequences
     ch_ncbi_nt_db_in = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map { db -> tuple([id:'ncbi_nt'], db) }.dump(tag:'ch_ncbi_nt_db_in')

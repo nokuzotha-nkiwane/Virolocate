@@ -8,7 +8,7 @@ process FASTA_PROCESSING {
     path(fasta)
 
     output:
-    path('final_blast_contigs.fasta')  , emit: fasta
+    path('final_blast_contigs.fasta')  , emit: reads
     path "versions.yml"             , emit: versions
 
 
