@@ -244,7 +244,7 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     SPLITTER_2(BLAST_BLASTN.out.txt)
-    ch_versions = ch_versions.mix(SPLITTER_2.out.versions)
+    ch_versions = ch_versions.mix(SPLITTER_2.out.versions.first())
     ch_splitter_2 = (SPLITTER_2.out.txt).dump(tag:'ch_splitter_2')
 
     ch_splitter_file_2 = ch_splitter_2.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_2')
