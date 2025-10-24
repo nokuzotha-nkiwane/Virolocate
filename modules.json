@@ -35,6 +35,11 @@
             "git_sha": "f0719ae309075ae4a291533883847c3f7c441dad",
             "installed_by": ["modules"]
           },
+          "seqkit/split2": {
+            "branch": "master",
+            "git_sha": "55a02f55949516773979bbff82bf3f6bdb09456e",
+            "installed_by": ["modules"]
+          },
           "taxonkit/lineage": {
             "branch": "master",
             "git_sha": "41dfa3f7c0ffabb96a6a813fe321c6d1cc5b6e46",
