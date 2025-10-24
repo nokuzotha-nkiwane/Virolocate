@@ -243,7 +243,7 @@ workflow VIROLOCATE_NF {
 
     ch_splitter_fasta_out = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta_out')
     // Blastn for comparing contig sequences to known nucleotide sequences
-    ch_ncbi_nt_db_in = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map { db -> tuple([id:'ncbi_nt'], db) }.dump(tag:'ch_ncbi_nt_db_in')
+    ch_ncbi_nt_db_in = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map { db -> tuple([id:'ncbi_nt', 'single_end':true], db) }.dump(tag:'ch_ncbi_nt_db_in')
     // ch_ncbi_nt_db = ch_ncbi_nt_db_in.map { it[1] }.dump(tag:'ch_ncbi_nt_db')
     ch_taxids = Channel.value(false).dump(tag:'ch_taxids')
     ch_taxidlist = Channel.fromPath(params.taxidlist).map { it }.dump(tag:'ch_taxidlist')
