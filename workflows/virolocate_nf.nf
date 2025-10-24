@@ -240,7 +240,7 @@ workflow VIROLOCATE_NF {
     // Blastn for comparing contig sequences to known nucleotide sequences
     ch_ncbi_nt_db = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map {db -> [[id:"ncbi_nt"], db]}.map { it[0] }.dump(tag:'ch_ncbi_nt_db')
     ch_taxids = Channel.value(false).map { it[0] }.dump(tag:'ch_taxids')
-    ch_taxidlist = Channel.fromPath(params.taxidlist).map { it[0] }.dump(tag:'ch_taxidlist')}
+    ch_taxidlist = Channel.fromPath(params.taxidlist).map { it[0] }.dump(tag:'ch_taxidlist')
 
     ch_negative_tax = Channel.value(false).map { it[0] }.dump(tag:'ch_negative_tax')
 
