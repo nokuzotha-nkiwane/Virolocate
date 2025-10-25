@@ -6,7 +6,7 @@ process MERGER{
     tuple val(meta), path(ncbi_tsv), path(rvdb_tsv)
 
     output:
-    tuple val(meta), path("${meta.id}_merged.tsv"), emit: tsv
+    tuple val(meta), path("*.tsv"), emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
