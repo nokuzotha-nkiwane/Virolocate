@@ -241,7 +241,7 @@ workflow VIROLOCATE_NF {
     ch_splitter_fasta = (SEQKIT_SPLIT2.out.reads).dump(tag:'ch_splitter_fasta')
     ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions.first())
 
-    ch_splitter_fasta_file = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta_out')
+    ch_splitter_fasta_file = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta')
     ch_splitter_fasta_out = ch_splitter_fasta_file.map { meta, fasta ->
     def part_name = fasta.getBaseName()
     def new_meta = meta.clone()
