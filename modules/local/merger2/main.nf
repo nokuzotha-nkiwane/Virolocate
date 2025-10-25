@@ -12,7 +12,8 @@ process MERGER2 {
     script:
     """
     cat ${tsvs} > "${meta.id}_collect.tsv"
-    cat ${tsvs2} >> "${meta.id}_collect.tsv"
+    awk -F'\\t' '\$9 != "NA"' "${meta.id}_collect.tsv" > "${meta.id}_collect2.tsv"
+    cat ${tsvs2} >>  "${meta.id}_collect2.tsv"
     awk 'NF' "${meta.id}_collect.tsv" > "${meta.id}_collected.tsv"
 
 
