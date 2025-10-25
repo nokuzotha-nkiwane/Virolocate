@@ -241,7 +241,13 @@ workflow VIROLOCATE_NF {
     ch_splitter_fasta = (SEQKIT_SPLIT2.out.reads).dump(tag:'ch_splitter_fasta')
     ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions.first())
 
-    ch_splitter_fasta_out = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta_out')
+    ch_splitter_fasta_file = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta_out')
+    ch_splitter_fasta_out = ch_splitter_fasta_file.map { meta, fasta ->
+    def part_name = fasta.getBaseName()
+    def new_meta = meta.clone()
+    new_meta.id = "${meta.id}_${part_name}"
+    tuple(new_meta, fasta)}.dump(tag:'ch_splitter_fasta_out_unique')
+
     // Blastn for comparing contig sequences to known nucleotide sequences
     // ch_ncbi_nt_db_in = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map { db -> [[id:'ncbi_nt'], db] }.dump(tag:'ch_ncbi_nt_db_in')
     // ch_paired = ch_splitter_fasta_out.cross(ch_ncbi_nt_db_in).set { ch_final_inputs }.dump(tag:'ch_paired')
@@ -382,7 +388,6 @@ workflow VIROLOCATE_NF {
     emit:
     multiqc_report = MULTIQC.out.report.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions                 // channel: [ path(versions.yml) ]
-
 }
 
 /*
