@@ -6,13 +6,13 @@ process SPLITTER{
     tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path("${meta.id}_*.txt"), emit: txt
+    tuple val(meta), path("*.txt"), emit: txt
     path "versions.yml"             , emit: versions
 
     script:
     """
-    split -n l/${task.cpus} "${meta.id}_merged.tsv" ${meta.id}_
-    rm "${meta.id}_merged.tsv"
+    split -n l/${task.cpus} "${tsv}" ${meta.id}_
+    rm "${tsv}"
     for file in ${meta.id}_*; do
         mv "\${file}" "\${file}.txt"
     done

@@ -1,7 +1,7 @@
-name: fasta_split
+name: merger_processing
 channels:
   - conda-forge
   - bioconda
   - defaults
 dependencies:
-  - bioconda::fasta_split=1.0.0
+  - bioconda::merger_processing=1.0.0

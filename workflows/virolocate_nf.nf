@@ -56,11 +56,12 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 
 // import local modules
 include { FASTA_PROCESSING } from '../modules/local/fasta_processing/main.nf'
+include { MERGER_PROCESSING as MERGER_PROCESSING_BLASTX } from '../modules/local/merger_processing/main.nf'
+include { MERGER_PROCESSING as MERGER_PROCESSING_BLASTN } from '../modules/local/merger_processing/main.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
 include { SPLITTER as SPLITTER } from '../modules/local/splitter/main.nf'
 include { SPLITTER as SPLITTER_3} from '../modules/local/splitter/main.nf'
 include { SPLITTER_2 } from '../modules/local/splitter_2/main.nf'
-include { FASTA_SPLIT } from '../modules/local/fasta_split/main.nf'
 include { MERGER } from '../modules/local/merger/main.nf'
 include { TAXONOMY_ID } from '../modules/local/taxonomy_id/main.nf'
 include { TAXONOMY_ID_2 } from '../modules/local/taxonomy_id_2/main.nf'
@@ -288,7 +289,11 @@ workflow VIROLOCATE_NF {
     MERGER3(ch_taxonomy_id_collected_2)
     ch_versions = ch_versions.mix(MERGER3.out.versions.first())
 
-    ch_taxonkit_blastn_input_2 = (MERGER3.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_all_2 = MERGER3.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
+    MERGER_PROCESSING_BLASTN(ch_all_2)
+    ch_blastn = (MERGER_PROCESSING_BLASTN.out.tsv).map { tsv -> tuple([id:'final'], tsv) }.dump(tag:'ch_blastn')
+
+    ch_taxonkit_blastn_input_2 = (ch_blastn).map {meta, taxidfile -> [meta, null, taxidfile]}
 
     LINEAGE_BLASTN(ch_taxonkit_blastn_input_2, ch_db_mapped2)
     ch_versions = ch_versions.mix(LINEAGE_BLASTN.out.versions.first())
@@ -312,14 +317,14 @@ workflow VIROLOCATE_NF {
     )
     // ch_versions = ch_versions.mix(DIAMOND_BLASTX_FINAL.out.versions.first())
 
-    // SPLITTER_3(DIAMOND_BLASTX_FINAL.out.tsv)
-    // ch_versions = ch_versions.mix(SPLITTER_3.out.versions)
-    // ch_splitter_3 = (SPLITTER_3.out.txt).dump(tag:'ch_splitter_3')
+    SPLITTER_3(DIAMOND_BLASTX_FINAL.out.tsv)
+    ch_versions = ch_versions.mix(SPLITTER_3.out.versions)
+    ch_splitter_3 = (SPLITTER_3.out.txt).dump(tag:'ch_splitter_3')
 
-    // ch_splitter_file_3 = ch_splitter_3.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_3')
+    ch_splitter_file_3 = ch_splitter_3.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_3')
 
     //get metadata of the blastx hits
-    FETCH_METADATA_BLASTX(DIAMOND_BLASTX_FINAL.out.tsv)
+    FETCH_METADATA_BLASTX(ch_splitter_file_3)
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
 
     // check taxonomy id
@@ -337,7 +342,11 @@ workflow VIROLOCATE_NF {
     MERGER4(ch_taxonomy_id_collected_3)
     ch_versions = ch_versions.mix(MERGER4.out.versions.first())
 
-    ch_taxonkit_blastx_input_3 = (MERGER4.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_all_3 = MERGER4.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
+    MERGER_PROCESSING_BLASTX(ch_all_3)
+    ch_blastx = (MERGER_PROCESSING_BLASTX.out.tsv).map { tsv -> tuple([id:'final'], tsv) }.dump(tag:'ch_blastx')
+
+    ch_taxonkit_blastx_input_3 = (ch_blastx).map {meta, taxidfile -> [meta, null, taxidfile]}
     LINEAGE_BLASTX(ch_taxonkit_blastx_input_3, ch_db_mapped3)
     ch_versions = ch_versions.mix(LINEAGE_BLASTX.out.versions.first())
 
