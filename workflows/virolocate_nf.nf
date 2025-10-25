@@ -237,16 +237,16 @@ workflow VIROLOCATE_NF {
     ch_blast_fasta = (FASTA_PROCESSING.out.reads).map { fasta -> tuple([id:'final', 'single_end':true], fasta) }.dump(tag:'ch_blast_fasta')
 
     // Split fasta into smaller ones for faster processing
-    SEQKIT_SPLIT2(ch_blast_fasta)
-    ch_splitter_fasta = (SEQKIT_SPLIT2.out.reads).dump(tag:'ch_splitter_fasta')
-    ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions.first())
+    // SEQKIT_SPLIT2(ch_blast_fasta)
+    // ch_splitter_fasta = (SEQKIT_SPLIT2.out.reads).dump(tag:'ch_splitter_fasta')
+    // ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions.first())
 
-    ch_splitter_fasta_file = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta')
-    ch_splitter_fasta_out = ch_splitter_fasta_file.map { meta, fasta ->
-    def part_name = fasta.getBaseName()
-    def new_meta = meta.clone()
-    new_meta.id = "${meta.id}_${part_name}"
-    tuple(new_meta, fasta)}.dump(tag:'ch_splitter_fasta_out_unique')
+    // ch_splitter_fasta_file = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta')
+    // ch_splitter_fasta_out = ch_splitter_fasta_file.map { meta, fasta ->
+    // def part_name = fasta.getBaseName()
+    // def new_meta = meta.clone()
+    // new_meta.id = "${meta.id}_${part_name}"
+    // tuple(new_meta, fasta)}.dump(tag:'ch_splitter_fasta_out_unique')
 
     // Blastn for comparing contig sequences to known nucleotide sequences
     // ch_ncbi_nt_db_in = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map { db -> [[id:'ncbi_nt'], db] }.dump(tag:'ch_ncbi_nt_db_in')
@@ -259,7 +259,7 @@ workflow VIROLOCATE_NF {
 
     ch_negative_tax = Channel.value(false).dump(tag:'ch_negative_tax')
 
-    BLAST_BLASTN(ch_splitter_fasta_out, ch_ncbi_nt_db_in, ch_taxidlist, ch_taxids, ch_negative_tax)
+    BLAST_BLASTN(ch_blast_fasta, ch_ncbi_nt_db_in, ch_taxidlist, ch_taxids, ch_negative_tax)
     ch_versions = ch_versions.mix(BLAST_BLASTN.out.versions.first())
 
     SPLITTER_2(BLAST_BLASTN.out.txt)
@@ -305,7 +305,7 @@ workflow VIROLOCATE_NF {
 
 
     DIAMOND_BLASTX_FINAL(
-        ch_splitter_fasta_out,
+        ch_blast_fasta,
         ch_diamond_blastx_final_in,
         params.diamond_output_format,
         ''
