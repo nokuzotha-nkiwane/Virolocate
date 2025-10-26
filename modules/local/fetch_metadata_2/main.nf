@@ -30,8 +30,8 @@ process FETCH_METADATA_BLASTN_2 {
         local info=\$(curl -N -# -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1})
 
         #host source, gographical location name, collection date, gene, product, taxonomic number
-        local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2; exit}')
-        local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1]; exit }')
+        local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}' | head -n 1)
+        local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }' | head -n 1)
 
         #put NA if any of the fields are empty
         if [[ -z "\${host}" ]]; then
