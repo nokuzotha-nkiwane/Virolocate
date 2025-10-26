@@ -49,7 +49,7 @@ process MERGER2 {
             [[ -z "\${!var:-}" ]] && declare "\$var"="NA"
         done
 
-        echo -e "\${col1}\\t\${col2}\\t\${rest}\\t\${tax}\\t\${host}\\t\${gene}\\t\${product}\\t\${geo_loc_name}\\t\${date}" >> ${meta.id}.tsv
+        echo -e "\${col1}\\t\${col2}\\t\${rest}\\t\${tax}\\t\${host}\\t\${gene}\\t\${product}\\t\${geo_loc_name}\\t\${date}" >> ${meta.id}_merged.tsv
 
     done < ${tsv}
 
