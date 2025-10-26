@@ -11,7 +11,7 @@ process SPLITTER_2{
 
     script:
     """
-    split -n -e l/${task.cpus} "${txt}" ${meta.id}_
+    split -e -n l/${task.cpus} "${txt}" ${meta.id}_
     rm "${txt}"
     for file in ${meta.id}_*; do
         mv "\${file}" "\${file}.txt"
