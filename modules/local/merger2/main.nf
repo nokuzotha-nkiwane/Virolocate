@@ -14,7 +14,7 @@ process MERGER2 {
     """
     while IFS=\$'\\t' read -r col1 col2 rest; do
     
-        local file=\$(grep -lE "VERSION[[:space:]]+${col2}" ${gbs} | head -n 1)
+        local file=\$(grep -lE "VERSION[[:space:]]+\${col2}" ${gbs} | head -n 1)
         if [[ -z "\$file" ]]; then 
             echo "\${col2} not found" >&2 
             continue
