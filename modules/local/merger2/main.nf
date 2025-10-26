@@ -19,7 +19,7 @@ process MERGER2 {
       
         for gb in ${gbs}; do
             if grep -qE "VERSION[[:space:]]+\${col2}" \${gb} || grep -qE "ACCESSION[[:space:]]+\${col2}" \${gb}; then
-                found_file="\${gb}"
+                found_file=""
                 break
             fi
         done
@@ -38,12 +38,12 @@ process MERGER2 {
         }
         ' "\$found_file")
 
-        local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}' | head -n 1)
-        local geo_loc_name=\$(echo "\${info}" | awk -F'"' '/\\/geo_loc_name/ {print \$2}' | head -n 1)
-        local date=\$(echo "\${info}" | awk -F'"' '/\\/collection_date/ {print \$2}' | head -n 1)
-        local gene=\$(echo "\${info}" | awk -F'"' '/\\/coded_by/ {print \$2}' | head -n 1)
-        local product=\$(echo "\${info}" | awk -F'"' '/\\/product/ {print \$2}' | head -n 1)
-        local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }' | head -n 1)
+        host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}' | head -n 1)
+        geo_loc_name=\$(echo "\${info}" | awk -F'"' '/\\/geo_loc_name/ {print \$2}' | head -n 1)
+        date=\$(echo "\${info}" | awk -F'"' '/\\/collection_date/ {print \$2}' | head -n 1)
+        gene=\$(echo "\${info}" | awk -F'"' '/\\/coded_by/ {print \$2}' | head -n 1)
+        product=\$(echo "\${info}" | awk -F'"' '/\\/product/ {print \$2}' | head -n 1)
+        tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }' | head -n 1)
 
         for var in host source geo_loc_name date gene product tax; do
             [[ -z "\${!var:-}" ]] && declare "\$var"="NA"
