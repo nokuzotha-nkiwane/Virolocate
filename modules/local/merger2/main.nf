@@ -16,7 +16,7 @@ process MERGER2 {
     
         local file=\$(grep -lE "VERSION[[:space:]]+\${col2}" ${gbs} | head -n 1)
         if [[ -z "\$file" ]]; then 
-            echo "\${col2} not found" >&2 
+            echo "\${col2}" not found" >&2 
             continue
         fi
 
