@@ -17,13 +17,13 @@ process MERGER2 {
     
         found_file=""
         for gb in ${gbs}; do
-            if grep -qE "VERSION[[:space:]]+${col2}" "${gb}" || grep -qE "ACCESSION[[:space:]]+\${col2}" "${gb}"; then
+            if grep -qE "VERSION[[:space:]]+\${col2}" "${gb}" || grep -qE "ACCESSION[[:space:]]+\${col2}" "${gb}"; then
                 found_file="\${gb}"
                 break
             fi
         done
-        if [[ -z "$found_file" ]]; then
-            echo "${col2} not found" >&2
+        if [[ -z "\$found_file" ]]; then
+            echo "\${col2} not found" >&2
             continue
         fi
 
