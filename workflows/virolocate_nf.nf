@@ -193,7 +193,15 @@ workflow VIROLOCATE_NF {
     ch_splitter = (SPLITTER.out.txt).dump(tag:'ch_splitter')
     ch_versions = ch_versions.mix(SPLITTER.out.versions.first())
 
-    ch_splitter_file = ch_splitter.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file')
+    ch_splitter_file = ch_splitter.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
+
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_splitter_file')
 
     // //get accession ids and taxonomy ids for taxonkit to use
     TAXONOMY_ID(ch_splitter_file)
