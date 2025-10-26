@@ -16,12 +16,12 @@ process TAXONOMY_ID {
     script:
     def name = txt.getBaseName()
     """
-    local accessions=\$(cat ${txt})
-    local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${accessions}&rettype=gb&retmode=text" 
+    accessions=\$(cat ${txt})
+    url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${accessions}&rettype=gb&retmode=text" 
     curl -N -# -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1} -o ${name}_1.gb
 
-    local ON=0
-    local ACC=""
+    ON=0
+    ACC=""
 
     while IFS= read -r line; do
         if [[ "\$line" =~ ^LOCUS ]]; then
