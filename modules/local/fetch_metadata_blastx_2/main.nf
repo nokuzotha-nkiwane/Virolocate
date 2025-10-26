@@ -28,12 +28,12 @@ process FETCH_METADATA_BLASTX_2{
         local info=\$(curl -N -# -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1})
 
         #host source, gographical location name, collection date, gene, product, taxonomic number
-        local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}')
-        local geo_loc_name=\$(echo "\${info}" | awk -F'"' '/\\/geo_loc_name/ {print \$2}')
-        local date=\$(echo "\${info}" | awk -F'"' '/\\/collection_date/ {print \$2}')
-        local gene=\$(echo "\${info}" | awk -F'"' '/\\/coded_by/ {print \$2}')
-        local product=\$(echo "\${info}" | awk -F'"' '/\\/product/ {print \$2}')
-        local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }')
+        local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2; exit}')
+        local geo_loc_name=\$(echo "\${info}" | awk -F'"' '/\\/geo_loc_name/ {print \$2; exit}')
+        local date=\$(echo "\${info}" | awk -F'"' '/\\/collection_date/ {print \$2; exit}')
+        local gene=\$(echo "\${info}" | awk -F'"' '/\\/coded_by/ {print \$2; exit}')
+        local product=\$(echo "\${info}" | awk -F'"' '/\\/product/ {print \$2; exit}')
+        local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1]; exit }')
 
         #put NA if any of the fields are empty
         if [[ -z "\${host}" ]]; then
