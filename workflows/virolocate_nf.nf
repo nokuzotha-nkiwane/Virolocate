@@ -199,17 +199,17 @@ workflow VIROLOCATE_NF {
     TAXONOMY_ID(ch_splitter_file)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
-    // check taxonomy id
-    TAXONOMY_ID_CHECK(TAXONOMY_ID.out.tsv)
-    ch_versions = ch_versions.mix(TAXONOMY_ID_CHECK.out.versions.first())
+    // // check taxonomy id
+    // TAXONOMY_ID_CHECK(TAXONOMY_ID.out.tsv)
+    // ch_versions = ch_versions.mix(TAXONOMY_ID_CHECK.out.versions.first())
 
-    TAXONOMY_ID_2(TAXONOMY_ID_CHECK.out.txt)
-    ch_versions = ch_versions.mix(TAXONOMY_ID_2.out.versions.first())
+    // TAXONOMY_ID_2(TAXONOMY_ID_CHECK.out.txt)
+    // ch_versions = ch_versions.mix(TAXONOMY_ID_2.out.versions.first())
 
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
-    ch_taxonomy_id_collected = (TAXONOMY_ID.out.tsv).join(TAXONOMY_ID_2.out.tsv).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected')
+    ch_taxonomy_id_collected = (MERGER.out.tsv).join(TAXONOMY_ID.out.gb).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected')
 
     MERGER2(ch_taxonomy_id_collected)
     ch_versions = ch_versions.mix(MERGER2.out.versions.first())
