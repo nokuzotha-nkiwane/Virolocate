@@ -289,9 +289,9 @@ workflow VIROLOCATE_NF {
     MERGER3(ch_taxonomy_id_collected_2)
     ch_versions = ch_versions.mix(MERGER3.out.versions.first())
 
-    ch_all_2 = MERGER3.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
-    MERGER_PROCESSING_BLASTN(ch_all_2)
-    ch_blastn = (MERGER_PROCESSING_BLASTN.out.tsv).map { tsv -> tuple([id:'final'], tsv) }.dump(tag:'ch_blastn')
+    // ch_all_2 = MERGER3.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
+    // MERGER_PROCESSING_BLASTN(ch_all_2)
+    ch_blastn = (MERGER3.out.tsv).map { tsv -> tuple([id:'final'], tsv) }.dump(tag:'ch_blastn')
 
     ch_taxonkit_blastn_input_2 = (ch_blastn).map {meta, taxidfile -> [meta, null, taxidfile]}
 
@@ -342,9 +342,9 @@ workflow VIROLOCATE_NF {
     MERGER4(ch_taxonomy_id_collected_3)
     ch_versions = ch_versions.mix(MERGER4.out.versions.first())
 
-    ch_all_3 = MERGER4.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
-    MERGER_PROCESSING_BLASTX(ch_all_3)
-    ch_blastx = (MERGER_PROCESSING_BLASTX.out.tsv).map { tsv -> tuple([id:'final'], tsv) }.dump(tag:'ch_blastx')
+    // ch_all_3 = MERGER4.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
+    // MERGER_PROCESSING_BLASTX(ch_all_3)
+    ch_blastx = (MERGER4.out.tsv).map { tsv -> tuple([id:'final'], tsv) }.dump(tag:'ch_blastx')
 
     ch_taxonkit_blastx_input_3 = (ch_blastx).map {meta, taxidfile -> [meta, null, taxidfile]}
     LINEAGE_BLASTX(ch_taxonkit_blastx_input_3, ch_db_mapped3)
