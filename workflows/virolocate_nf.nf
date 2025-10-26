@@ -343,9 +343,8 @@ workflow VIROLOCATE_NF {
 
     // ch_all_3 = MERGER4.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
     // MERGER_PROCESSING_BLASTX(ch_all_3)
-    ch_blastx = (MERGER4.out.tsv).map { tsv -> tuple([id:'final'], tsv) }.dump(tag:'ch_blastx')
 
-    ch_taxonkit_blastx_input_3 = (ch_blastx).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonkit_blastx_input_3 = (MERGER4.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
     LINEAGE_BLASTX(ch_taxonkit_blastx_input_3, ch_db_mapped3)
     ch_versions = ch_versions.mix(LINEAGE_BLASTX.out.versions.first())
 
