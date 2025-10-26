@@ -51,7 +51,7 @@ process TAXONOMY_ID {
 
     if [[ -s ${name}_missing.lst && \$(grep -cv '^[[:space:]]*\$' ${name}_missing.lst) -eq 0 ]]; then
         awk 'NF' ${name}_missing.lst >> ${name}_missing_1.lst
-        tr '\n' ',' < ${name}_missing_1.lst | sed 's/,\$/\\n/' > ${name}_missing_final.lst
+        tr '\\n' ',' < ${name}_missing_1.lst | sed 's/,\$/\\n/' > ${name}_missing_final.lst
         accessions=\$(cat ${name}_missing_final.lst)
         url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${accessions}&rettype=gb&retmode=text" 
         curl -N -# -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1} -o ${name}_2.gb
