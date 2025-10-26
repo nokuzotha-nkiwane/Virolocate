@@ -13,12 +13,16 @@ process MERGER2 {
     script:
     """
     while IFS=\$'\\t' read -r col1 col2 rest; do
+
     
-        local file=\$(grep -lE "VERSION[[:space:]]+\${col2}" ${gbs} | head -n 1)
-        if [[ -z "\$file" ]]; then 
-            echo "\${col2}" not found" >&2 
-            continue
-        fi
+        found_file=""
+      
+        for gb in ${gbs}; do
+            if grep -qE "VERSION[[:space:]]+\${col2}" "\$gb" || grep -qE "ACCESSION[[:space:]]+\${col2}" "\$gb"; then
+                found_file="\$gb"
+                break
+            fi
+        done
 
         info=\$(awk -v acc="\${col2}" '
         BEGIN {found=0}
@@ -26,13 +30,13 @@ process MERGER2 {
             if (\$2 == acc) {found=1}
         }
         /^ACCESSION[[:space:]]+/ {
-        if (!found && \$2 == acc) found=1
+            if (!found && \$2 == acc) found=1
         }
         found {
             print
             if (/^\\/\\//) exit
         }
-        ' "\$file")
+        ' "\$found_file")
 
         local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}' | head -n 1)
         local geo_loc_name=\$(echo "\${info}" | awk -F'"' '/\\/geo_loc_name/ {print \$2}' | head -n 1)
