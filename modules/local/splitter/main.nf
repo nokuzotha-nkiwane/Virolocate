@@ -18,7 +18,7 @@ process SPLITTER{
         if [[ "\${file}" == *.tsv ]]; then
             continue
         else
-            tr '\\n' ',' < "\${file}" | sed 's/,\\$/\\n/' > "\${file}.txt"
+            tr '\\n' ',' < "\${file}" | sed 's|,\$|\\n|' > "\${file}.txt"
         fi
     done
     
