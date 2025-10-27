@@ -12,12 +12,12 @@ process MERGER2 {
 
     script:
     """
-    while IFS=\$'\\t' read -r col1 col2 rest; do
+    while IFS=\$'\\t' read -r col1 col2 col3 rest; do
 
     
         found_file=""
         for gb in ${gbs}; do
-            if grep -qE "VERSION[[:space:]]+\${col2}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${col2}" "\${gb}"; then
+            if grep -qE "VERSION[[:space:]]+\${col3}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${col3}" "\${gb}"; then
                 found_file="\${gb}"
                 break
             fi
@@ -27,7 +27,7 @@ process MERGER2 {
             continue
         fi
 
-        info=\$(awk -v acc="\${col2}" '
+        info=\$(awk -v acc="\${col3}" '
             BEGIN {in_block=0; matched=0}
             /^LOCUS/ { block=""; in_block=1 }
             in_block { block = block \$0 "\\n" }
@@ -53,7 +53,7 @@ process MERGER2 {
             tax=\$(printf "%s" "\${tax}" | tr -d '\\n')
         fi
 
-        echo -e "\${col1}\\t\${col2}\\t\${rest}\\t\${tax}" >> ${meta.id}_merged.tsv
+        echo -e "\${col1}\\t\${col2}\\t\${col3}\${rest}\\t\${tax}" >> ${meta.id}_merged.tsv
 
     done < ${tsv}
 
