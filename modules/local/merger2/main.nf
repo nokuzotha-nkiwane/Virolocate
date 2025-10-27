@@ -23,7 +23,7 @@ process MERGER2 {
             fi
         done
         if [[ -z "\$found_file" ]]; then
-            echo "\${col2}" not found" >&2
+            echo "\${col2} not found" >&2
             continue
         fi
 
