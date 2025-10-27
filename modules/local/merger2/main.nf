@@ -23,7 +23,7 @@ process MERGER2 {
             fi
         done
         if [[ -z "\$found_file" ]]; then
-            echo "\${col2} not found" >&2
+            echo "\${col3} not found" >&2
             continue
         fi
 
@@ -32,7 +32,7 @@ process MERGER2 {
             /^LOCUS/ { block=""; in_block=1 }
             in_block { block = block \$0 "\\n" }
             /^\\/\\// {
-                if (block ~ acc) {
+                if (block ~ acc || block ~ ("VERSION[[:space:]]+" acc) || block ~ ("ACCESSION[[:space:]]+" acc)) {
                     print block
                     matched=1
                 }
@@ -45,7 +45,7 @@ process MERGER2 {
         ' "\$found_file")
 
         
-        tax=\$(awk '/taxon:[0-9]+/ { match(\$0, /taxon:([0-9]+)/, tax_id); if (tax_id[1]!="") { print tax_id[1]; exit }}' <<< "\${info}")
+        tax=\$(awk '/taxon:[0-9]+/ { match(\$0, /taxon:([0-9]+)/, tax_id); { print tax_id[1]; exit }}' <<< "\$info")
         
         if [[ -z "\${tax}" ]]; then
             tax="NA"
@@ -53,7 +53,7 @@ process MERGER2 {
             tax=\$(printf "%s" "\${tax}" | tr -d '\\n')
         fi
 
-        echo -e "\${col1}\\t\${col2}\\t\${col3}\${rest}\\t\${tax}" >> ${meta.id}_merged.tsv
+        echo -e "\${col1}\\t\${col2}\\t\${col3}\\t\${rest}\\t\${tax}" >> ${meta.id}_merged.tsv
 
     done < ${tsv}
 
