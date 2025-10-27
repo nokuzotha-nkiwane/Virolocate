@@ -18,7 +18,7 @@ process MERGER2 {
     batch_num=0
     batch_file="\$tmp_dir/batch_\${batch_num}.tmp"
 
-    while IFS=$'\t' read -r col1 col2 col3 rest; do
+    while IFS=\$'\\t' read -r col1 col2 col3 rest; do
         found_file=""
         for gb in ${gbs}; do
             if grep -qE "VERSION[[:space:]]+\${col3}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${col3}" "\${gb}"; then
