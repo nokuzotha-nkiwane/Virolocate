@@ -51,11 +51,11 @@ process MERGER2 {
 
         [[ -z "\$tax" ]] && tax="NA"
 
-        printf "%s\\t%s\\t%s\\t%s\\t%s\\n" "\${col1}" "\${col2}" "\${col3}" "\${rest}" "\${tax}" >> "\$batch_file}"
+        printf "%s\\t%s\\t%s\\t%s\\t%s\\n" "\${col1}" "\${col2}" "\${col3}" "\${rest}" "\${tax}" >> "\${batch_file}"
 
         ((count++))
         if (( count % batch_size == 0 )); then
-            batch_num\$((batch_num + 1))
+            batch_num=\$((batch_num + 1))
             batch_file="\$tmp_dir/batch_\${batch_num}.tmp"
         fi
 
