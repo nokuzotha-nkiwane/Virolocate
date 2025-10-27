@@ -28,17 +28,20 @@ process MERGER2 {
         fi
 
         info=\$(awk -v acc="\${col2}" '
-        BEGIN {found=0}
-        /^VERSION[[:space:]]+/ {
-            if (\$2 == acc) {found=1}
-        }
-        /^ACCESSION[[:space:]]+/ {
-            if (!found && \$2 == acc) found=1
-        }
-        found {
-            print
-            if (/^\\/\\//) exit
-        }
+            BEGIN {in_block=0; matched=0}
+            /^LOCUS/ { block=""; in_block=1 }
+            in_block { block = block \$0 "\\n" }
+            /^\\/\\// {
+                if (block ~ acc) {
+                    print block
+                    matched=1
+                }
+                in_block=0
+                block=""
+            }
+            END {
+                if (matched==0) exit 1
+            }
         ' "\$found_file")
 
         tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }' | head -n 1)
