@@ -7,7 +7,7 @@ process MERGER2 {
 
 
     output:
-    tuple val(meta), path("*_merged.tsv"), emit: tsv
+    tuple val(meta), path("*_tax.tsv"), emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
