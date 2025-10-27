@@ -12,11 +12,11 @@ process MERGER2 {
 
     script:
     """
-    tmp_dir=$(mktemp -d)
-    batch_size=100     # adjust: number of records per batch
+    tmp_dir=\$(mktemp -d)
+    batch_size=100
     count=0
     batch_num=0
-    batch_file="\$tmp_dir/batch_${batch_num}.tmp"
+    batch_file="\$tmp_dir/batch_\${batch_num}.tmp"
 
     while IFS=$'\t' read -r col1 col2 col3 rest; do
         found_file=""
