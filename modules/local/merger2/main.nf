@@ -7,7 +7,7 @@ process MERGER2 {
 
 
     output:
-    tuple val(meta), path("*.tsv"), emit: tsv
+    tuple val(meta), path("*_merged.tsv"), emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -23,7 +23,7 @@ process MERGER2 {
             fi
         done
         if [[ -z "\$found_file" ]]; then
-            echo "\${col2} not found" >&2
+            echo "\${col2}" not found" >&2
             continue
         fi
 
