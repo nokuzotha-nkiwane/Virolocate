@@ -44,12 +44,13 @@ process MERGER2 {
             }
         ' "\$found_file")
 
-        tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }' | head -n 1)
+        
+        tax=\$(awk '/taxon:[0-9]+/ { match(\$0, /taxon:([0-9]+)/, tax_id); if (tax_id[1]!="") { print tax_id[1]; exit }}' <<< "\${info}")
         
         if [[ -z "\${tax}" ]]; then
             tax="NA"
         else
-            tax=\$(printf "%s" "\$tax" | tr -d '\\n')
+            tax=\$(printf "%s" "\${tax}" | tr -d '\\n')
         fi
 
         echo -e "\${col1}\\t\${col2}\\t\${rest}\\t\${tax}" >> ${meta.id}_merged.tsv
