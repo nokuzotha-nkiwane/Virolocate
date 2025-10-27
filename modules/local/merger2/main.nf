@@ -53,7 +53,7 @@ process MERGER2 {
             tax=\$(printf "%s" "\${tax}" | tr -d '\\n')
         fi
 
-        echo -e "\${col1}\\t\${col2}\\t\${col3}\\t\${rest}\\t\${tax}" >> ${meta.id}_merged.tsv
+        echo -e "\${col1}\\t\${col2}\\t\${col3}\\t\${rest}\\t\${tax}" >> ${meta.id}_tax.tsv
 
     done < ${tsv}
 
