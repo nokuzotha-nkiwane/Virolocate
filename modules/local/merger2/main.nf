@@ -35,7 +35,7 @@ process MERGER2 {
         info=\$(awk -v acc="\${col3}" '
             BEGIN {in_block=0; matched=0}
             /^LOCUS/ { block=""; in_block=1 }
-            in_block { block = block \$0 "\n" }
+            in_block { block = block \$0 "\\n" }
             /^\\/\\// {
                 if (block ~ acc || block ~ ("VERSION[[:space:]]+" acc) || block ~ ("ACCESSION[[:space:]]+" acc)) {
                     print block; matched=1
