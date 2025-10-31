@@ -12,12 +12,8 @@ process MERGER2 {
 
     script:
     """
-    tmp_dir=\$(mktemp -d)
-    batch_size=100
-    count=0
-    batch_num=0
-    batch_file="\$tmp_dir/batch_\${batch_num}.tmp"
-
+    tmp_dir1=\$(mktemp -d)
+    tmp_dir2=\$(mktemp -d)
     while IFS=\$'\\t' read -r col1 col2 col3 rest; do
         found_file=""
         for gb in ${gbs}; do
@@ -32,39 +28,41 @@ process MERGER2 {
             continue
         fi
 
-        info=\$(awk -v acc="\${col3}" '
+       
+        tmpfile1=\$(mktemp "\${tmp_dir1}/tmpfile_\${col3}.tmp")
+        awk -v acc="\${col3}" -v file="\${tmpfile1}" '
             BEGIN {in_block=0; matched=0}
             /^LOCUS/ { block=""; in_block=1 }
             in_block { block = block \$0 "\\n" }
             /^\\/\\// {
                 if (block ~ acc || block ~ ("VERSION[[:space:]]+" acc) || block ~ ("ACCESSION[[:space:]]+" acc)) {
-                    print block; matched=1
+                    print block > file
+                    matched=1
                 }
                 in_block=0; block=""
             }
             END { if (matched==0) exit 1 }
-        ' "\${found_file}")
+        ' "\${found_file}" || continue
 
-        tax=\$(awk '
-            /db_xref="taxon:[0-9]+"/ { match(\$0,/taxon:([0-9]+)/,a); if(a[1]!=""){print a[1]; exit} }
-        ' <<< "\$info")
+        tax=\$(grep -oE 'taxon:[0-9]+' "\${tmpfile1}" | head -n 1 | cut -d: -f2 )
 
-        [[ -z "\$tax" ]] && tax="NA"
+        if [[ -z "\${tax}" ]]; then
+            tax="NA"
 
-        printf "%s\\t%s\\t%s\\t%s\\t%s\\n" "\${col1}" "\${col2}" "\${col3}" "\${rest}" "\${tax}" >> "\${batch_file}"
-
-        ((count++))
-        if (( count % batch_size == 0 )); then
-            batch_num=\$((batch_num + 1))
-            batch_file="\$tmp_dir/batch_\${batch_num}.tmp"
+        else
+            tax=\$(printf "%s" "\$tax" | tr -d '\\n')
         fi
 
-    done < "${tsv}"
+        
+        tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
+        echo -e "\${col1}\\t\${col2}\\t\${col3}\\t\${rest}\\t\${tax}" >> "\${tmpfile2}"
+       
+        cat "\${tmpfile2}" >> "${meta.id}_tax.tsv"
+        rm "\${tmpfile1}" "\${tmpfile2}"
 
-    # merge batches atomically
-    cat "\${tmp_dir}"/*.tmp > "${meta.id}_tax.tsv"
-    rm -rf "\${tmp_dir}"
-    sync
+    done < "${tsv}"
+    rm -rf "\${tmp_dir1}" "\${tmp_dir2}"
+    
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -74,7 +72,7 @@ process MERGER2 {
 
     stub:
     """
-    touch sample_collected.tsv
+    touch sample_tax.tsv"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
