@@ -278,7 +278,16 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(SPLITTER_2.out.versions.first())
     ch_splitter_2 = (SPLITTER_2.out.txt).dump(tag:'ch_splitter_2')
 
-    ch_splitter_file_2 = ch_splitter_2.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_2')
+
+    ch_splitter_file_2 = ch_splitter_2.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
+
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_splitter_file_2')
 
     //get metadata of the blastn hits
     FETCH_METADATA_BLASTN(ch_splitter_file_2)
@@ -331,7 +340,16 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(SPLITTER_3.out.versions)
     ch_splitter_3 = (SPLITTER_3.out.txt).dump(tag:'ch_splitter_3')
 
-    ch_splitter_file_3 = ch_splitter_3.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_3')
+
+    ch_splitter_file_3 = ch_splitter_3.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
+
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_splitter_file_3')
 
     //get metadata of the blastx hits
     FETCH_METADATA_BLASTX(ch_splitter_file_3)
