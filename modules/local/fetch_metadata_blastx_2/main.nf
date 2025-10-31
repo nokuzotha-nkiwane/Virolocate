@@ -13,6 +13,7 @@ process FETCH_METADATA_BLASTX_2{
     path "versions.yml"             , emit: versions
 
     script:
+    def name = txt.getBaseName()
     """
     get_meta() {
 
