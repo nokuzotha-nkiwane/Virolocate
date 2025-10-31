@@ -27,7 +27,7 @@ process FETCH_METADATA_BLASTN_2 {
         echo "Fetching metadata for "\${acc_id}""
         #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
         local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=\${acc_id}&rettype=gb&retmode=text"
-        local info=\$(curl -N -# -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1})
+        local info=\$(curl -N -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1})
 
         #host source, gographical location name, collection date, gene, product, taxonomic number
         local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}' | head -n 1)

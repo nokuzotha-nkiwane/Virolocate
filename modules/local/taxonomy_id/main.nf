@@ -18,7 +18,7 @@ process TAXONOMY_ID {
     """
     accessions=\$(cat ${txt})
     url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${accessions}&rettype=gb&retmode=text" 
-    curl -N -# -L --retry 5 --retry-delay 5 \${url1} -o ${name}_1.gb
+    curl -N -L --retry 5 --retry-delay 5 \${url1} -o ${name}_1.gb
 
     ON=0
     ACC=""
@@ -54,7 +54,7 @@ process TAXONOMY_ID {
         tr '\\n' ',' < ${name}_missing_1.lst | sed 's/,\$/\\n/' > ${name}_missing_final.lst
         accessions=\$(cat ${name}_missing_final.lst)
         url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${accessions}&rettype=gb&retmode=text" 
-        curl -N -# -L --retry 5 --retry-delay 5 \${url1} -o ${name}_2.gb
+        curl -N -L --retry 5 --retry-delay 5 \${url1} -o ${name}_2.gb
     else
         touch ${name}_2.gb
     fi
