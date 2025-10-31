@@ -83,7 +83,7 @@ process FETCH_METADATA_BLASTX_2{
     }
 
     if [[ ! -s ${txt} || \$(grep -cv '^[[:space:]]*\$' ${txt}) -eq 0 ]]; then
-            echo > "${name}_blastn_metadata2.tsv"
+            echo > "${name}_blastx_metadata2.tsv"
     else
         while IFS=\$'\\t' read -r col1 col2 col3 rest;do
             tmpfile=\$(mktemp)
