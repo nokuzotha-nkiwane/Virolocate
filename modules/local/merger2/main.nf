@@ -29,7 +29,7 @@ process MERGER2 {
         fi
 
        
-        tmpfile1=\$(mktemp "\${tmp_dir1}/tmpfile_\${col3}.tmp")
+        tmpfile1=\$(mktemp "\${tmp_dir1}/tmpfile_XXXXXXX.tmp")
         awk -v acc="\${col3}" -v file="\${tmpfile1}" '
             BEGIN {in_block=0; matched=0}
             /^LOCUS/ { block=""; in_block=1 }
