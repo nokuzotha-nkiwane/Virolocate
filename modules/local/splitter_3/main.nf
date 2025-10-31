@@ -1,4 +1,4 @@
-process SPLITTER_2{
+process SPLITTER_3{
     tag "${meta.id}"
     label 'process_high'
 
