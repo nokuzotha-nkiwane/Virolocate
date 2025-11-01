@@ -6,7 +6,7 @@ process SPLITTER_3{
     tuple val(meta), path(tsv)
 
     output:
-    tuple val(meta), path(".txt"), emit: txt
+    tuple val(meta), path('.txt'), emit: txt
     path "versions.yml"             , emit: versions
 
     script:
