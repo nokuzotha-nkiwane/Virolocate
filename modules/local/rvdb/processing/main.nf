@@ -18,7 +18,7 @@ process RVDB_PROCESSING {
     #take nucleotide acc_id from diamond output file
     
     if [[ ! -f "${tsv}" ]]; then
-        echo "# No RVDB data processed" > "${prefix}.tsv"
+        echo "" > "${prefix}_rvdb.tsv"
         exit 0
     fi
 
