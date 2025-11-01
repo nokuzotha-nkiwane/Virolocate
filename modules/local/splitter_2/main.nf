@@ -6,7 +6,7 @@ process SPLITTER_2{
     tuple val(meta), path(txt)
 
     output:
-    tuple val(meta), path("*_split*.txt"), emit: txt
+    tuple val(meta), path(".txt"), emit: txt
     path "versions.yml"             , emit: versions
 
     script:
@@ -15,7 +15,7 @@ process SPLITTER_2{
     sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
     split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_split
     for file in *_split*; do
-        if [[ "\${file}" == *.tsv ]]; then
+        if [[ "\${file}" == *.tsv || final.txt ]]; then
             continue
         else
             tr '\\n' ',' < "\${file}" | sed 's/,\$/\\n/' > "\${file}.txt"

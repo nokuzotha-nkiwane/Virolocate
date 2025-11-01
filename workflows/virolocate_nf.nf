@@ -280,7 +280,7 @@ workflow VIROLOCATE_NF {
 
     ch_splitter_file_2 = ch_splitter_2.flatMap { meta, txts ->
         if (txts instanceof Path) {
-            return [meta, txts]
+            return [[meta, txts]]
         }
 
         else if (txts instanceof List) {
@@ -344,7 +344,7 @@ workflow VIROLOCATE_NF {
 
     ch_splitter_file_3 = ch_splitter_3.flatMap { meta, txts ->
         if (txts instanceof Path) {
-            return [meta, txts]
+            return [[meta, txts]]
         }
 
         else if (txts instanceof List) {
