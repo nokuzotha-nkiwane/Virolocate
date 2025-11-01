@@ -70,7 +70,6 @@ include { TAXONOMY_ID_CHECK_2 } from '../modules/local/taxonomy_id_check_2/main.
 include { TAXONOMY_ID_CHECK_3 } from '../modules/local/taxonomy_id_check_3/main.nf'
 include { MERGER2 } from '../modules/local/merger2/main.nf'
 include { MERGER3 as MERGER3 } from '../modules/local/merger3/main.nf'
-include { MERGER3 as MERGER4 } from '../modules/local/merger3/main.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
 include { MEGAHIT_RENAME } from '../modules/local/megahit_rename/main.nf'
 include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/main.nf'
