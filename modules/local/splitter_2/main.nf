@@ -15,7 +15,7 @@ process SPLITTER_2{
     sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
     split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_split
     for file in *; do
-        if [[ "\${file}" == *.tsv || final.txt ]]; then
+        if [[ "\${file}" == *.tsv || "\${file}" == final.txt ]]; then
             continue
         else
             tr '\\n' ',' < "\${file}" | sed 's/,\$/\\n/' > "\${file}.txt"
