@@ -15,7 +15,7 @@ process SPLITTER_2{
     sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
     split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_split
     rm "${txt}"
-    for file in ${meta.id}_split; do
+    for file in ${meta.id}_split*; do
         tr '\\n' ',' < "\${file}" | sed 's/,\$/\\n/' > "\${file}.txt"  
     done
     
