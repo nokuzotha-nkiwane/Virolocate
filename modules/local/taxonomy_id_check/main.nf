@@ -1,7 +1,7 @@
 process MERGER4 {
     tag "${meta.id}"
-    maxForks 3
-    label 'process_medium'
+    label 'process_long'
+    label 'process_high'
 
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
@@ -11,7 +11,7 @@ process MERGER4 {
 
 
     output:
-    tuple val(meta), path('*_check.txt')  , emit: tsv
+    tuple val(meta), path('*_tax.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
