@@ -3,7 +3,7 @@ process SPLITTER_3{
     label 'process_high'
 
     input:
-    tuple val(meta), path(txt)
+    tuple val(meta), path(tsv)
 
     output:
     tuple val(meta), path("${meta.id}_*.txt"), emit: txt
@@ -13,8 +13,8 @@ process SPLITTER_3{
     """
     awk -F'\\t' '{print \$2}' "${tsv}" > "${meta.id}_acc.tsv"
     sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
-    split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_acc_ids_
-    for file in *; do
+    split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_split
+    for file in *_split; do
         if [[ "\${file}" == *.tsv ]]; then
             continue
         else
