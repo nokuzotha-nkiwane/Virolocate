@@ -17,21 +17,20 @@ process RVDB_PROCESSING {
     """
     #take nucleotide acc_id from diamond output file
     
-    if [[ ! -f "${tsv}" ]]; then
+    if [[ ! -s "${tsv}" || \$(grep -cv '^[[:space:]]*\$' "${tsv}") -eq 0]]; then
         echo "" > "${prefix}_rvdb.tsv"
-        exit 0
+    else
+        # process the file line by line
+        tmpfile="${prefix}.tsv.tmp"
+        while IFS=\$'\\t' read -r col1 col2 col3 col4 rest; do
+            if [[ -n "\${col1}" ]] && [[ "\${col1}" != "#"* ]]; then
+                acc_id=\$(echo "\${col3}" | awk -F'|' '{print \$3}')
+                name=\$(echo "\${col4}" | awk -F'|' '{print \$6}')
+                echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}" >> "\${tmpfile}"
+            fi
+        done < "${tsv}"
+        cat "\${tmpfile}" > "${prefix}_rvdb.tsv"
     fi
-
-    # process the file line by line
-    tmpfile="${prefix}.tsv.tmp"
-    while IFS=\$'\\t' read -r col1 col2 col3 col4 rest; do
-        if [[ -n "\${col1}" ]] && [[ "\${col1}" != "#"* ]]; then
-            acc_id=\$(echo "\${col3}" | awk -F'|' '{print \$3}')
-            name=\$(echo "\${col4}" | awk -F'|' '{print \$6}')
-            echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}" >> "\${tmpfile}"
-        fi
-    done < "${tsv}"
-    cat "\${tmpfile}" > "${prefix}_rvdb.tsv"
 
     
     cat <<-END_VERSIONS > versions.yml
