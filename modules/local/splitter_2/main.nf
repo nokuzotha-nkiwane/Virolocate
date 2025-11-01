@@ -14,7 +14,7 @@ process SPLITTER_2{
     awk -F'\\t' '{print \$2}' "${txt}" | awk -F'|' '{print \$4}' > "${meta.id}_acc.tsv"
     sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
     split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_split
-    for file in *_split*; do
+    for file in *; do
         if [[ "\${file}" == *.tsv || final.txt ]]; then
             continue
         else
