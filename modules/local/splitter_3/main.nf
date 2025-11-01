@@ -11,10 +11,15 @@ process SPLITTER_3{
 
     script:
     """
-    split -e -n l/${task.cpus} "${txt}" ${meta.id}_
-    rm "${txt}"
-    for file in ${meta.id}_*; do
-        mv "\${file}" "\${file}.txt"
+    awk -F'\\t' '{print \$2}' "${tsv}" > "${meta.id}_acc.tsv"
+    sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
+    split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_acc_ids_
+    for file in *; do
+        if [[ "\${file}" == *.tsv ]]; then
+            continue
+        else
+            tr '\\n' ',' < "\${file}" | sed 's/,\$/\\n/' > "\${file}.txt"
+        fi
     done
     
 

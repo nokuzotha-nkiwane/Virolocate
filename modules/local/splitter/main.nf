@@ -11,7 +11,7 @@ process SPLITTER{
 
     script:
     """
-    awk '{print \$3}' "${tsv}" > "${meta.id}_acc.tsv"
+    awk -F'\\t' '{print \$3}' "${tsv}" > "${meta.id}_acc.tsv"
     sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
     split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_acc_ids_
     for file in *; do
