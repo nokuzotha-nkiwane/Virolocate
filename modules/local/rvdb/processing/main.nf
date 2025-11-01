@@ -17,7 +17,7 @@ process RVDB_PROCESSING {
     """
     #take nucleotide acc_id from diamond output file
     
-    if [[ ! -s "${tsv}" || \$(grep -cv '^[[:space:]]*\$' "${tsv}") -eq 0]]; then
+    if [[ ! -s "${tsv}" || \$(grep -cv '^[[:space:]]*\$' "${tsv}") -eq 0 ]]; then
         echo "" > "${prefix}_rvdb.tsv"
     else
         # process the file line by line
