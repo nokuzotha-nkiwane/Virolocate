@@ -305,7 +305,7 @@ workflow VIROLOCATE_NF {
     //get taxonomy
     ch_taxonkit_db2 = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped2 = ch_taxonkit_db2.toList().map { it[0] }
-    ch_taxonomy_id_collected_2 = (BLAST_BLASTN.out.txt).join(ch_gb_grouped_2).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected_2')
+    ch_taxonomy_id_collected_2 = (BLAST_BLASTN.out.txt).join(ch_gb_grouped_2).dump(tag:'ch_taxonomy_id_collected_2')
 
     MERGER3(ch_taxonomy_id_collected_2)
     ch_versions = ch_versions.mix(MERGER3.out.versions.first())
