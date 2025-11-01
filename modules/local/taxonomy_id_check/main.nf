@@ -1,32 +1,72 @@
-process TAXONOMY_ID_CHECK {
+process MERGER4 {
     tag "${meta.id}"
     maxForks 3
-    label 'process_long'
+    label 'process_medium'
 
     // conda "${moduleDir}/environment.yml"
     // container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
 
     input:
-    tuple val(meta), path(tsv) 
+    tuple val(meta), path(tsv), path(gbs) 
 
 
     output:
-    tuple val(meta), path('*_check.txt')  , emit: txt
+    tuple val(meta), path('*_check.txt')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
-    def name = tsv.getBaseName()
     """
-    while IFS=\$'\\t' read -r -a fields; do
-        if [[ "\${fields[8]}" == "NA" ]]; then
-            printf "%s\\t" "\${fields[@]}" >> "${name}_check.txt"
-            echo >> "${name}_check.txt"
-        fi
-    done < "${tsv}"
+    tmp_dir1=\$(mktemp -d)
+    tmp_dir2=\$(mktemp -d)
+    while IFS=\$'\\t' read -r col1 col2 col3 rest; do
+        found_file=""
+        for gb in ${gbs}; do
+            if grep -qE "VERSION[[:space:]]+\${col2}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${col2}" "\${gb}"; then
+                found_file="\${gb}"
+                break
+            fi
+        done
 
-    if [[ ! -s "${name}_check.txt" ]]; then
-        echo > "${name}_check.txt"
-    fi
+        if [[ -z "\${found_file}" ]]; then
+            echo "\${col2} not found" >&2
+            continue
+        fi
+
+       
+        tmpfile1=\$(mktemp "\${tmp_dir1}/tmpfile_XXXXXXX.tmp")
+        awk -v acc="\${col2}" -v file="\${tmpfile1}" '
+            BEGIN {in_block=0; matched=0}
+            /^LOCUS/ { block=""; in_block=1 }
+            in_block { block = block \$0 "\\n" }
+            /^\\/\\// {
+                if (block ~ acc || block ~ ("VERSION[[:space:]]+" acc) || block ~ ("ACCESSION[[:space:]]+" acc)) {
+                    print block > file
+                    matched=1
+                }
+                in_block=0; block=""
+            }
+            END { if (matched==0) exit 1 }
+        ' "\${found_file}" || continue
+
+        tax=\$(grep -oE 'taxon:[0-9]+' "\${tmpfile1}" | head -n 1 | cut -d: -f2 )
+
+        if [[ -z "\${tax}" ]]; then
+            tax="NA"
+
+        else
+            tax=\$(printf "%s" "\$tax" | tr -d '\\n')
+        fi
+
+        
+        tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
+        echo -e "\${col1}\\t\${col2}\\t\${col3}\\t\${rest}\\t\${tax}" >> "\${tmpfile2}"
+       
+        cat "\${tmpfile2}" >> "${meta.id}_tax.tsv"
+        rm "\${tmpfile1}" "\${tmpfile2}"
+
+    done < "${tsv}"
+    rm -rf "\${tmp_dir1}" "\${tmp_dir2}"
+    
             
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
