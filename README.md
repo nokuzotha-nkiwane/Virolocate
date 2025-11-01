@@ -12,7 +12,20 @@
 
 <!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
      workflows use the "tube map" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
+1. Read quality control - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+2. Read trimming - [Trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
+3. Post trimming read quality control - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+3. De novo assembly - [MEGAHIT](https://www.metagenomics.wiki/tools/assembly/megahit)
+4. Blastx against NCBI subset database and protein [Reference Viral DataBase](https://rvdb-prot.pasteur.fr/) - [Diamond Blastx](https://github.com/bbuchfink/diamond)
+5. Taxonomic annotation - [TaxonKit](https://bioinf.shenwei.me/taxonkit/)
+6. Viral contig filtering to select for viral hits
+7. Combine all viral hits into a single FASTA
+8. Blastn the FASTA - [NCBI Blastn](https://www.ncbi.nlm.nih.gov/books/NBK279690/)
+9. Blastx the FASTA - [Diamond Blastx](https://github.com/bbuchfink/diamond)
+10. Taxonomic annotation of Blastn and Blastx outputs - [TaxonKit](https://bioinf.shenwei.me/taxonkit/)
+11. Viral contig filtering with summary table of contigs most likely to be viral.
+12. Present QC for raw reads - [MultiQC](http://multiqc.info/)
 
 ## Documentation
 
