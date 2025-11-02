@@ -215,7 +215,16 @@ workflow VIROLOCATE_NF {
 
     // Collect all gb files per meta.id
     ch_gb_grouped = TAXONOMY_ID.out.gb.groupTuple(by: 0).dump(tag:'ch_gb_grouped')
-    ch_split_group = SPLITTER.out.lst.dump(tag:'ch_split_group')
+    ch_split_group = (SPLITTER.out.lst).flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
+
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_split_group')
+    
 
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
