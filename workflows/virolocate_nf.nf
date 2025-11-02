@@ -231,6 +231,19 @@ workflow VIROLOCATE_NF {
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
     ch_taxonomy_id_collected = (SPLITTER.out.lst).flatMap { meta, lsts -> lsts.collect { lst -> [meta, lst] }}
     .join(ch_gb_grouped).flatMap { meta, lst, gbs -> gbs.collect { gb -> [meta, lst, gb] }}.dump(tag:'ch_taxonomy_id_collected')
+
+    // ch_taxonomy_id_collected emits: [meta, lst, gb]
+
+    ch_taxonomy_id_collected_grouped = ch_taxonomy_id_collected
+    .groupTuple(by: 0)
+    .flatMap { meta, grouped_entries ->
+        def lst_groups = grouped_entries.groupBy { it[1] }
+        lst_groups.collect { lst, entries ->
+            def gbs = grouped_entries.collect { it[2] }
+            tuple(meta, lst, gbs)
+        }
+    }
+
     
 
     MERGER2(ch_taxonomy_id_collected)
