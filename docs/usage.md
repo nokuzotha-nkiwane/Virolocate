@@ -8,7 +8,7 @@
 
 ## Dataset
 
-Samples from the Kruger National Park were collected and subsampled using Seqkit to generate a test dataset. See link below.
+Samples from the Kruger National Park were collected and subsampled using FastP to generate a test dataset.
 
 
 ## Samplesheet input
@@ -28,7 +28,7 @@ You will need to create a samplesheet with information about the samples you wou
 
 The input samplesheet should be in CSV format, containing either of the two possibilities
 
-  1. Paired-end reads (e.g `SRR8364252`)
+  1. Paired-end reads (e.g `SRR35709878`)
 
   2. Single-end reads (e.g. `SRR771360` )
 
@@ -36,7 +36,6 @@ The input samplesheet should be in CSV format, containing either of the two poss
 
 ```csv
 sample,fastq_1,fastq_2
-SRR8364252,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR836/002/SRR8364252/SRR8364252_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR836/002/SRR8364252/SRR8364252_2.fastq.gz
 SRR35709878,/path/to/paired-end/SRR35709878_1.fastq.gz,/path/to/paired-end/SRR35709878_2.fastq.gz
 SRR35366026,/path/to/single-end/SRR35366026.fastq.gz
 
@@ -102,7 +101,6 @@ with `params.yaml` containing:
 ```yaml
 input: './samplesheet.csv'
 outdir: './results/'
-genome: 'GRCh37'
 # other parameters
 ```
 

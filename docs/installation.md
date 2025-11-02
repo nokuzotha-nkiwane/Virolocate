@@ -7,7 +7,7 @@ If you need to install this pipeline on a cluster (HPC or K8s) then please refer
 
 :::{.callout-tip}
 ## nf-core documentation
-As the Virolocate pipeline uses nf-core template, the extensive documentation regarding [installation](https://nf-co.re/docs/usage/getting_started/configuration), configuration and [customization](https://training.nextflow.io/2.1/other/nf_customize/) of the pipeline are applicable for CholeraSeq.
+As the Virolocate pipeline uses nf-core template, the extensive documentation regarding [installation](https://nf-co.re/docs/usage/getting_started/configuration), configuration and [customization](https://training.nextflow.io/2.1/other/nf_customize/) of the pipeline are applicable for Virolocate.
 :::
 
 
