@@ -57,7 +57,7 @@ process MERGER2 {
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
         echo -e "\${access}\\t\${tax}" >> "\${tmpfile2}"
        
-        base_name=\(basename "${lst}" .lst)
+        base_name=\$(basename "${lst}" .lst)
         cat "\${tmpfile2}" >> "\${base_name}_tax.tsv"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
