@@ -63,11 +63,11 @@ This document provides an overview of the customizable parameters for the Virolo
 
 ### Blast Blastn
 
-| Parameter                | Default Value | Description                                                                                                                                                                                                        |
-|---------------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--evalue`       | 1e-5            | maximum e-value to report alignments                                                                                                                                                                  |
-| `--max_target_seqs`       | 20            | Maximum number of aligned sequences to keep                                                                                                                                                                   |
-| `--outfmt`       | '6 qseqid sseqid qlen stitle pident length qstart qend evalue bitscore            | output format                                                                                                                                                                  |
+| Parameter                     | Default Value | Description                                                                                                                                                                                                        |
+|---------------------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--evalue`             | 1e-5            | maximum e-value to report alignments                                                                                                                                                                  |
+| `--max_target_seqs`             | 20            | Maximum number of aligned sequences to keep                                                                                                                                                                   |
+| `--outfmt`               | '6 qseqid sseqid qlen stitle pident length qstart qend evalue bitscore            | output format                                                                                                                                                                  |
 
 ### Lineage Pre
 
