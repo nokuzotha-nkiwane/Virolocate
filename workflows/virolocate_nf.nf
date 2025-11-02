@@ -215,21 +215,21 @@ workflow VIROLOCATE_NF {
 
     // Collect all gb files per meta.id
     ch_gb_grouped = TAXONOMY_ID.out.gb.groupTuple(by: 0).dump(tag:'ch_gb_grouped')
-    ch_split_group = SPLITTER.out.lst.flatMap { meta, txts ->
-        if (txts instanceof Path) {
-            return [[meta, txts]]
-        }
+    // ch_split_group = SPLITTER.out.lst.flatMap { meta, txts ->
+    //     if (txts instanceof Path) {
+    //         return [[meta, txts]]
+    //     }
 
-        else if (txts instanceof List) {
-            return txts.collect { file -> [meta, file] }
-        }
-    }.dump(tag:'ch_split_group')
+    //     else if (txts instanceof List) {
+    //         return txts.collect { file -> [meta, file] }
+    //     }
+    // }.dump(tag:'ch_split_group')
     
 
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
-    ch_taxonomy_id_collected = ch_split_group.join(ch_gb_grouped).flatMap { meta, lst, gbs -> gbs.collect { gb -> [meta, lst, gb] } }.dump(tag:'ch_taxonomy_id_collected')
+    ch_taxonomy_id_collected = (SPLITTER.out.lst).join(ch_gb_grouped).flatMap { meta, lst, gbs -> gbs.collect { gb -> [meta, lst, gb] } }.dump(tag:'ch_taxonomy_id_collected')
     
 
     MERGER2(ch_taxonomy_id_collected)
