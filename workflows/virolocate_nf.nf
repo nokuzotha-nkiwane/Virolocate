@@ -233,7 +233,7 @@ workflow VIROLOCATE_NF {
 
     ch_lineage_1 = LINEAGE_PRE.out.tsv.groupTuple(by: 0).dump(tag:'ch_lineage_1')
 
-    PROTEIN_MERGER(MERGER.out.tsv)
+    //PROTEIN_MERGER(MERGER.out.tsv)
 
     //Contig_filter to extract sequences marked as viral only
     CONTIG_FILTER(LINEAGE_PRE.out.tsv)
