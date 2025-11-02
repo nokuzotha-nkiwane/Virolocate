@@ -7,6 +7,3 @@ The nokuzotha-nkiwane/Virolocate documentation is split into the following pages
 
 - [Output](output.md)
   - An overview of the different results produced by the pipeline and how to interpret them.
-
-- [Parameters](parameters.md)
-  - An overview of the different parameters in the pipeline.
