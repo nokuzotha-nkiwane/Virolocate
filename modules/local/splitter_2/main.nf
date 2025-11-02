@@ -7,6 +7,7 @@ process SPLITTER_2{
 
     output:
     tuple val(meta), path('*.txt'), emit: txt
+    tuple val(meta), path("*.lst"), emit: lst
     path "versions.yml"             , emit: versions
 
     script:
@@ -16,6 +17,7 @@ process SPLITTER_2{
     split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_split
     rm "${txt}"
     for file in ${meta.id}_split*; do
+        cp "\${file}" "\${file}.lst"
         tr '\\n' ',' < "\${file}" | sed 's/,\$/\\n/' > "\${file}.txt"  
     done
     

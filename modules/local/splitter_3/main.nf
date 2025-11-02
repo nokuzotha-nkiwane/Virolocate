@@ -7,6 +7,7 @@ process SPLITTER_3{
 
     output:
     tuple val(meta), path('*.txt'), emit: txt
+    tuple val(meta), path("*.lst"), emit: lst
     path "versions.yml"             , emit: versions
 
     script:
@@ -18,6 +19,7 @@ process SPLITTER_3{
         if [[ "\${file}" == *.tsv ]]; then
             continue
         else
+            cp "\${file}" "\${file}.lst"
             tr '\\n' ',' < "\${file}" | sed 's/,\$/\\n/' > "\${file}.txt"
         fi
     done

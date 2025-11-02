@@ -3,7 +3,7 @@ process MERGER3 {
     label 'process_high'
 
     input:
-    tuple val(meta), path(tsv), path(gbs)
+    tuple val(meta), path(lst), path(gbs)
 
 
     output:
@@ -11,6 +11,7 @@ process MERGER3 {
     path "versions.yml"             , emit: versions
 
     script:
+    def name = lst.getBaseName()
     """
 
     tmp_dir1=\$(mktemp -d)
@@ -62,7 +63,7 @@ process MERGER3 {
         cat "\${tmpfile2}" >> "${meta.id}_tax.tsv"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
-    done < "${tsv}"
+    done < "${lst}"
     rm -rf "\${tmp_dir1}" "\${tmp_dir2}"
     
     cat <<-END_VERSIONS > versions.yml

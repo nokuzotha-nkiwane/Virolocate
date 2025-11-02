@@ -7,17 +7,19 @@ process SPLITTER{
 
     output:
     tuple val(meta), path("*.txt"), emit: txt
+    tuple val(meta), path("*.lst"), emit: lst
     path "versions.yml"             , emit: versions
 
     script:
     """
-    awk -F'\\t' '{print \$3}' "${tsv}" > "${meta.id}_acc.tsv"
+    awk -F'\\t' '{print \$2}' "${tsv}" > "${meta.id}_acc.tsv"
     sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
     split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_acc_ids_
     for file in *; do
         if [[ "\${file}" == *.tsv ]]; then
             continue
         else
+            cp "\${file}" "\${file}.lst"
             tr '\\n' ',' < "\${file}" | sed 's/,\$/\\n/' > "\${file}.txt"
         fi
     done

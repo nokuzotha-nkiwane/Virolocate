@@ -24,9 +24,9 @@ process RVDB_PROCESSING {
         tmpfile="${prefix}.tsv.tmp"
         while IFS=\$'\\t' read -r col1 col2 col3 col4 rest; do
             if [[ -n "\${col1}" ]] && [[ "\${col1}" != "#"* ]]; then
-                acc_id=\$(echo "\${col3}" | awk -F'|' '{print \$3}')
+                acc_id=\$(echo "\${col2}" | awk -F'|' '{print \$3}')
                 name=\$(echo "\${col4}" | awk -F'|' '{print \$6}')
-                echo -e "\${col1}\\t\${col2}\\t\${acc_id}\\t\${name}\\t\${rest}" >> "\${tmpfile}"
+                echo -e "\${col1}\\t\${acc_id}\\t\${col3}\\t\${name}\\t\${rest}" >> "\${tmpfile}"
             fi
         done < "${tsv}"
         cat "\${tmpfile}" > "${prefix}_rvdb.tsv"

@@ -7,7 +7,7 @@ process MERGER4 {
     // container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
 
     input:
-    tuple val(meta), path(tsv), path(gbs) 
+    tuple val(meta), path(lst), path(gbs) 
 
 
     output:
@@ -15,6 +15,7 @@ process MERGER4 {
     path "versions.yml"             , emit: versions
 
     script:
+    def name = lst.getBaseName()
     """
     tmp_dir1=\$(mktemp -d)
     tmp_dir2=\$(mktemp -d)
@@ -64,7 +65,7 @@ process MERGER4 {
         cat "\${tmpfile2}" >> "${meta.id}_tax.tsv"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
-    done < "${tsv}"
+    done < "${lst}"
     rm -rf "\${tmp_dir1}" "\${tmp_dir2}"
     
             
