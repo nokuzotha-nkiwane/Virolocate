@@ -220,7 +220,7 @@ workflow VIROLOCATE_NF {
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
-    ch_taxonomy_id_collected = ch_split_group.join(ch_gb_grouped).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected')
+    ch_taxonomy_id_collected = ch_split_group.join(ch_gb_grouped).dump(tag:'ch_taxonomy_id_collected')
 
     MERGER2(ch_taxonomy_id_collected)
     ch_versions = ch_versions.mix(MERGER2.out.versions.first())
@@ -230,6 +230,10 @@ workflow VIROLOCATE_NF {
     
     LINEAGE_PRE(ch_taxonkit_input, ch_db_mapped)
     ch_versions = ch_versions.mix(LINEAGE_PRE.out.versions.first())
+
+    ch_lineage_1 = LINEAGE_PRE.out.tsv.groupTuple(by: 0).dump(tag:'ch_lineage_1')
+
+    PROTEIN_MERGER(MERGER.out.tsv)
 
     //Contig_filter to extract sequences marked as viral only
     CONTIG_FILTER(LINEAGE_PRE.out.tsv)
