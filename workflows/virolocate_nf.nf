@@ -215,7 +215,8 @@ workflow VIROLOCATE_NF {
 
     // Collect all gb files per meta.id
     ch_gb_grouped = TAXONOMY_ID.out.gb.groupTuple(by: 0).dump(tag:'ch_gb_grouped')
-    ch_split_group = (SPLITTER.out.lst).flatMap { meta, txts ->
+    ch_tax_split = (SPLITTER.out.lst).dump(tag:'ch_tax_split')
+    ch_split_group = ch_tax_split.flatMap { meta, txts ->
         if (txts instanceof Path) {
             return [[meta, txts]]
         }
