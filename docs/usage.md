@@ -4,7 +4,7 @@
 
 ## Introduction
 
-**nokuzotha-nkiwane/Virolocate** is a Nextflow pipeline for genomic data analysis of metatranscriptomic Next Generation Sequencing data.
+**Virolocate** is a Nextflow pipeline for genomic data analysis of metatranscriptomic Next Generation Sequencing data.
 
 ## Dataset
 

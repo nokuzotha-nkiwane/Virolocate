@@ -1,4 +1,4 @@
-# CERI-KRISP/virolocate_nf: A pipeline for viral metatranscriptomic data analysis
+# Virolocate: A pipeline for viral metatranscriptomic data analysis
 
 ## Introduction
 
