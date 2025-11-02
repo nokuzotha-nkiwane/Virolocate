@@ -11,19 +11,6 @@ process MERGER2 {
     path "versions.yml"             , emit: versions
 
     script:
-    def name = bprocess MERGER2 {
-    tag "${meta.id}"
-    label 'process_high'
-
-    input:
-    tuple val(meta), path(lst), path(gbs)
-
-
-    output:
-    tuple val(meta), path("*_tax.tsv"), emit: tsv
-    path "versions.yml"             , emit: versions
-
-    script:
     def name = lst.getBaseName()
     """
     tmp_dir1=\$(mktemp -d)
