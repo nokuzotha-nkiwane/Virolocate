@@ -33,6 +33,10 @@ This document provides an overview of the customizable parameters for the Virolo
 | Parameter                | Default Value | Description                                                                                                                                                                                                        |
 |--------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `FIXME`       | FIXME            | FIXME                                                                                                                                                                  |
+| `FIXME`       | FIXME            | FIXME                                                                                                                                                                  |
+| `FIXME`       | FIXME            | FIXME                                                                                                                                                                  |
+| `FIXME`       | FIXME            | FIXME                                                                                                                                                                  |
+| `FIXME`       | FIXME            | FIXME                                                                                                                                                                  |
 
 ---
 
