@@ -10,29 +10,50 @@ The directories listed below will be created in the results directory after the 
 
 ## Pipeline overview
 
-The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
+The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data to produce the following results:
 
-- [FastQC](#fastqc) - Raw reads QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Trimmed reads QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
-- [FastQC](#fastqc) - Raw read QC
+results
+├── assembly
+├── assembly_rename
+├── blast_fasta
+├── blast_out_metadata
+│    ├── blastn
+│    └── blastx
+├── contig_filtering
+├── contig_sorting
+├── dmnd_databases
+│    ├── rvdb
+│    ├── ncbi_pre
+│    └── nr
+├── dmnd_results
+│    ├── rvdb
+│    ├── ncbi_pre
+│    └── nr
+├── fasta_processing
+├── merges
+│    ├── ncbi_rvdb_merged
+│    ├── taxonomy1_prep
+│    ├── blastn_taxonomy_prep
+│    └── blastx_taxonomy_prep
+├── qc
+│    ├── fastqc_pre
+│    ├── trimmomatic
+│    ├── fastqc_post
+│    └── multiqc
+│         ├── multiqc_data
+│         └── multiqc_plots
+├── rvdb_processing
+├── splitter
+│    ├── taxonomy1_prep
+│    ├── blastn_taxonomy_prep
+│    └── blastx_taxonomy_prep
+├── taxonomy
+│    ├── pre
+│    ├── blastn
+│    └── blastx
+├── taxonomy_id
+
+
 
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
