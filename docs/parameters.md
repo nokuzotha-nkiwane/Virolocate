@@ -30,6 +30,8 @@ This document provides an overview of the customizable parameters for the Virolo
 > ⚠️ **Attention**: Ensure these values are adjusted based on the quality of your input data to avoid processing errors.
 > The defaults are set to faciliate a majority of users. Only advanced users are recommended to change these.
 
+### Trimmomatic
+
 | Parameter                | Default Value | Description                                                                                                                                                                                                        |
 |--------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `ILLUMINACLIP`       | fastaWithAdaptersEtc : seed mismatches : palindrome clip threshold : simple clip threshold            | Cut adapter and other illumina-specific sequences from the read                                                                                                                                                                  |
@@ -41,7 +43,17 @@ This document provides an overview of the customizable parameters for the Virolo
 | `TRAILING`       | 5            | Cut bases off the end of a read, if below a threshold quality                                                                                                                                                                  |
 | `SLIDINGWINDOW`       | 4:15            | Perform a sliding window trimming, cutting once the average quality within the window falls below a threshold                                                                                                                                                                  |
 | `MINLEN`       | 25            | Drop the read if it is below a specified length                                                                                                                                                                  |
+| `MINLEN`       | 25            | Drop the read if it is below a specified length                                                                                                                                                                  |
 
+### Diamond Blastx Pre
+
+| Parameter                | Default Value | Description                                                                                                                                                                                                        |
+|--------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--evalue`       | 1e-5            | maximum e-value to report alignments                                                                                                                                                                  |
+| `outfmt`       | '6 qseqid qlen sseqid stitle pident length evalue bitscore            | output format                                                                                                                                                                  |
+| `--id`       | 80            | minimum identity% to report an alignment                                                                                                                                                                  |
+| `--strand`       | both            | query strands to search (both/minus/plus)                                                                                                                                                                  |
+| `--unal`       | 0            | report unaligned queries (0=no, 1=yes)                                                                                                                                                                  |
 ---
 
 ## Skipping Pipeline Steps
