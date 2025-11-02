@@ -11,7 +11,6 @@ process MERGER2 {
     path "versions.yml"             , emit: versions
 
     script:
-    def name = lst.getBaseName()
     """
     tmp_dir1=\$(mktemp -d)
     tmp_dir2=\$(mktemp -d)
@@ -58,7 +57,8 @@ process MERGER2 {
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
         echo -e "\${access}\\t\${tax}" >> "\${tmpfile2}"
        
-        cat "\${tmpfile2}" >> "${name}_tax.tsv"
+        base_name=\(basename "${lst}" .lst)
+        cat "\${tmpfile2}" >> "\${base_name}_tax.tsv"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
     done < "${lst}"
