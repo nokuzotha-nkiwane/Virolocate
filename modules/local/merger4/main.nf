@@ -58,12 +58,11 @@ process MERGER4 {
             tax=\$(printf "%s" "\$tax" | tr -d '\\n')
         fi
 
-        
+        base_name=\$(basename "${lst}" .lst)
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
-        tmpfile3=\$(mktemp)
         echo -e "\${col2}\\t\${tax}" >> "\${tmpfile2}"
        
-        cat "\${tmpfile2}" >> "\${tmpfile3}_tax.tsl"
+        cat "\${tmpfile2}" >> "\${base_name}_tax.tsl"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
     done < "${lst}"
