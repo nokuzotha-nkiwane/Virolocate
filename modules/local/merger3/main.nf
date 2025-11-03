@@ -25,30 +25,56 @@ process MERGER3 {
     use warnings;
 
     my (\$LSTIN, \$GBIN, \$OUT) = @ARGV;
+    
+    # Read list file
     open my \$L, '<', \$LSTIN or die "Cannot open list file: \$!";
     my %lst;
-    while (<\$L>) { chomp; \$lst{\$_} = 1; }
+    while (<\$L>) { 
+        chomp; 
+        s/\\r//g;  # Remove carriage returns
+        s/^\\s+|\\s+\$//g;  # Trim whitespace
+        next if /^\\s*\$/;  # Skip empty lines
+        \$lst{\$_} = 1;
+        warn "LIST: '\$_'\\n";  # Debug output
+    }
     close \$L;
 
+    # Read GenBank file
     open my \$G, '<', \$GBIN or die "Cannot open GB file: \$!";
     my %tmp;
     my \$ACC = '';
     while (<\$G>) {
         chomp;
-        if (/^ACCESSION\\s+(\\S+)/) { \$ACC = \$1; next; }
-        if (/\\/db_xref=\\"taxon:(\\d+)\\"/) { \$tmp{\$ACC} = \$1; }
+        if (/^ACCESSION\\s+(\\S+)/) { 
+            \$ACC = \$1;
+            warn "FOUND ACC: '\$ACC'\\n";  # Debug output
+            next;
+        }
+        if (/\\/db_xref=\\"taxon:(\\d+)\\"/) { 
+            \$tmp{\$ACC} = \$1 if \$ACC;
+            warn "TAXON for \$ACC: \$1\\n";  # Debug output
+        }
     }
     close \$G;
 
+    # Write output
     open my \$O, '>', \$OUT or die "Cannot write output: \$!";
     print \$O "Accession\\tTaxId\\n";
+    my \$matched = 0;
     for my \$k (sort keys %lst) {
-        print \$O "\$k\\t\$tmp{\$k}\\n" if exists \$tmp{\$k};
+        if (exists \$tmp{\$k}) {
+            print \$O "\$k\\t\$tmp{\$k}\\n";
+            \$matched++;
+        } else {
+            warn "NO MATCH for: '\$k'\\n";  # Debug output
+        }
     }
     close \$O;
+    
+    warn "Total matched: \$matched out of " . scalar(keys %lst) . " accessions\\n";
     PERL
 
-    perl script.pl "\$LSTIN" "\$GBIN" "\$OUT"
+    perl script.pl "\$LSTIN" "\$GBIN" "\$OUT" 2>&1 | head -100
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -58,7 +84,7 @@ process MERGER3 {
 
     stub:
     """
-    touch sample_tax.tsv"
+    touch sample_tax.tsl
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
