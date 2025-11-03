@@ -66,7 +66,7 @@ include { MERGER } from '../modules/local/merger/main.nf'
 include { TAXONOMY_ID as TAXONOMY_ID } from '../modules/local/taxonomy_id/main.nf'
 include { TAXONOMY_ID_2 } from '../modules/local/taxonomy_id_2/main.nf'
 include { MERGER4 } from '../modules/local/taxonomy_id_check/main.nf'
-include { TAXONOMY_ID_CHECK_2 } from '../modules/local/taxonomy_id_check_2/main.nf'
+include { PROTEIN_MERGER } from '../modules/local/protein_merger/main.nf'
 include { TAXONOMY_ID_CHECK_3 } from '../modules/local/taxonomy_id_check_3/main.nf'
 include { MERGER2 } from '../modules/local/merger2/main.nf'
 include { MERGER3 as MERGER3 } from '../modules/local/merger3/main.nf'
@@ -235,7 +235,12 @@ workflow VIROLOCATE_NF {
     MERGER2(ch_taxonomy_id_collected)
     ch_versions = ch_versions.mix(MERGER2.out.versions.first())
 
-    ch_taxonkit_input = (MERGER2.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonkit_input = (MERGER2.out.tsv).map { meta, taxidfile ->
+    def base = taxidfile.getBaseName()
+    def new_meta = meta.clone()
+    new_meta.id = "${meta.id}_${base}"
+    tuple(new_meta, null, taxidfile)}
+
 
     
     LINEAGE_PRE(ch_taxonkit_input, ch_db_mapped)
@@ -243,7 +248,8 @@ workflow VIROLOCATE_NF {
 
     ch_lineage_1 = LINEAGE_PRE.out.tsv.groupTuple(by: 0).dump(tag:'ch_lineage_1')
 
-    //PROTEIN_MERGER(MERGER.out.tsv).join
+    ch_protein_merger = (MERGER.out.tsv).combine(ch_lineage_1, by:0).dump(tag:'ch_protein_merger')
+    PROTEIN_MERGER(ch_protein_merger)
 
     //Contig_filter to extract sequences marked as viral only
     CONTIG_FILTER(LINEAGE_PRE.out.tsv)
