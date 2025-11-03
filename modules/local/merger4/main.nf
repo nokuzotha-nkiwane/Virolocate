@@ -60,9 +60,10 @@ process MERGER4 {
 
         
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
+        tmpfile3=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
         echo -e "\${col2}\\t\${tax}" >> "\${tmpfile2}"
        
-        cat "\${tmpfile2}" >> "${meta.id}_tax.tsl"
+        cat "\${tmpfile2}" >> "${tmpfile3}_tax.tsl"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
     done < "${lst}"
