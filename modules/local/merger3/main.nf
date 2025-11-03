@@ -17,7 +17,8 @@ process MERGER3 {
 
     LSTIN="${lst}"
     GBIN="${gb}"
-    OUT="${meta.id}_taxid.tsv"
+    base_name=\$(basename "${lst}" .lst)
+    OUT="\${base_name}_tax.tsl"
 
     cat <<'PERL' > script.pl
     use strict;
