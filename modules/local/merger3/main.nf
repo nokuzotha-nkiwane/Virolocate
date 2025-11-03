@@ -12,57 +12,31 @@ process MERGER3 {
 
     script:
     """
+    #!/bin/env perl
+    perl -e '
+        my (\$LSTIN, \$GBIN, \$OUT) = @ARGV;
+        open L, "<", \$LSTIN or die "Cannot open list file: \$!";
+        my %lst;
+        while (<L>) { chomp; \$lst{\$_} = 1; }
+        close L;
 
-    tmp_dir1=\$(mktemp -d)
-    tmp_dir2=\$(mktemp -d)
-    while read -r access; do
-        found_file=""
-        for gb in ${gbs}; do
-            if grep -qE "VERSION[[:space:]]+\${access}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${access}" "\${gb}"; then
-                found_file="\${gb}"
-                break
-            fi
-        done
+        open G, "<", \$GBIN or die "Cannot open GB file: \$!";
+        my %tmp;
+        my \$ACC = "";
+        while (<G>) {
+            chomp;
+            if (/^ACCESSION\\s+(\\S+)/) { \$ACC = \$1; next; }
+            if (/\\/db_xref=\\"taxon:(\\d+)\\"/) { \$tmp{\$ACC} = \$1; }
+        }
+        close G;
 
-        if [[ -z "\${found_file}" ]]; then
-            echo "\${access} not found" >&2
-            continue
-        fi
-
-       
-        tmpfile1=\$(mktemp "\${tmp_dir1}/tmpfile_XXXXXXX.tmp")
-        awk -v acc="\${access}" -v file="\${tmpfile1}" '
-            BEGIN {in_block=0; matched=0}
-            /^LOCUS/ { block=""; in_block=1 }
-            in_block { block = block \$0 "\\n" }
-            /^\\/\\// {
-                if (block ~ acc || block ~ ("VERSION[[:space:]]+" acc) || block ~ ("ACCESSION[[:space:]]+" acc)) {
-                    print block > file
-                    matched=1
-                }
-                in_block=0; block=""
-            }
-            END { if (matched==0) exit 1 }
-        ' "\${found_file}" || continue
-
-        tax=\$(grep -oE 'taxon:[0-9]+' "\${tmpfile1}" | head -n 1 | cut -d: -f2 )
-
-        if [[ -z "\${tax}" ]]; then
-            tax="NA"
-
-        else
-            tax=\$(printf "%s" "\$tax" | tr -d '\\n')
-        fi
-
-        base_name=\$(basename "${lst}" .lst)
-        tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
-        echo -e "\${access}\\t\${tax}" >> "\${tmpfile2}"
-       
-        cat "\${tmpfile2}" >> "\${base_name}_tax.tsl"
-        rm "\${tmpfile1}" "\${tmpfile2}"
-
-    done < "${lst}"
-    rm -rf "\${tmp_dir1}" "\${tmp_dir2}"
+        open O, ">", \$OUT or die "Cannot write output: \$!";
+        print O "Accession\\tTaxId\\n";
+        for my \$k (sort keys %lst) {
+            print O "\$k\\t\$tmp{\$k}\\n" if exists \$tmp{\$k};
+        }
+        close O;
+    ' "\$LSTIN" "\$GBIN" "\$OUT"
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
