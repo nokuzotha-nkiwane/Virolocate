@@ -1,0 +1,8 @@
+name: protein_merger
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::curl
+  - bioconda::protein_merger=1.0.0

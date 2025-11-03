@@ -11,7 +11,7 @@ process MERGER4 {
 
 
     output:
-    tuple val(meta), path('*_tax.tsl')  , emit: tsv
+    tuple val(meta), path('*_tax.tsl')  , emit: tsl
     path "versions.yml"             , emit: versions
 
     script:
