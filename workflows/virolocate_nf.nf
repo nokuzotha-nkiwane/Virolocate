@@ -252,7 +252,7 @@ workflow VIROLOCATE_NF {
     PROTEIN_MERGER(ch_protein_merger)
 
     //Contig_filter to extract sequences marked as viral only
-    CONTIG_FILTER(LINEAGE_PRE.out.tsv)
+    CONTIG_FILTER(PROTEIN_MERGER.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
    //sort the filtered list to remove duplicates

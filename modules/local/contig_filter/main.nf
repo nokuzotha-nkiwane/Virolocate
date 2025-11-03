@@ -18,7 +18,7 @@ process CONTIG_FILTER {
     #contig filtering according to kingdom viruses
     #extract contig matches that are part of viruses
     while IFS=\$'\\t' read -r -a fields; do
-        if [[ "\${fields[9]}" == *Viruses* ]]; then
+        if [[ "\${fields[11]}" == *Viruses* ]]; then
             printf "%s\\t" "\${fields[@]}" >> "${prefix}_viral_contigs_metadata.tsv"
             echo >> "${prefix}_viral_contigs_metadata.tsv"
         fi
