@@ -18,7 +18,7 @@ process PROTEIN_MERGER_2 {
     """
     cat ${tsvs.join(' ')} | tr -d '\r' > metadata.txt 
     while IFS=\$'\\t' read -r col1 col2 rest;do
-        acc=awk'{print \$2}' | awk -F'|' '{print \$4}'
+        acc=\$(echo -e "\${col2}" | awk -F'|' '{print \$4}')
         echo -e "\${col1}\\t\${acc}\\t\${rest}" >> blastn.out
     done < ${txt}
     sort -k1,1 metadata.txt  -o metadata2.txt
