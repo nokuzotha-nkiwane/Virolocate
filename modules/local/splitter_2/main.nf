@@ -1,20 +1,24 @@
 process SPLITTER_2{
     tag "${meta.id}"
-    label 'process_high'
+    label 'process_medium'
 
     input:
     tuple val(meta), path(txt)
 
     output:
-    tuple val(meta), path("${meta.id}_*.txt"), emit: txt
+    tuple val(meta), path('*.txt'), emit: txt
+    tuple val(meta), path("*.lst"), emit: lst
     path "versions.yml"             , emit: versions
 
     script:
     """
-    split -e -n l/${task.cpus} "${txt}" ${meta.id}_
+    awk -F'\\t' '{print \$2}' "${txt}" | awk -F'|' '{print \$4}' > "${meta.id}_acc.tsv"
+    sort -u "${meta.id}_acc.tsv" > "${meta.id}_acc_ids.tsv"
+    split -e -l 100 "${meta.id}_acc_ids.tsv" ${meta.id}_split
     rm "${txt}"
-    for file in ${meta.id}_*; do
-        mv "\${file}" "\${file}.txt"
+    for file in ${meta.id}_split*; do
+        cp "\${file}" "\${file}.lst"
+        tr '\\n' ',' < "\${file}" | sed 's/,\$/\\n/' > "\${file}.txt"  
     done
     
 

@@ -13,6 +13,7 @@ process FETCH_METADATA_BLASTX_2{
     path "versions.yml"             , emit: versions
 
     script:
+    def name = txt.getBaseName()
     """
     get_meta() {
 
@@ -25,7 +26,7 @@ process FETCH_METADATA_BLASTX_2{
         echo "Fetching metadata for "\${acc_id}""
         #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
         local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=protein&id=\${acc_id}&rettype=gb&retmode=text"
-        local info=\$(curl -N -# -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1})
+        local info=\$(curl -N -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1})
 
         #host source, gographical location name, collection date, gene, product, taxonomic number
         local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}' | head -n 1)
@@ -82,7 +83,7 @@ process FETCH_METADATA_BLASTX_2{
     }
 
     if [[ ! -s ${txt} || \$(grep -cv '^[[:space:]]*\$' ${txt}) -eq 0 ]]; then
-            echo > "${name}_blastn_metadata2.tsv"
+            echo > "${name}_blastx_metadata.tsv"
     else
         while IFS=\$'\\t' read -r col1 col2 col3 rest;do
             tmpfile=\$(mktemp)

@@ -1,4 +1,4 @@
-process CONTIG_FILTER {
+process CONTIG_FILTER_2 {
     tag "${meta.id}"
     label 'process_low'
 

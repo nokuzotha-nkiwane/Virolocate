@@ -59,25 +59,28 @@ include { FASTA_PROCESSING } from '../modules/local/fasta_processing/main.nf'
 include { MERGER_PROCESSING as MERGER_PROCESSING_BLASTX } from '../modules/local/merger_processing/main.nf'
 include { MERGER_PROCESSING as MERGER_PROCESSING_BLASTN } from '../modules/local/merger_processing/main.nf'
 include { RVDB_PROCESSING } from '../modules/local/rvdb/processing/main.nf'
-include { SPLITTER as SPLITTER } from '../modules/local/splitter/main.nf'
-include { SPLITTER as SPLITTER_3} from '../modules/local/splitter/main.nf'
+include { SPLITTER } from '../modules/local/splitter/main.nf'
+include { SPLITTER_3} from '../modules/local/splitter_3/main.nf'
 include { SPLITTER_2 } from '../modules/local/splitter_2/main.nf'
 include { MERGER } from '../modules/local/merger/main.nf'
-include { TAXONOMY_ID } from '../modules/local/taxonomy_id/main.nf'
+include { TAXONOMY_ID as TAXONOMY_ID } from '../modules/local/taxonomy_id/main.nf'
 include { TAXONOMY_ID_2 } from '../modules/local/taxonomy_id_2/main.nf'
-include { TAXONOMY_ID_CHECK } from '../modules/local/taxonomy_id_check/main.nf'
-include { TAXONOMY_ID_CHECK_2 } from '../modules/local/taxonomy_id_check_2/main.nf'
+include { MERGER4 } from '../modules/local/merger4/main.nf'
+include { PROTEIN_MERGER as PROTEIN_MERGER } from '../modules/local/protein_merger/main.nf'
+include { PROTEIN_MERGER_2 } from '../modules/local/protein_merger_2/main.nf'
+include { PROTEIN_MERGER as PROTEIN_MERGER_3 } from '../modules/local/protein_merger/main.nf'
 include { TAXONOMY_ID_CHECK_3 } from '../modules/local/taxonomy_id_check_3/main.nf'
-include { MERGER2 as MERGER2 } from '../modules/local/merger2/main.nf'
-include { MERGER2 as MERGER3 } from '../modules/local/merger2/main.nf'
-include { MERGER2 as MERGER4 } from '../modules/local/merger2/main.nf'
+include { MERGER2 } from '../modules/local/merger2/main.nf'
+include { MERGER3 as MERGER3 } from '../modules/local/merger3/main.nf'
 include { CONTIG_FILTER } from '../modules/local/contig_filter/main.nf'
+include { CONTIG_FILTER_2 } from '../modules/local/contig_filter_2/main.nf'
+include { CONTIG_FILTER as CONTIG_FILTER_3 } from '../modules/local/contig_filter/main.nf'
 include { MEGAHIT_RENAME } from '../modules/local/megahit_rename/main.nf'
 include { CONTIG_UNIQUE_SORTER } from '../modules/local/contig_sorting/main.nf'
 include { MAKE_BLAST_FASTA } from '../modules/local/make_blast_fasta/main.nf'
 include { FETCH_METADATA_BLASTN } from '../modules/local/fetch_metadata/main.nf'
 include { FETCH_METADATA_BLASTN_2 } from '../modules/local/fetch_metadata_2/main.nf'
-include { FETCH_METADATA_BLASTX } from '../modules/local/fetch_metadata_blastx/main.nf'
+include { TAXONOMY_ID as FETCH_METADATA_BLASTX } from '../modules/local/taxonomy_id/main.nf'
 include { FETCH_METADATA_BLASTX_2 } from '../modules/local/fetch_metadata_blastx_2/main.nf'
 
 
@@ -193,35 +196,55 @@ workflow VIROLOCATE_NF {
     ch_splitter = (SPLITTER.out.txt).dump(tag:'ch_splitter')
     ch_versions = ch_versions.mix(SPLITTER.out.versions.first())
 
-    ch_splitter_file = ch_splitter.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file')
+    ch_splitter_file = ch_splitter.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
+
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_splitter_file')
 
     // //get accession ids and taxonomy ids for taxonkit to use
     TAXONOMY_ID(ch_splitter_file)
     ch_versions = ch_versions.mix(TAXONOMY_ID.out.versions.first())
 
-    // check taxonomy id
-    TAXONOMY_ID_CHECK(TAXONOMY_ID.out.tsv)
-    ch_versions = ch_versions.mix(TAXONOMY_ID_CHECK.out.versions.first())
+    // Collect all gb files per meta.id
+    ch_gb_grouped = TAXONOMY_ID.out.gb.groupTuple(by: 0).dump(tag:'ch_gb_grouped')
+    ch_tax_split = (SPLITTER.out.lst).dump(tag:'ch_tax_split')
+    ch_split_group = ch_tax_split.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
 
-    TAXONOMY_ID_2(TAXONOMY_ID_CHECK.out.txt)
-    ch_versions = ch_versions.mix(TAXONOMY_ID_2.out.versions.first())
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_split_group')
+    
 
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
-    ch_taxonomy_id_collected = (TAXONOMY_ID.out.tsv).join(TAXONOMY_ID_2.out.tsv).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected')
+    ch_taxonomy_id_collected = ch_split_group.combine(ch_gb_grouped, by:0).dump(tag:'ch_taxonomy_id_collected')
 
     MERGER2(ch_taxonomy_id_collected)
     ch_versions = ch_versions.mix(MERGER2.out.versions.first())
 
-    ch_taxonkit_input = (MERGER2.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonkit_input = (MERGER2.out.tsl).map { meta, taxidfile -> tuple(meta, null, taxidfile)} 
 
-    
     LINEAGE_PRE(ch_taxonkit_input, ch_db_mapped)
     ch_versions = ch_versions.mix(LINEAGE_PRE.out.versions.first())
 
+
+    ch_lineage_1 = LINEAGE_PRE.out.tsv.groupTuple(by: 0).dump(tag:'ch_lineage_1')
+
+    ch_protein_merger = (MERGER.out.tsv).combine(ch_lineage_1, by:0).dump(tag:'ch_protein_merger')
+    PROTEIN_MERGER(ch_protein_merger)
+
     //Contig_filter to extract sequences marked as viral only
-    CONTIG_FILTER(LINEAGE_PRE.out.tsv)
+    CONTIG_FILTER(PROTEIN_MERGER.out.tsv)
     ch_versions = ch_versions.mix(CONTIG_FILTER.out.versions.first())
 
    //sort the filtered list to remove duplicates
@@ -237,23 +260,6 @@ workflow VIROLOCATE_NF {
     FASTA_PROCESSING(ch_all)
     ch_blast_fasta = (FASTA_PROCESSING.out.reads).map { fasta -> tuple([id:'final', 'single_end':true], fasta) }.dump(tag:'ch_blast_fasta')
 
-    // Split fasta into smaller ones for faster processing
-    // SEQKIT_SPLIT2(ch_blast_fasta)
-    // ch_splitter_fasta = (SEQKIT_SPLIT2.out.reads).dump(tag:'ch_splitter_fasta')
-    // ch_versions = ch_versions.mix(SEQKIT_SPLIT2.out.versions.first())
-
-    // ch_splitter_fasta_file = ch_splitter_fasta.flatMap { meta, fastas -> fastas.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_fasta')
-    // ch_splitter_fasta_out = ch_splitter_fasta_file.map { meta, fasta ->
-    // def part_name = fasta.getBaseName()
-    // def new_meta = meta.clone()
-    // new_meta.id = "${meta.id}_${part_name}"
-    // tuple(new_meta, fasta)}.dump(tag:'ch_splitter_fasta_out_unique')
-
-    // Blastn for comparing contig sequences to known nucleotide sequences
-    // ch_ncbi_nt_db_in = Channel.fromPath(params.ncbi_nt_db, checkIfExists: true).map { db -> [[id:'ncbi_nt'], db] }.dump(tag:'ch_ncbi_nt_db_in')
-    // ch_paired = ch_splitter_fasta_out.cross(ch_ncbi_nt_db_in).set { ch_final_inputs }.dump(tag:'ch_paired')
-    // ch_fastas = ch_final_inputs.map { it[0] }.dump(tag:'ch_fastas')
-    // ch_ncbi_nt_db = ch_final_inputs.map{ it[1] }.dump(tag:'ch_ncbi_nt_db')
     ch_ncbi_nt_db_in = Channel.value(tuple([id:'ncbi_nt'], file(params.ncbi_nt_db))).dump(tag:'ch_ncbi_nt_db_in')
     ch_taxids = Channel.value(false).dump(tag:'ch_taxids')
     ch_taxidlist = Channel.fromPath(params.taxidlist).map { it }.dump(tag:'ch_taxidlist')
@@ -267,36 +273,55 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(SPLITTER_2.out.versions.first())
     ch_splitter_2 = (SPLITTER_2.out.txt).dump(tag:'ch_splitter_2')
 
-    ch_splitter_file_2 = ch_splitter_2.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_2')
+
+    ch_splitter_file_2 = ch_splitter_2.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
+
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_splitter_file_2')
 
     //get metadata of the blastn hits
     FETCH_METADATA_BLASTN(ch_splitter_file_2)
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN.out.versions.first())
 
-    // check taxonomy id
-    TAXONOMY_ID_CHECK_2(FETCH_METADATA_BLASTN.out.tsv)
-    ch_versions = ch_versions.mix(TAXONOMY_ID_CHECK_2.out.versions.first())
+    // Collect all gb files per meta.id
+    ch_gb_grouped_2 = FETCH_METADATA_BLASTN.out.gb.groupTuple(by: 0).dump(tag:'ch_gb_grouped_2')
+    ch_tax_split_2 = (SPLITTER_2.out.lst).dump(tag:'ch_tax_split_2')
+    ch_split_group_2 = ch_tax_split_2.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
 
-    FETCH_METADATA_BLASTN_2(TAXONOMY_ID_CHECK_2.out.txt)
-    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTN_2.out.versions.first())
-
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_split_group_2')
     
     //get taxonomy
     ch_taxonkit_db2 = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped2 = ch_taxonkit_db2.toList().map { it[0] }
-    ch_taxonomy_id_collected_2 = (FETCH_METADATA_BLASTN.out.tsv).join(FETCH_METADATA_BLASTN_2.out.tsv).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected_2')
+    ch_taxonomy_id_collected_2 = ch_split_group_2.combine(ch_gb_grouped_2, by:0).dump(tag:'ch_taxonomy_id_collected_2')
 
     MERGER3(ch_taxonomy_id_collected_2)
     ch_versions = ch_versions.mix(MERGER3.out.versions.first())
 
-    // ch_all_2 = MERGER3.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
-    // MERGER_PROCESSING_BLASTN(ch_all_2)
-
-    ch_taxonkit_blastn_input_2 = (MERGER3.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonkit_blastn_input_2 = (MERGER3.out.tsl).map {meta, taxidfile -> tuple(meta, null, taxidfile)}
 
     LINEAGE_BLASTN(ch_taxonkit_blastn_input_2, ch_db_mapped2)
     ch_versions = ch_versions.mix(LINEAGE_BLASTN.out.versions.first())
 
+    ch_lineage_2 = LINEAGE_BLASTN.out.tsv.groupTuple(by: 0).dump(tag:'ch_lineage_2')
+
+    ch_protein_merger_2 = (BLAST_BLASTN.out.txt).combine(ch_lineage_2, by:0).dump(tag:'ch_protein_merger_2')
+    PROTEIN_MERGER_2(ch_protein_merger_2)
+
+    //Contig_filter to extract sequences marked as viral only
+    CONTIG_FILTER_2(PROTEIN_MERGER_2.out.tsv)
+    ch_versions = ch_versions.mix(CONTIG_FILTER_2.out.versions.first())
 
     // // //Make nr database using nr fasta
     ch_nr_fasta = Channel.fromPath(params.ncbi_nr_fasta, checkIfExists: true)
@@ -320,34 +345,57 @@ workflow VIROLOCATE_NF {
     ch_versions = ch_versions.mix(SPLITTER_3.out.versions)
     ch_splitter_3 = (SPLITTER_3.out.txt).dump(tag:'ch_splitter_3')
 
-    ch_splitter_file_3 = ch_splitter_3.flatMap { meta, txts -> txts.collect { file -> [meta, file] }}.dump(tag:'ch_splitter_file_3')
+
+    ch_splitter_file_3 = ch_splitter_3.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
+
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_splitter_file_3')
 
     //get metadata of the blastx hits
     FETCH_METADATA_BLASTX(ch_splitter_file_3)
     ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX.out.versions.first())
 
-    // check taxonomy id
-    TAXONOMY_ID_CHECK_3(FETCH_METADATA_BLASTX.out.tsv)
-    ch_versions = ch_versions.mix(TAXONOMY_ID_CHECK_3.out.versions.first())
+    ch_gb_grouped_3 = FETCH_METADATA_BLASTX.out.gb.groupTuple(by: 0).dump(tag:'ch_gb_grouped_3')
+    ch_tax_split_3 = (SPLITTER_3.out.lst).dump(tag:'ch_tax_split_3')
+    ch_split_group_3 = ch_tax_split_3.flatMap { meta, txts ->
+        if (txts instanceof Path) {
+            return [[meta, txts]]
+        }
 
-    FETCH_METADATA_BLASTX_2(TAXONOMY_ID_CHECK_3.out.txt)
-    ch_versions = ch_versions.mix(FETCH_METADATA_BLASTX_2.out.versions.first())
+        else if (txts instanceof List) {
+            return txts.collect { file -> [meta, file] }
+        }
+    }.dump(tag:'ch_split_group_3')
+    
+
+    // Collect all gb files per meta.id
+    ch_gb_grouped_3 = FETCH_METADATA_BLASTX.out.gb.groupTuple(by: 0).dump(tag:'ch_gb_grouped_3')
 
     //get taxonomy
     ch_taxonkit_db3 = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped3 = ch_taxonkit_db3.toList().map { it[0] }
-    ch_taxonomy_id_collected_3 = (FETCH_METADATA_BLASTX.out.tsv).join(FETCH_METADATA_BLASTX_2.out.tsv).groupTuple(by: 0).dump(tag:'ch_taxonomy_id_collected_3')
+    ch_taxonomy_id_collected_3 = ch_split_group_3.combine(ch_gb_grouped_3, by:0).dump(tag:'ch_taxonomy_id_collected_3')
 
     MERGER4(ch_taxonomy_id_collected_3)
     ch_versions = ch_versions.mix(MERGER4.out.versions.first())
 
-    // ch_all_3 = MERGER4.out.tsv.map {meta, tsv-> [tsv]}.collect({it})
-    // MERGER_PROCESSING_BLASTX(ch_all_3)
-
-    ch_taxonkit_blastx_input_3 = (MERGER4.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
+    ch_taxonkit_blastx_input_3 = (MERGER4.out.tsl).map {meta, taxidfile -> [meta, null, taxidfile]}
     LINEAGE_BLASTX(ch_taxonkit_blastx_input_3, ch_db_mapped3)
     ch_versions = ch_versions.mix(LINEAGE_BLASTX.out.versions.first())
 
+    ch_lineage_3 = LINEAGE_BLASTX.out.tsv.groupTuple(by: 0).dump(tag:'ch_lineage_2')
+
+    ch_protein_merger_3 = (DIAMOND_BLASTX_FINAL.out.tsv).combine(ch_lineage_3, by:0).dump(tag:'ch_protein_merger_3')
+    PROTEIN_MERGER_3(ch_protein_merger_3)
+
+    //Contig_filter to extract sequences marked as viral only
+    CONTIG_FILTER_3(PROTEIN_MERGER_3.out.tsv)
+    ch_versions = ch_versions.mix(CONTIG_FILTER_3.out.versions.first())
 
 
     //---------------------------------------

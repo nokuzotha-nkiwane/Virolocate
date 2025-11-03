@@ -1,4 +1,4 @@
-process MERGER2 {
+process MERGER4 {
     tag "${meta.id}"
     label 'process_high'
 
@@ -78,7 +78,7 @@ process MERGER2 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        merger2: "1.0.0"
+        merger4: "1.0.0"
     END_VERSIONS
     """
 
@@ -88,7 +88,7 @@ process MERGER2 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        merger2: "1.0.0"
+        merger4: "1.0.0"
     END_VERSIONS
     """
 }

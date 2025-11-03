@@ -8,55 +8,57 @@ process FETCH_METADATA_BLASTN {
     tuple val(meta), path(txt)
 
     output:
-    tuple val(meta), path('*_blastn_metadata.tsv')  , emit: tsv
+    tuple val(meta), path('*_final.gb')  , emit: gb
     path "versions.yml"             , emit: versions
 
     script:
     def name = txt.getBaseName()
     """
-    get_meta() {
+    accessions=\$(cat ${txt})
+    url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=\${accessions}&rettype=gb&retmode=text" 
+    curl -N -L --retry 5 --retry-delay 5 \${url1} -o ${name}_1.gb
 
-        local contig=\$1
-        local col=\$2
-        local rest=\$3
-        local output=\$4
+    ON=0
+    ACC=""
 
-        local acc_id=\$(echo "\${col}" | awk -F'|' '{print \$4}')
-
-        #progress check
-        echo "Fetching metadata for "\${acc_id}""
-        #print ncbi page of protein accession and parse taxonomic id for use in taxonkit for lineage
-        local url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=\${acc_id}&rettype=gb&retmode=text"
-        local info=\$(curl -N -# -L --retry 5 --retry-delay 5 --max-time 15 --connect-timeout 10 \${url1})
-
-        #host source, gographical location name, collection date, gene, product, taxonomic number
-        local host=\$(echo "\${info}" | awk -F'"' '/\\/host/ {print \$2}' | head -n 1)
-        local tax=\$(echo "\${info}" | awk '/\\/db_xref/ { match(\$0, /taxon:([0-9]+)/, tax_id); print tax_id[1] }' | head -n 1)
-
-        #put NA if any of the fields are empty
-        if [[ -z "\${host}" ]]; then
-            host="NA"
-        else
-            host=\$(printf "%s" "\$host" | tr -d '\\n')
+    while IFS= read -r line; do
+        if [[ "\$line" =~ ^LOCUS ]]; then
+            if [[ "\$ON" -eq 1 ]]; then
+                echo "\$ACC" >> ${name}_missing.lst
+            fi
+            ON=1
+            ACC=""
+            continue
         fi
 
-        if [[ -z "\${tax}" ]]; then
-            tax="NA"
-        else
-            tax=\$(printf "%s" "\$tax" | tr -d '\\n')
+        if [[ "\$line" =~ ^ACCESSION ]]; then
+            ACC=\$(echo "\$line" | awk '{print \$2}')
+            continue
         fi
 
-        #print output
-        echo -e "\${contig}\\t\${col}\\t\${rest}\\t\${tax}\\t\${host}" >>\${output}
+        if [[ "\$line" =~ ^// ]]; then
+            ON=0
+            ACC=""
+            continue
+        fi
+    done < ${name}_1.gb
 
-    }
+    if [[ "\$ON" -eq 1 && -n "\$ACC" ]]; then
+        echo "\$ACC" >> ${name}_missing.lst
+    fi
 
-    while IFS=\$'\\t' read -r col1 col2 rest;do
-        tmpfile=\$(mktemp)
-        get_meta "\${col1}" "\${col2}" "\${rest}" "\$tmpfile"
-        cat "\$tmpfile" >> "${name}_blastn_metadata.tsv"
-        rm "\$tmpfile"
-    done < "${txt}"
+    if [[ -s ${name}_missing.lst && \$(grep -cv '^[[:space:]]*\$' ${name}_missing.lst) -eq 0 ]]; then
+        awk 'NF' ${name}_missing.lst >> ${name}_missing_1.lst
+        tr '\\n' ',' < ${name}_missing_1.lst | sed 's/,\$/\\n/' > ${name}_missing_final.lst
+        accessions=\$(cat ${name}_missing_final.lst)
+        url1="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=\${accessions}&rettype=gb&retmode=text" 
+        curl -N -L --retry 5 --retry-delay 5 \${url1} -o ${name}_2.gb
+    else
+        touch ${name}_2.gb
+    fi
+
+    cat ${name}_1.gb > ${name}_final.gb
+    awk 'NF' "${name}_2.gb" >> "${name}_final.gb"
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -16,7 +16,7 @@ process FASTA_PROCESSING {
     """
     cat ${fasta} > "final_blast_contigs.fasta"
     sed -i '/^>/ s/ /_/g' "final_blast_contigs.fasta"
-    dos2unix "final_blast_contigs.fasta"
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

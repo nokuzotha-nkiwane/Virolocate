@@ -12,7 +12,7 @@ process MERGER{
     script:
     """
     cat "${ncbi_tsv}" > "${meta.id}_merged.tsv"
-    cat "${rvdb_tsv}" >> "${meta.id}_merged.tsv"
+    awk 'NF' "${rvdb_tsv}" >> "${meta.id}_merged.tsv"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

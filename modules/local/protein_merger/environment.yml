@@ -1,8 +1,8 @@
-name: taxonomy_id_check_2
+name: protein_merger
 channels:
   - conda-forge
   - bioconda
   - defaults
 dependencies:
   - bioconda::curl
-  - bioconda::taxonomy_id_check_2=1.0.0
+  - bioconda::protein_merger=1.0.0

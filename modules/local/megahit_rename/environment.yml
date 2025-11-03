@@ -2,6 +2,6 @@ name: megahit_rename
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
+  - conda-forge::pigz=2.8
   - bioconda::megahit_rename=1.0.0

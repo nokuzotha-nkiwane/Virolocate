@@ -8,4 +8,6 @@ testing*
 *.pyc
 null/
 
-_site
+docs/_site
+docs/.quarto
+
