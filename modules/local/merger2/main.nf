@@ -3,7 +3,7 @@ process MERGER2 {
     label 'process_high'
 
     input:
-    tuple val(meta), path(lst), path(gbs)
+    tuple val(meta), path(lst), path(gb)
 
 
     output:
@@ -12,57 +12,65 @@ process MERGER2 {
 
     script:
     """
-    tmp_dir1=\$(mktemp -d)
-    tmp_dir2=\$(mktemp -d)
-    while IFS=\$'\\t' read -r access; do
-        found_file=""
-        for gb in ${gbs}; do
-            if grep -qE "VERSION[[:space:]]+\${access}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${access}" "\${gb}"; then
-                found_file="\${gb}"
-                break
-            fi
-        done
+    #!/usr/bin/env bash
+    set -euo pipefail
 
-        if [[ -z "\${found_file}" ]]; then
-            echo "\${access} not found" >&2
-            continue
-        fi
+    LSTIN="${lst}"
+    GBIN="${gb}"
+    base_name=\$(basename "${lst}" .lst)
+    OUT="\${base_name}_tax.tsl"
 
-       
-        tmpfile1=\$(mktemp "\${tmp_dir1}/tmpfile_XXXXXXX.tmp")
-        awk -v acc="\${access}" -v file="\${tmpfile1}" '
-            BEGIN {in_block=0; matched=0}
-            /^LOCUS/ { block=""; in_block=1 }
-            in_block { block = block \$0 "\\n" }
-            /^\\/\\// {
-                if (block ~ acc || block ~ ("VERSION[[:space:]]+" acc) || block ~ ("ACCESSION[[:space:]]+" acc)) {
-                    print block > file
-                    matched=1
-                }
-                in_block=0; block=""
-            }
-            END { if (matched==0) exit 1}
-        ' "\${found_file}" || continue
+    cat <<'PERL' > script.pl
+    use strict;
+    use warnings;
 
-        tax=\$(grep -oE 'taxon:[0-9]+' "\${tmpfile1}" | head -n 1 | cut -d: -f2 )
+    my (\$LSTIN, \$GBIN, \$OUT) = @ARGV;
+    
+    # Read list file
+    open my \$L, '<', \$LSTIN or die "Cannot open list file: \$!";
+    my %lst;
+    while (<\$L>) { 
+        chomp; 
+        s/\\r//g;
+        s/^\\s+|\\s+\$//g;
+        next if /^\\s*\$/;
+        \$lst{\$_} = 1;
+    }
+    close \$L;
 
-        if [[ -z "\${tax}" ]]; then
-            tax="NA"
+    # Read GenBank file - store by accession with and without version
+    open my \$G, '<', \$GBIN or die "Cannot open GB file: \$!";
+    my %tmp;
+    my \$ACC = '';
+    while (<\$G>) {
+        chomp;
+        if (/^ACCESSION\\s+(\\S+)/) { 
+            \$ACC = \$1;
+            next;
+        }
+        if (/^VERSION\\s+(\\S+)/) {
+            my \$version_acc = \$1;
+            # Store under the VERSION accession (with version number)
+            \$ACC = \$version_acc;
+            next;
+        }
+        if (/\\/db_xref=\\"taxon:(\\d+)\\"/) { 
+            \$tmp{\$ACC} = \$1 if \$ACC;
+        }
+    }
+    close \$G;
 
-        else
-            tax=\$(printf "%s" "\$tax" | tr -d '\\n')
-        fi
+    # Write output
+    open my \$O, '>', \$OUT or die "Cannot write output: \$!";
+    for my \$k (sort keys %lst) {
+        if (exists \$tmp{\$k}) {
+            print \$O "\$k\\t\$tmp{\$k}\\n";
+        }
+    }
+    close \$O;
+    PERL
 
-        
-        tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
-        echo -e "\${access}\\t\${tax}" >> "\${tmpfile2}"
-       
-        base_name=\$(basename "${lst}" .lst)
-        cat "\${tmpfile2}" >> "\${base_name}_tax.tsl"
-        rm "\${tmpfile1}" "\${tmpfile2}"
-
-    done < ${lst}
-    rm -rf "\${tmp_dir1}" "\${tmp_dir2}"
+    perl script.pl "\$LSTIN" "\$GBIN" "\$OUT"
     
 
     cat <<-END_VERSIONS > versions.yml
@@ -73,7 +81,7 @@ process MERGER2 {
 
     stub:
     """
-    touch sample_tax.tsv"
+    touch sample_tax.tsl"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
