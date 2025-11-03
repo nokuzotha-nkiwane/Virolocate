@@ -24,6 +24,10 @@ process CONTIG_FILTER {
         fi
     done < "${tsv}"
 
+    if [[ ! -s "${prefix}_viral_contigs_metadata.tsv" ]]; then
+        echo -e "No_viral_contigs_found" > "${prefix}_viral_contigs_metadata.tsv"
+    fi
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         contig_filter: "1.0.0"

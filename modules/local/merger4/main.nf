@@ -78,7 +78,7 @@ process MERGER4 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        taxonomy_id_check: "1.0.0"
+        merger4: "1.0.0"
     END_VERSIONS
     """
 
@@ -88,7 +88,7 @@ process MERGER4 {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        taxonomy_id_check: "1.0.0"
+        merger4: "1.0.0"
     END_VERSIONS
     """
 }
