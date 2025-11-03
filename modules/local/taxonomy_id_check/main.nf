@@ -11,11 +11,11 @@ process MERGER4 {
 
 
     output:
-    tuple val(meta), path('*_tax.tsv')  , emit: tsv
+    tuple val(meta), path('*_tax.tsl')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
-    def name = lst.getBaseName()
+    
     """
     tmp_dir1=\$(mktemp -d)
     tmp_dir2=\$(mktemp -d)
@@ -60,7 +60,7 @@ process MERGER4 {
 
         
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
-        echo -e "\${col1}\\t\${col2}\\t\${col3}\\t\${rest}\\t\${tax}" >> "\${tmpfile2}"
+        echo -e "\${access}\\t\${tax}" >> "\${tmpfile2}"
        
         cat "\${tmpfile2}" >> "${meta.id}_tax.tsv"
         rm "\${tmpfile1}" "\${tmpfile2}"
