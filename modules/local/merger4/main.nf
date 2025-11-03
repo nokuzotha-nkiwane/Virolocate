@@ -60,7 +60,7 @@ process MERGER4 {
 
         base_name=\$(basename "${lst}" .lst)
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
-        echo -e "\${col1}\\t\${tax}" >> "\${tmpfile2}"
+        echo -e "\${access}\\t\${tax}" >> "\${tmpfile2}"
        
         cat "\${tmpfile2}" >> "\${base_name}_tax.tsl"
         rm "\${tmpfile1}" "\${tmpfile2}"
