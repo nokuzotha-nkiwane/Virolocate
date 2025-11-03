@@ -7,7 +7,7 @@ process MERGER2 {
 
 
     output:
-    tuple val(meta), path("*_tax.tsv"), emit: tsv
+    tuple val(meta), path("*_tax.tsl"), emit: tsl
     path "versions.yml"             , emit: versions
 
     script:
@@ -58,7 +58,7 @@ process MERGER2 {
         echo -e "\${access}\\t\${tax}" >> "\${tmpfile2}"
        
         base_name=\$(basename "${lst}" .lst)
-        cat "\${tmpfile2}" >> "\${base_name}_tax.tsv"
+        cat "\${tmpfile2}" >> "\${base_name}_tax.tsl"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
     done < ${lst}
