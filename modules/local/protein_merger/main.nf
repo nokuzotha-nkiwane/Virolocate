@@ -11,16 +11,15 @@ process PROTEIN_MERGER {
 
 
     output:
-    tuple val(meta), path('*.tsv')  , emit: tsv
+    tuple val(meta), path('*_.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
     """
     cat ${tsvs.join(' ')} | tr -d '\r' > metadata.txt 
-    #grep -F -w -f accessions.txt ${tsv} > ${meta.id}_matches.txt
     sort -k1,1 metadata.txt  -o metadata2.txt
     sort -k2,2 ${tsv} -o ${meta.id}_matches2.txt
-    join -t \$'\\t' -1 2 -2 1 ${meta.id}_matches2.txt metadata2.txt > ${meta.id}.tsv
+    join -t \$'\\t' -1 2 -2 1 ${meta.id}_matches2.txt metadata2.txt > ${meta.id}_.tsv
             
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
