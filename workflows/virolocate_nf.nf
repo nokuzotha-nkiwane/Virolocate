@@ -230,7 +230,7 @@ workflow VIROLOCATE_NF {
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
-    ch_taxonomy_id_collected = ch_split_group.combine(ch_gb_grouped).dump(tag:'ch_taxonomy_id_collected')
+    ch_taxonomy_id_collected = ch_split_group.combine(ch_gb_grouped, by:0).dump(tag:'ch_taxonomy_id_collected')
 
     MERGER2(ch_taxonomy_id_collected)
     ch_versions = ch_versions.mix(MERGER2.out.versions.first())
