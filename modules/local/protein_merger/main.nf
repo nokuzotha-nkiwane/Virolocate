@@ -16,7 +16,7 @@ process PROTEIN_MERGER {
 
     script:
     """
-    cat ${tsvs.join(' ')} >> metadata.txt
+    cat ${tsvs.join(' ')} >> metadata.txt 
     awk '{print \$1}' metadata.txt > accessions.txt
     grep -Ff accessions.txt ${tsv} > ${meta.id}_matches.txt
     sort -k1,1 accessions.txt -o accessions2.txt
