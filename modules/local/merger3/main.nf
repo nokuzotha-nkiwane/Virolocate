@@ -62,7 +62,6 @@ process MERGER3 {
 
     # Write output
     open my \$O, '>', \$OUT or die "Cannot write output: \$!";
-    print \$O "Accession\\tTaxId\\n";
     for my \$k (sort keys %lst) {
         if (exists \$tmp{\$k}) {
             print \$O "\$k\\t\$tmp{\$k}\\n";
