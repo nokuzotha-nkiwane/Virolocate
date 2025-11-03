@@ -31,15 +31,14 @@ process MERGER3 {
     my %lst;
     while (<\$L>) { 
         chomp; 
-        s/\\r//g;  # Remove carriage returns
-        s/^\\s+|\\s+\$//g;  # Trim whitespace
-        next if /^\\s*\$/;  # Skip empty lines
+        s/\\r//g;
+        s/^\\s+|\\s+\$//g;
+        next if /^\\s*\$/;
         \$lst{\$_} = 1;
-        warn "LIST: '\$_'\\n";  # Debug output
     }
     close \$L;
 
-    # Read GenBank file
+    # Read GenBank file - store by accession with and without version
     open my \$G, '<', \$GBIN or die "Cannot open GB file: \$!";
     my %tmp;
     my \$ACC = '';
@@ -47,12 +46,16 @@ process MERGER3 {
         chomp;
         if (/^ACCESSION\\s+(\\S+)/) { 
             \$ACC = \$1;
-            warn "FOUND ACC: '\$ACC'\\n";  # Debug output
+            next;
+        }
+        if (/^VERSION\\s+(\\S+)/) {
+            my \$version_acc = \$1;
+            # Store under the VERSION accession (with version number)
+            \$ACC = \$version_acc;
             next;
         }
         if (/\\/db_xref=\\"taxon:(\\d+)\\"/) { 
             \$tmp{\$ACC} = \$1 if \$ACC;
-            warn "TAXON for \$ACC: \$1\\n";  # Debug output
         }
     }
     close \$G;
@@ -60,21 +63,15 @@ process MERGER3 {
     # Write output
     open my \$O, '>', \$OUT or die "Cannot write output: \$!";
     print \$O "Accession\\tTaxId\\n";
-    my \$matched = 0;
     for my \$k (sort keys %lst) {
         if (exists \$tmp{\$k}) {
             print \$O "\$k\\t\$tmp{\$k}\\n";
-            \$matched++;
-        } else {
-            warn "NO MATCH for: '\$k'\\n";  # Debug output
         }
     }
     close \$O;
-    
-    warn "Total matched: \$matched out of " . scalar(keys %lst) . " accessions\\n";
     PERL
 
-    perl script.pl "\$LSTIN" "\$GBIN" "\$OUT" 2>&1 | head -100
+    perl script.pl "\$LSTIN" "\$GBIN" "\$OUT"
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
