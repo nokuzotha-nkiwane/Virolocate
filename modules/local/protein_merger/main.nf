@@ -19,7 +19,7 @@ process PROTEIN_MERGER {
     cat ${tsvs.join(' ')} | tr -d '\r' > metadata.txt 
     #grep -F -w -f accessions.txt ${tsv} > ${meta.id}_matches.txt
     sort -k1,1 metadata.txt  -o metadata2.txt
-    sort -k2,2 ${meta.id}_matches.txt -o ${meta.id}_matches2.txt
+    sort -k2,2 ${tsv} -o ${meta.id}_matches2.txt
     join -t \$'\\t' -1 2 -2 1 ${meta.id}_matches2.txt metadata2.txt > ${meta.id}.tsv
             
     cat <<-END_VERSIONS > versions.yml
