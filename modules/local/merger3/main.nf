@@ -3,7 +3,7 @@ process MERGER3 {
     label 'process_high'
 
     input:
-    tuple val(meta), path(lst), path(gbs)
+    tuple val(meta), path(lst), path(gb)
 
 
     output:
