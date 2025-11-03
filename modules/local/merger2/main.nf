@@ -41,7 +41,7 @@ process MERGER2 {
                 }
                 in_block=0; block=""
             }
-            END { if (matched==0) }
+            END { if (matched==0) exit 1}
         ' "\${found_file}" || continue
 
         tax=\$(grep -oE 'taxon:[0-9]+' "\${tmpfile1}" | head -n 1 | cut -d: -f2 )
