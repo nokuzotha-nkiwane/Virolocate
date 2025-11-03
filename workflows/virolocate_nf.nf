@@ -67,7 +67,7 @@ include { TAXONOMY_ID as TAXONOMY_ID } from '../modules/local/taxonomy_id/main.n
 include { TAXONOMY_ID_2 } from '../modules/local/taxonomy_id_2/main.nf'
 include { MERGER4 } from '../modules/local/merger4/main.nf'
 include { PROTEIN_MERGER as PROTEIN_MERGER } from '../modules/local/protein_merger/main.nf'
-include { PROTEIN_MERGER as PROTEIN_MERGER_2 } from '../modules/local/protein_merger_2/main.nf'
+include { PROTEIN_MERGER_2 } from '../modules/local/protein_merger_2/main.nf'
 include { PROTEIN_MERGER as PROTEIN_MERGER_3 } from '../modules/local/protein_merger/main.nf'
 include { TAXONOMY_ID_CHECK_3 } from '../modules/local/taxonomy_id_check_3/main.nf'
 include { MERGER2 } from '../modules/local/merger2/main.nf'
