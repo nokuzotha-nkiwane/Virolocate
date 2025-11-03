@@ -20,7 +20,7 @@ process TAXONKIT_LINEAGE {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = taxidfile.getBaseName()
     assert (!taxid && taxidfile) || (taxid && !taxidfile)
     """
     taxonkit \\
