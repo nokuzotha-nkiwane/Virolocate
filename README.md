@@ -1,8 +1,8 @@
-# CERI-KRISP/virolocate_nf
+# Virolocate
 
 ## Introduction
 
-**CERI-KRISP/virolocate_nf** is a bioinformatics pipeline that ...
+**Virolocate** is a Nextflow pipeline that processes metatranscriptomic reads to identify potential novel viruses.
 
 <!-- TODO nf-core:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
@@ -14,46 +14,30 @@
      workflows use the "tube map" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->
 <!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
 
-## Usage
+## Documentation
 
-> [!NOTE]
-> If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
+The documentation for the pipeline can be accessed at [https://nokuzotha-nkiwane.github.io/Virolocate/](https://nokuzotha-nkiwane.github.io/Virolocate/usage.html)
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
+## Testing
 
-First, prepare a samplesheet with your input data that looks as follows:
+A built-in test profile is available in the Virolocate pipeline. This profile can be used to assess the Virolocat infrastructure using the `test` profile option. This allows users to address infrastructural issues before performin analyses.
 
-`samplesheet.csv`:
+**NOTE** the test instructions below assume that you have have eith `docker` or `singularity` on server or machine you plan to test the pipeline. For other institutional configs please visit [nf-core/configs](https://nf-co.re/docs/usage/getting_started/configuration#different-config-locations).
 
-```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+```
+$ nextflow run nokuzotha-nkiwane/Virolocate \
+  -profile test,docker --outdir test_output
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
-
--->
-
-Now, you can run the pipeline using:
-
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
-
-```bash
-nextflow run CERI-KRISP/virolocate_nf \
-   -profile <docker/singularity/.../institute> \
-   --input samplesheet.csv \
-   --outdir <OUTDIR>
 ```
-
-> [!WARNING]
-> Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
+$ nextflow run nokuzotha-nkiwane/Virolocate \
+  -profile test,singularity --outdir test_output
+```
 
 ## Credits
 
-CERI-KRISP/virolocate_nf was originally written by nokuzotha-nkiwane,abhi18av.
+Virolocate was originally written by Nokuzotha Nkiwane, Abhinav Sharma, Tomasz J. Sanko and Eduan Wilkinson.
 
-We thank the following people for their extensive assistance in the development of this pipeline:
 
 <!-- TODO nf-core: If applicable, make list of people who have also contributed -->
 
