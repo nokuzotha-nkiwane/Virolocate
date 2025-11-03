@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>parameters – CERI-KRISP/CholeraSeq</title>
+<title>parameters – Virolocate</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -68,6 +68,35 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -96,7 +125,7 @@ ul.task-list li input[type="checkbox"] {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">CERI-KRISP/CholeraSeq</a> 
+      <a href="./">Virolocate</a> 
     </div>
       </div>
         <div class="mt-2 flex-shrink-0 align-items-center">
@@ -147,7 +176,15 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#input-samplesheet" id="toc-input-samplesheet" class="nav-link" data-scroll-target="#input-samplesheet">Input Samplesheet</a></li>
   <li><a href="#output-directory" id="toc-output-directory" class="nav-link" data-scroll-target="#output-directory">Output Directory</a></li>
   </ul></li>
-  <li><a href="#quality-control-parameters" id="toc-quality-control-parameters" class="nav-link" data-scroll-target="#quality-control-parameters">Quality Control Parameters</a></li>
+  <li><a href="#quality-control-parameters" id="toc-quality-control-parameters" class="nav-link" data-scroll-target="#quality-control-parameters">Quality Control Parameters</a>
+  <ul class="collapse">
+  <li><a href="#trimmomatic" id="toc-trimmomatic" class="nav-link" data-scroll-target="#trimmomatic">Trimmomatic</a></li>
+  <li><a href="#diamond-blastx-pre" id="toc-diamond-blastx-pre" class="nav-link" data-scroll-target="#diamond-blastx-pre">Diamond Blastx Pre</a></li>
+  <li><a href="#diamond-blastx-final-replaces---outfmt-above" id="toc-diamond-blastx-final-replaces---outfmt-above" class="nav-link" data-scroll-target="#diamond-blastx-final-replaces---outfmt-above">Diamond Blastx Final (replaces <code>--outfmt</code> above)</a></li>
+  <li><a href="#blast-blastn" id="toc-blast-blastn" class="nav-link" data-scroll-target="#blast-blastn">Blast Blastn</a></li>
+  <li><a href="#lineage-pre" id="toc-lineage-pre" class="nav-link" data-scroll-target="#lineage-pre">Lineage Pre</a></li>
+  <li><a href="#lineage-blastx-lineage-blastn" id="toc-lineage-blastx-lineage-blastn" class="nav-link" data-scroll-target="#lineage-blastx-lineage-blastn">Lineage Blastx &amp; Lineage Blastn</a></li>
+  </ul></li>
   <li><a href="#skipping-pipeline-steps" id="toc-skipping-pipeline-steps" class="nav-link" data-scroll-target="#skipping-pipeline-steps">Skipping Pipeline Steps</a></li>
   <li><a href="#reference-files" id="toc-reference-files" class="nav-link" data-scroll-target="#reference-files">Reference Files</a></li>
   </ul></li>
@@ -228,6 +265,8 @@ ul.task-list li input[type="checkbox"] {
 <blockquote class="blockquote">
 <p>⚠️ <strong>Attention</strong>: Ensure these values are adjusted based on the quality of your input data to avoid processing errors. The defaults are set to faciliate a majority of users. Only advanced users are recommended to change these.</p>
 </blockquote>
+<section id="trimmomatic" class="level3">
+<h3 class="anchored" data-anchor-id="trimmomatic">Trimmomatic</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 10%">
@@ -243,13 +282,219 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>FIXME</code></td>
-<td>FIXME</td>
-<td>FIXME</td>
+<td><code>ILLUMINACLIP</code></td>
+<td>fastaWithAdaptersEtc : seed mismatches : palindrome clip threshold : simple clip threshold</td>
+<td>cut adapter and other illumina-specific sequences from the read</td>
+</tr>
+<tr class="even">
+<td><code>&lt;fastaWithAdaptersEtc&gt;</code></td>
+<td><span class="math inline">\({params.trimmomatic_adapters}\)</span></td>
+<td>specifies the path to a fasta file containing all the adapters, PCR sequences etc</td>
+</tr>
+<tr class="odd">
+<td><code>&lt;seed mismatches&gt;</code></td>
+<td>2</td>
+<td>specifies the maximum mismatch count which will still allow a full match to be performed</td>
+</tr>
+<tr class="even">
+<td><code>&lt;palindrome clip threshold&gt;</code></td>
+<td>30</td>
+<td>specifies how accurate the match between the two ‘adapter ligated’ reads must be for PE palindrome read alignment</td>
+</tr>
+<tr class="odd">
+<td><code>&lt;simple clip threshold&gt;</code></td>
+<td>10</td>
+<td>specifies how accurate the match between any adapter etc. sequence must be against a read</td>
+</tr>
+<tr class="even">
+<td><code>LEADING</code></td>
+<td>5</td>
+<td>cut bases off the start of a read, if below a threshold quality</td>
+</tr>
+<tr class="odd">
+<td><code>TRAILING</code></td>
+<td>5</td>
+<td>cut bases off the end of a read, if below a threshold quality</td>
+</tr>
+<tr class="even">
+<td><code>SLIDINGWINDOW</code></td>
+<td>4:15</td>
+<td>perform a sliding window trimming, cutting once the average quality within the window falls below a threshold</td>
+</tr>
+<tr class="odd">
+<td><code>MINLEN</code></td>
+<td>25</td>
+<td>drop the read if it is below a specified length</td>
+</tr>
+<tr class="even">
+<td><code>MINLEN</code></td>
+<td>25</td>
+<td>drop the read if it is below a specified length</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="diamond-blastx-pre" class="level3">
+<h3 class="anchored" data-anchor-id="diamond-blastx-pre">Diamond Blastx Pre</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 5%">
+<col style="width: 83%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--evalue</code></td>
+<td>1e-5</td>
+<td>maximum e-value to report alignments</td>
+</tr>
+<tr class="even">
+<td><code>--outfmt</code></td>
+<td>’6 qseqid qlen sseqid stitle pident length evalue bitscore</td>
+<td>output format</td>
+</tr>
+<tr class="odd">
+<td><code>--id</code></td>
+<td>80</td>
+<td>minimum identity% to report an alignment</td>
+</tr>
+<tr class="even">
+<td><code>--strand</code></td>
+<td>both</td>
+<td>query strands to search (both/minus/plus)</td>
+</tr>
+<tr class="odd">
+<td><code>--unal</code></td>
+<td>0</td>
+<td>report unaligned queries (0=no, 1=yes)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="diamond-blastx-final-replaces---outfmt-above" class="level3">
+<h3 class="anchored" data-anchor-id="diamond-blastx-final-replaces---outfmt-above">Diamond Blastx Final (replaces <code>--outfmt</code> above)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 5%">
+<col style="width: 83%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--outfmt</code></td>
+<td>’6 qseqid sseqid qlen stitle pident length qstart qend evalue bitscore</td>
+<td>output format</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="blast-blastn" class="level3">
+<h3 class="anchored" data-anchor-id="blast-blastn">Blast Blastn</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 5%">
+<col style="width: 79%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--evalue</code></td>
+<td>1e-5</td>
+<td>maximum e-value to report alignments</td>
+</tr>
+<tr class="even">
+<td><code>--max_target_seqs</code></td>
+<td>20</td>
+<td>Maximum number of aligned sequences to keep</td>
+</tr>
+<tr class="odd">
+<td><code>--outfmt</code></td>
+<td>’6 qseqid sseqid qlen stitle pident length qstart qend evalue bitscore</td>
+<td>output format</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="lineage-pre" class="level3">
+<h3 class="anchored" data-anchor-id="lineage-pre">Lineage Pre</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 5%">
+<col style="width: 83%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-i</code></td>
+<td>9</td>
+<td>field index of taxid. input data should be tab-separated</td>
+</tr>
+<tr class="even">
+<td><code>-d</code></td>
+<td>$’</td>
+<td>field delimiter in lineage (default “;”)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="lineage-blastx-lineage-blastn" class="level3">
+<h3 class="anchored" data-anchor-id="lineage-blastx-lineage-blastn">Lineage Blastx &amp; Lineage Blastn</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 5%">
+<col style="width: 83%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-i</code></td>
+<td>10</td>
+<td>field index of taxid. input data should be tab-separated</td>
+</tr>
+<tr class="even">
+<td><code>-d</code></td>
+<td>$’</td>
+<td>field delimiter in lineage (default “;”)</td>
 </tr>
 </tbody>
 </table>
 <hr>
+</section>
 </section>
 <section id="skipping-pipeline-steps" class="level2">
 <h2 class="anchored" data-anchor-id="skipping-pipeline-steps">Skipping Pipeline Steps</h2>
@@ -268,8 +513,8 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>skip_FIXME</code></td>
-<td><code>FIXME</code></td>
+<td><code>null</code></td>
+<td><code>null</code></td>
 <td></td>
 </tr>
 </tbody>
@@ -282,6 +527,11 @@ ul.task-list li input[type="checkbox"] {
 <section id="reference-files" class="level2">
 <h2 class="anchored" data-anchor-id="reference-files">Reference Files</h2>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 26%">
+<col style="width: 50%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Parameter</th>
@@ -291,9 +541,34 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>ref_FIXME</code></td>
-<td><code>FIXME</code></td>
-<td>Path to the FIXME</td>
+<td><code>rvdb_fasta</code></td>
+<td><code>null</code></td>
+<td>Path to the RVDB unclustered protein fasta</td>
+</tr>
+<tr class="even">
+<td><code>ncbi_nr_fasta</code></td>
+<td><code>null</code></td>
+<td>Path to the full NCBI non-redundant protein (Nr) database in fasta format</td>
+</tr>
+<tr class="odd">
+<td><code>ncbi_nt_db</code></td>
+<td><code>null</code></td>
+<td>Path to the full NCBI nucleotide (NT)</td>
+</tr>
+<tr class="even">
+<td><code>viral_csv</code></td>
+<td><code>null</code></td>
+<td>Path to the csv used to subset NCBI NR database to viral fasta sequences only</td>
+</tr>
+<tr class="odd">
+<td><code>ncbi_viral_fasta</code></td>
+<td><code>null</code></td>
+<td>Path to the subset NCBI NR database</td>
+</tr>
+<tr class="even">
+<td><code>taxdb</code></td>
+<td><code>null</code></td>
+<td>Path to the Taxdump database from TaxonKit</td>
 </tr>
 </tbody>
 </table>

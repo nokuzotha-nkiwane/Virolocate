@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>usage – CERI-KRISP/CholeraSeq</title>
+<title>usage – Virolocate</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -131,7 +131,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">CERI-KRISP/CholeraSeq</a> 
+      <a href="./">Virolocate</a> 
     </div>
       </div>
         <div class="mt-2 flex-shrink-0 align-items-center">
@@ -222,17 +222,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="usage" class="level1">
 <h1>Usage</h1>
-<p><code>Virolocate</code>: a pipeline for data analysis Cholera outbreaks.</p>
+<p><code>Virolocate</code>: A pipeline for viral metatranscriptomic data analysis</p>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p><strong>nokuzotha-nkiwane/Virolocate</strong> is a Nextflow pipeline for genomic data analysis of Cholera outbreaks.</p>
+<p><strong>Virolocate</strong> is a Nextflow pipeline for genomic data analysis of metatranscriptomic Next Generation Sequencing data.</p>
 </section>
 <section id="dataset" class="level2">
 <h2 class="anchored" data-anchor-id="dataset">Dataset</h2>
-<p>We have created a multi-fasta reference with global cohort available on … , available at the link below.</p>
+<p>Samples from the Kruger National Park were collected and subsampled using FastP to generate a test dataset.</p>
 </section>
 <section id="samplesheet-input" class="level2">
 <h2 class="anchored" data-anchor-id="samplesheet-input">Samplesheet input</h2>
+<p>You need to</p>
 <p>You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">--samplesheet</span> <span class="st">'[path to samplesheet file]'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <section id="full-samplesheet" class="level3">
@@ -242,19 +243,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="input" class="level1">
 <h1>Input</h1>
-<p>The input samplesheet should be in CSV format, containing either of the three possibilities</p>
+<p>The input samplesheet should be in CSV format, containing either of the two possibilities</p>
 <ol type="1">
-<li><p>Paired-end reads (e.g <code>SRR8364252</code>)</p></li>
+<li><p>Paired-end reads (e.g <code>SRR35709878</code>)</p></li>
 <li><p>Single-end reads (e.g.&nbsp;<code>SRR771360</code> )</p></li>
 </ol>
 <pre class="csv"><code>sample,fastq_1,fastq_2
-SRR8364252,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR836/002/SRR8364252/SRR8364252_1.fastq.gz,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR836/002/SRR8364252/SRR8364252_2.fastq.gz</code></pre>
+SRR35709878,/path/to/paired-end/SRR35709878_1.fastq.gz,/path/to/paired-end/SRR35709878_2.fastq.gz
+SRR35366026,/path/to/single-end/SRR35366026.fastq.gz
+</code></pre>
 <section id="running-the-pipeline" class="level2">
 <h2 class="anchored" data-anchor-id="running-the-pipeline">Running the pipeline</h2>
 <section id="test-profiles" class="level3">
 <h3 class="anchored" data-anchor-id="test-profiles">Test profiles</h3>
-<p>A built-in test profile are available in the virolocate pipeline with different size of datasets. This profile can be used to run tests on the relevant infrastructure using the <code>test</code> profile, to help users identify and resolve any infrastructural issue before the analysis stage.</p>
-<p><strong>NOTE</strong>: The snippets below assumes you have <code>docker</code> on the sever/machine you wish to test the pipeline. For other institutional configs please refer <a href="https://nf-co.re/docs/usage/configuration#max-resources">nf-core/configs</a> project, which are all applicable to this pipeline.</p>
+<p>Virolocate comes with a <code>test</code> profile that is available in the Virolocate pipeline. The <code>test</code> profile can use datasets of different sizes to test the pipeline’s functionality before performing any analyses.</p>
+<p><strong>NOTE</strong>: The following code chuncks assume that the server/machine being used has <code>docker</code> on it. For other institutional configurations, visit <a href="https://nf-co.re/docs/usage/configuration#max-resources">nf-core/configs</a> project, which are all applicable to this pipeline.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nextflow run nokuzotha-nkiwane/Virolocate <span class="dt">\</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">-profile</span> test,docker <span class="at">--outdir</span> test_output</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -278,15 +281,14 @@ SRR8364252,ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR836/002/SRR8364252/SRR8364252_1
 <p>If you wish to repeatedly use the same parameters for multiple runs, rather than specifying each flag in the command, you can specify these in a params file.</p>
 <p>Pipeline settings can be provided in a <code>yaml</code> or <code>json</code> file via <code>-params-file &lt;file&gt;</code>.</p>
 <blockquote class="blockquote">
-<p>⚠️ Do not use <code>-c &lt;file&gt;</code> to specify parameters as this will result in errors. Custom config files specified with <code>-c</code> must only be used for <a href="https://nf-co.re/docs/usage/configuration#tuning-workflow-resources">tuning process resource specifications</a>, other infrastructural tweaks (such as output directories), or module arguments (args).</p>
+<p>⚠️ Do not use <code>-c &lt;file&gt;</code> to specify parameters as this will result in errors. Custom config files specified with <code>-c</code> must only be used for <a href="https://nf-co.re/docs/usage/configuration#tuning-workflow-resources">tuning process resource specifications</a>, other infrastructural tweaks (e.g.:output directories), or module arguments (args).</p>
 </blockquote>
 <p>The above pipeline run specified with a params file in yaml format:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nextflow</span> run nokuzotha-nkiwane/virolocate <span class="at">-profile</span> docker <span class="at">-params-file</span> params.yaml</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>with <code>params.yaml</code> containing:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">input</span><span class="kw">:</span><span class="at"> </span><span class="st">'./samplesheet.csv'</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">outdir</span><span class="kw">:</span><span class="at"> </span><span class="st">'./results/'</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">genome</span><span class="kw">:</span><span class="at"> </span><span class="st">'GRCh37'</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># other parameters</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># other parameters</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>You can also generate such <code>YAML</code>/<code>JSON</code> files via <a href="https://nf-co.re/launch">nf-core/launch</a>.</p>
 </section>
 <section id="updating-the-pipeline" class="level3">
