@@ -1,27 +1,21 @@
-process MERGER4 {
+process MERGER2 {
     tag "${meta.id}"
-    label 'process_long'
     label 'process_high'
 
-    // conda "${moduleDir}/environment.yml"
-    // container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
-
     input:
-    tuple val(meta), path(lst), path(gb) 
+    tuple val(meta), path(lst), path(gbs)
 
 
     output:
-    tuple val(meta), path('*_tax.tsl')  , emit: tsl
+    tuple val(meta), path("*_tax.tsl"), emit: tsl
     path "versions.yml"             , emit: versions
 
     script:
-    
     """
     #!/usr/bin/env bash
     set -euo pipefail
 
     LSTIN="${lst}"
-    GBIN="${gb}"
     base_name=\$(basename "${lst}" .lst)
     OUT="\${base_name}_tax.tsl"
 
@@ -29,7 +23,9 @@ process MERGER4 {
     use strict;
     use warnings;
 
-    my (\$LSTIN, \$GBIN, \$OUT) = @ARGV;
+    my \$LSTIN = shift @ARGV;
+    my \$OUT = pop @ARGV;
+    my @GBINS = @ARGV;
     
     # Read list file
     open my \$L, '<', \$LSTIN or die "Cannot open list file: \$!";
@@ -43,27 +39,29 @@ process MERGER4 {
     }
     close \$L;
 
-    # Read GenBank file - store by accession with and without version
-    open my \$G, '<', \$GBIN or die "Cannot open GB file: \$!";
+    # Read all GenBank files
     my %tmp;
-    my \$ACC = '';
-    while (<\$G>) {
-        chomp;
-        if (/^ACCESSION\\s+(\\S+)/) { 
-            \$ACC = \$1;
-            next;
+    for my \$gbfile (@GBINS) {
+        open my \$G, '<', \$gbfile or die "Cannot open GB file \$gbfile: \$!";
+        my \$ACC = '';
+        while (<\$G>) {
+            chomp;
+            if (/^ACCESSION\\s+(\\S+)/) { 
+                \$ACC = \$1;
+                next;
+            }
+            if (/^VERSION\\s+(\\S+)/) {
+                my \$version_acc = \$1;
+                # Store under the VERSION accession (with version number)
+                \$ACC = \$version_acc;
+                next;
+            }
+            if (/\\/db_xref=\\"taxon:(\\d+)\\"/) { 
+                \$tmp{\$ACC} = \$1 if \$ACC;
+            }
         }
-        if (/^VERSION\\s+(\\S+)/) {
-            my \$version_acc = \$1;
-            # Store under the VERSION accession (with version number)
-            \$ACC = \$version_acc;
-            next;
-        }
-        if (/\\/db_xref=\\"taxon:(\\d+)\\"/) { 
-            \$tmp{\$ACC} = \$1 if \$ACC;
-        }
+        close \$G;
     }
-    close \$G;
 
     # Write output
     open my \$O, '>', \$OUT or die "Cannot write output: \$!";
@@ -75,24 +73,22 @@ process MERGER4 {
     close \$O;
     PERL
 
-    perl script.pl "\$LSTIN" "\$GBIN" "\$OUT"
+    perl script.pl "\$LSTIN" ${gbs} "\$OUT"
     
-            
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        taxonomy_id_check: "1.0.0"
+        merger2: "1.0.0"
     END_VERSIONS
     """
 
     stub:
-
     """
-    touch _check.txt
+    touch sample_tax.tsl
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        taxonomy_id_check: "1.0.0"
+        merger2: "1.0.0"
     END_VERSIONS
-
     """
 }
