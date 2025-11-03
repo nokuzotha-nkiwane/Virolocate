@@ -1,8 +1,6 @@
 name: taxonomy_id
 channels:
-  - conda-forge
-  - bioconda
-  - defaults
+- conda-forge
+- bioconda
 dependencies:
-  - bioconda::curl
-  - bioconda::taxonomy_id=1.0.0
+- conda-forge::curl=8.16.0

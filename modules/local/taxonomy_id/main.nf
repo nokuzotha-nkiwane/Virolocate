@@ -3,10 +3,13 @@ process TAXONOMY_ID {
     maxForks 3
     label 'process_long'
 
-    // conda "${moduleDir}/environment.yml"
-    // container "wave.seqera.io/wt/cf2847dec15c/wave/build:taxonomy_id--5d733d140ee5728f"
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'oras://community.wave.seqera.io/library/curl:8.16.0--0f923aab65c12492' :
+        'community.wave.seqera.io/library/curl:8.16.0--6a09e3d33a7b6391' }"
 
-   input:
+
+    input:
     tuple val(meta), path(txt)
 
     output:
