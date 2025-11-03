@@ -19,6 +19,7 @@ process MERGER4 {
     """
     tmp_dir1=\$(mktemp -d)
     tmp_dir2=\$(mktemp -d)
+    tmp_dir3=\$(mktemp -d)
     while IFS=\$'\\t' read -r col1 col2 col3 rest; do
         found_file=""
         for gb in ${gbs}; do
@@ -60,10 +61,10 @@ process MERGER4 {
 
         
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
-        tmpfile3=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
+        tmpfile3=\$(mktemp "\${tmp_dir3}/file_XXXXXXX")
         echo -e "\${col2}\\t\${tax}" >> "\${tmpfile2}"
        
-        cat "\${tmpfile2}" >> "${tmpfile3}_tax.tsl"
+        cat "\${tmpfile2}" >> "\${tmpfile3}_tax.tsl"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
     done < "${lst}"

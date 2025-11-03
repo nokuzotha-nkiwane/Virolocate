@@ -57,10 +57,10 @@ process MERGER3 {
 
         
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
-        tmpfile3=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
+        tmpfile3=\$(mktemp "\${tmp_dir3}/file_XXXXXXX")
         echo -e "\${access}\\t\${tax}" >> "\${tmpfile2}"
        
-        cat "\${tmpfile2}" >> "${tmpfile3}_tax.tsl"
+        cat "\${tmpfile2}" >> "\${tmpfile3}_tax.tsl"
         rm "\${tmpfile1}" "\${tmpfile2}"
 
     done < "${lst}"
