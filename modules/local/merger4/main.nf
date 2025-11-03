@@ -19,23 +19,23 @@ process MERGER4 {
     """
     tmp_dir1=\$(mktemp -d)
     tmp_dir2=\$(mktemp -d)
-    while IFS=\$'\\t' read -r col1 col2 col3 rest; do
+    while IFS=\$'\\t' read -r access; do
         found_file=""
         for gb in ${gbs}; do
-            if grep -qE "VERSION[[:space:]]+\${col2}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${col2}" "\${gb}"; then
+            if grep -qE "VERSION[[:space:]]+\${access}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${access}" "\${gb}"; then
                 found_file="\${gb}"
                 break
             fi
         done
 
         if [[ -z "\${found_file}" ]]; then
-            echo "\${col2} not found" >&2
+            echo "\${access} not found" >&2
             continue
         fi
 
        
         tmpfile1=\$(mktemp "\${tmp_dir1}/tmpfile_XXXXXXX.tmp")
-        awk -v acc="\${col2}" -v file="\${tmpfile1}" '
+        awk -v acc="\${access}" -v file="\${tmpfile1}" '
             BEGIN {in_block=0; matched=0}
             /^LOCUS/ { block=""; in_block=1 }
             in_block { block = block \$0 "\\n" }
@@ -60,7 +60,7 @@ process MERGER4 {
 
         base_name=\$(basename "${lst}" .lst)
         tmpfile2=\$(mktemp "\${tmp_dir2}/file_XXXXXXX")
-        echo -e "\${col2}\\t\${tax}" >> "\${tmpfile2}"
+        echo -e "\${col1}\\t\${tax}" >> "\${tmpfile2}"
        
         cat "\${tmpfile2}" >> "\${base_name}_tax.tsl"
         rm "\${tmpfile1}" "\${tmpfile2}"
