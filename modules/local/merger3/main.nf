@@ -15,8 +15,7 @@ process MERGER3 {
 
     tmp_dir1=\$(mktemp -d)
     tmp_dir2=\$(mktemp -d)
-    while IFS=\$'\\t' read -r access; do
-        access=\$(echo "\${access}" | awk -F'|' '{print \$4}')
+    while read -r access; do
         found_file=""
         for gb in ${gbs}; do
             if grep -qE "VERSION[[:space:]]+\${access}" "\${gb}" || grep -qE "ACCESSION[[:space:]]+\${access}" "\${gb}"; then
