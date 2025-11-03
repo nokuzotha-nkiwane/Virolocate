@@ -229,24 +229,15 @@ workflow VIROLOCATE_NF {
     //Taxonkit for lineage filtering and getting taxonomy ids
     ch_taxonkit_db = Channel.fromPath(params.taxdb, checkIfExists: true)
     ch_db_mapped = ch_taxonkit_db.toList().map { it[0] }
-    ch_taxonomy_id_collected = (SPLITTER.out.lst).flatMap { meta, lsts -> lsts.collect { lst -> [meta, lst] }}
-    .join(ch_gb_grouped).flatMap { meta, lst, gbs -> gbs.collect { gb -> [meta, lst, gb] }}.dump(tag:'ch_taxonomy_id_collected')
-
-    // ch_taxonomy_id_collected emits: [meta, lst, gb]
-
-    ch_taxonomy_id_collected_grouped = ch_taxonomy_id_collected
-    .groupTuple(by: 0)
-    .flatMap { meta, grouped_entries ->
-        def lst_groups = grouped_entries.groupBy { it[1] }
-        lst_groups.collect { lst, entries ->
-            def gbs = grouped_entries.collect { it[2] }
-            tuple(meta, lst, gbs)
-        }
-    }
+    ch_taxonomy_id_collected = SPLITTER.out.lst.flatMap { meta, lsts ->lsts.collect { lst -> tuple(meta, lst) }}.combine(ch_gb_grouped) { meta_lsts, meta_gbs ->
+        def meta = meta_lsts[0]
+        def lst = meta_lsts[1]
+        def gbs = meta_gbs[1]
+        tuple(meta, lst, gbs)}.dump(tag: 'ch_taxonomy_id_collected')
 
     
 
-    MERGER2(ch_taxonomy_id_collected_grouped)
+    MERGER2(ch_taxonomy_id_collected)
     ch_versions = ch_versions.mix(MERGER2.out.versions.first())
 
     ch_taxonkit_input = (MERGER2.out.tsv).map {meta, taxidfile -> [meta, null, taxidfile]}
