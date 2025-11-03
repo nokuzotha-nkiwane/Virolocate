@@ -11,7 +11,7 @@ process PROTEIN_MERGER_2 {
 
 
     output:
-    tuple val(meta), path('*.tsv')  , emit: tsv
+    tuple val(meta), path('*_blastn.tsv')  , emit: tsv
     path "versions.yml"             , emit: versions
 
     script:
@@ -23,7 +23,7 @@ process PROTEIN_MERGER_2 {
     done < ${txt}
     sort -k1,1 metadata.txt  -o metadata2.txt
     sort -k2,2 blastn.out -o ${meta.id}_matches2.txt
-    join -t \$'\\t' -1 2 -2 1 ${meta.id}_matches2.txt metadata2.txt > ${meta.id}.tsv
+    join -t \$'\\t' -1 2 -2 1 ${meta.id}_matches2.txt metadata2.txt > ${meta.id}_blastn.tsv
             
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
