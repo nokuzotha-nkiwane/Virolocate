@@ -235,7 +235,7 @@ workflow VIROLOCATE_NF {
     MERGER2(ch_taxonomy_id_collected)
     ch_versions = ch_versions.mix(MERGER2.out.versions.first())
 
-    ch_taxonkit_input = (MERGER2.out.tsv).map { meta, taxidfile -> tuple(new_meta, null, taxidfile)}
+    ch_taxonkit_input = (MERGER2.out.tsv).map { meta, taxidfile -> tuple(meta, null, taxidfile)}
 
     LINEAGE_PRE(ch_taxonkit_input, ch_db_mapped)
     ch_versions = ch_versions.mix(LINEAGE_PRE.out.versions.first())
